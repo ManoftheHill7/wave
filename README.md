@@ -1,0 +1,50 @@
+# Wave
+
+Name is a placeholder. The concept is a survival crafting game, where when the tide is low, you explore a set of caves for resources and treasure. When the tide rises, you need to get out before you get trapped. The core fun of the game, should be navigating procedurally generated caves with a varity of movement options. Jumps, dashes, grappling hooks, gliders, etc.
+
+## Design decisions
+
+- [DECIDED]: The game is a survival crafting game, but mining is not the focus. The focus is on fun platformer movement
+- [OPEN]: Should the game be a roguelite? Or should it focus more on base building?
+- [OPEN]: Should tools have durability? Or once you get a tool, do you have it?
+- [OPEN]: Farming? How to do this nicely on a side view 2d
+- [OPEN]: How should healing work? A food system? A potion system? Heal, when resting? No healing ever?
+- [OPEN]: How to indicate to the player the tide will rise? Clock on the hud? Sounds?
+- [OPEN]: How to implement water? Cellular automata? Water that rises independent of terrain? Smooth particle hydrodynamics?
+
+## Plan
+
+Note, many of these tasks can and should be broken up into smaller tasks
+
+### Tier 1 Tasks
+
+Things required for the games core concept
+
+- [x] Infinite worldsize
+- [x] Basic player physics (Jump, climb, walk, swim)
+- [x] Basic character animations (Jump, climb, walk, swim, idle)
+- [x] Basic Tileset
+- [x] Raycast for player tools
+- [ ] Cave generation
+- [ ] Dynamic Water
+- [ ] Tidal cycle
+- [ ] Inventory system
+- [ ] Stala(gm/ct)ites
+- [ ] Enemies
+
+### Tier 2 Tasks
+
+Things that I would really like to have
+
+- [ ] Dynamic lighting
+- [ ] Parallex backgrounds
+- [ ] Multiple cave biomes as you get deeper
+- [ ] Forageable foods
+- [ ] Fishing. Maybe like Stardew Valley?
+- [ ] Dungeons. Sets of connected handmade rooms to find important items
+
+### Tier 3 Tasks
+
+Things I will get to if there is time
+
+- [ ] Relaxed mode. No tidal pressures

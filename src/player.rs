@@ -1,0 +1,520 @@
+use raylib::prelude::*;
+use crate::terrain::Terrain;
+use crate::controller::Controller;
+
+pub const ACCEL: f32 = 30.0;
+pub const SPEED: f32 = 12.0;
+pub const CLIMB_SPEED: f32 = 3.125;
+pub const CLIMB_STAMINA: f32 = 2.0;
+pub const JUMP_VELOCITY: f32 = -15.0;
+pub const TERMINAL_VELOCITY: f32 = 30.0;
+pub const GRAVITY: f32 = 40.625;
+pub const JUMP_GRAVITY_REDUCTION: f32 = 0.65;
+pub const JUMP_RELEASE_REDUCTION: f32 = 0.5;
+pub const JUMP_COYOTE_TIME: f32 = 0.10;
+pub const JUMP_BUFFER_TIME: f32 = 0.1;
+pub const WALLJUMP_EFFECT_STRENGTH: f32 = 0.1;
+pub const WALLJUMP_EFFECT_TIME: f32 = 0.15;
+pub const WALLJUMP_LOCK_TIME: f32 = 0.1;
+pub const WALLJUMP_X_RELATIVE_STRENGTH: f32 = 0.8;
+pub const WALLSLIDE_FRICTION: f32 = 0.9;
+pub const DASH_TIME: f32 = 0.25;
+pub const DASH_EXTENDED_TIME: f32 = 0.35;
+pub const DASH_CONTROL_MODIFER: f32 = 2.0;
+pub const DASH_VELOCITY: f32 = SPEED * 1.7;
+pub const DASHJUMP_COOLDOWN: f32 = 0.075;
+pub const DASH_AMOUNT: i32 = 1;
+pub const CORNER_CORRECTION_AMOUNT: i32 = 5;
+pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.25;
+
+pub const BASE_HEIGHT: f32 = 2.0;
+pub const DASH_HEIGHT: f32 = 1.0;
+
+pub const WATER_BUOYANCY: f32 = -GRAVITY / 2.0;
+pub const WATER_DRAG: f32 = 0.9;
+pub const SWIM_SPEED: f32 = 8.0;
+pub const SWIM_EXIT_TIME: f32 = 0.10;
+
+pub const MAX_RAYCAST_PICKAXE: f32 = 2.0;
+pub const MAX_RAYCAST_HOOK: f32 = 10.0;
+pub const MAX_RAYCAST_SPEAR: f32 = 3.0;
+
+
+#[derive(Debug)]
+struct RaycastResult {
+    final_position: Vector2,
+    hit: bool,
+}
+
+pub struct Player {
+    // Position and physics
+    pub position: Vector2,
+    pub velocity: Vector2,
+    pub height: f32,
+    pub width: f32,
+    pub facing_dir: i32,
+
+    // State flags
+    pub on_ground: bool,
+    pub is_jumping: bool,
+    pub is_dashing: bool,
+    pub is_climbing: bool,
+    pub is_sliding: bool,
+    pub is_swimming: bool,
+    pub just_landed: bool,
+    pub just_finished_dashing: bool,
+
+    // Timers (using f32 for elapsed time)
+    pub last_on_ground: f32,
+    pub last_in_water: f32,
+    pub try_jumped_at: f32,
+    pub wall_jumped_at: f32,
+    pub dashed_at: f32,
+    pub last_action_at: f32,
+    pub time: f32,  // Game time tracker
+
+    // Resources
+    pub dashes: i32,
+    pub climb_stamina: f32,
+
+    // Physics modifiers
+    pub gravity_reduction: f32,
+
+    // Dash state
+    pub dash_dir: Vector2,
+
+    // Cached values
+    pub landing_speed: Vector2,
+    pub last_velocity: Vector2,
+
+    pub raycast_max_length: f32,
+    pub raycast_end_pos: Vector2,
+    pub raycast_hit_tile: Option<(f32, f32)>,
+}
+
+impl Player {
+    pub fn new(x: f32, y: f32) -> Self {
+        Player {
+            position: Vector2::new(x, y),
+            velocity: Vector2::zero(),
+            height: 2.0,
+            width: 1.3,
+            facing_dir: 1,
+
+            on_ground: false,
+            is_jumping: false,
+            is_dashing: false,
+            is_climbing: false,
+            is_sliding: false,
+            is_swimming: false,
+            just_landed: false,
+            just_finished_dashing: false,
+
+            last_on_ground: -999.0,
+            last_in_water: -999.0,
+            try_jumped_at: -999.0,
+            wall_jumped_at: -999.0,
+            dashed_at: -999.0,
+            last_action_at: -999.0,
+            time: 0.0,
+
+            dashes: DASH_AMOUNT,
+            climb_stamina: CLIMB_STAMINA,
+
+            gravity_reduction: 1.0,
+            dash_dir: Vector2::zero(),
+            landing_speed: Vector2::zero(),
+            last_velocity: Vector2::zero(),
+
+            raycast_max_length: MAX_RAYCAST_SPEAR,
+            raycast_hit_tile: None,
+            raycast_end_pos: Vector2::zero(),
+        }
+    }
+
+    pub fn update(&mut self, dt: f32, terrain: &Terrain, controller: &Controller) {
+        let dash_pressed = controller.dash_pressed;
+        let jump_pressed = controller.jump_pressed;
+        let jump_held = controller.jump_held;
+        let climb_pressed = controller.climb_pressed;
+        let inputDir = controller.input_dir;
+        let raycast_direction = controller.raycast_direction;
+
+        self.time += dt;
+
+        // Update dashing state
+        let wasDashing = self.is_dashing;
+        self.is_dashing = self.within_grace(self.dashed_at, DASH_TIME);
+        self.just_finished_dashing = wasDashing && !self.is_dashing;
+        self.height = if self.is_dashing {
+            DASH_HEIGHT
+        } else {
+            BASE_HEIGHT
+        };
+
+        if self.just_finished_dashing {
+            self.exit_dash_handler(terrain);
+        }
+
+        self.is_swimming = self.check_in_water(terrain);
+        if self.is_swimming {
+            self.last_in_water = self.time;
+            self.on_ground = false;
+        }
+
+        // Apply gravity
+        if !self.on_ground {
+            if self.is_swimming {
+                self.velocity.y += WATER_BUOYANCY * dt;
+                self.velocity.x *= WATER_DRAG;
+                self.velocity.y *= WATER_DRAG;
+            } else {
+                self.velocity.y += GRAVITY * self.gravity_reduction * dt;
+            }
+
+            self.landing_speed = self.velocity;
+        }
+
+        if !self.is_swimming && self.within_grace(self.last_in_water, SWIM_EXIT_TIME) {
+            self.is_swimming = true;
+        }
+
+
+        // Terminal velocity
+        self.velocity.y = self.velocity.y.clamp(-TERMINAL_VELOCITY, TERMINAL_VELOCITY);
+
+        // Wall detection
+        let on_wall = self.check_wall(terrain);
+
+        // Wall slide
+        self.is_sliding = false;
+        if on_wall && self.velocity.y > 0.0 {
+            self.is_sliding = true;
+            self.velocity.y *= WALLSLIDE_FRICTION;
+        }
+
+        // Climbing
+        self.is_climbing = false;
+
+        if on_wall && climb_pressed && self.climb_stamina > 0.0 {
+            self.climb_stamina -= dt;
+            self.is_climbing = true;
+            self.velocity.y = 0.0;
+            self.velocity.y = Self::move_toward(self.velocity.y, inputDir.y * CLIMB_SPEED, CLIMB_SPEED);
+        }
+
+        // Jump handling
+        if jump_pressed || self.within_grace(self.try_jumped_at, JUMP_BUFFER_TIME) {
+            if self.is_swimming {
+                self.jump(0.7);
+            } else if self.on_ground || (self.within_grace(self.last_on_ground, JUMP_COYOTE_TIME) && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN)) {
+                // TODO: wavedash
+                self.jump(1.0);
+            } else if on_wall && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
+                // Wall jump
+                self.last_action_at = self.time;
+                self.velocity.y = JUMP_VELOCITY;
+                self.velocity.x = JUMP_VELOCITY * self.facing_dir as f32 * WALLJUMP_X_RELATIVE_STRENGTH;
+                self.facing_dir *= -1;
+                self.try_jumped_at = 0.0;
+                self.wall_jumped_at = self.time;
+                self.is_jumping = true;
+
+                if self.is_dashing {
+                    self.dash_dir.y -= 0.7;
+                    self.dash_dir.x += 0.5 * self.facing_dir as f32;
+                }
+            } else if !self.within_grace(self.try_jumped_at, JUMP_BUFFER_TIME) {
+                self.try_jumped_at = self.time;
+            }
+        }
+
+        // Jump release (variable jump height)
+        if !jump_held || self.velocity.y > 0.0 {
+            if self.velocity.y < 0.0 && self.is_jumping {
+                self.velocity.y *= JUMP_RELEASE_REDUCTION;
+                self.is_jumping = false;
+            }
+            self.gravity_reduction = 1.0;
+        }
+
+        // Ground detection
+        self.just_landed = false;
+        if self.on_ground {
+            if !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
+                self.dashes = DASH_AMOUNT;
+            }
+            self.last_on_ground = self.time;
+            self.climb_stamina = CLIMB_STAMINA;
+            if !self.just_landed && self.is_jumping {
+                self.just_landed = true;
+            }
+            self.is_jumping = false;
+        } else if self.is_swimming {
+            self.is_jumping = false;
+            self.climb_stamina = CLIMB_STAMINA;
+            self.dashes = DASH_AMOUNT;
+        }
+
+        // Dash input
+        if dash_pressed && self.dashes > 0 && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
+            self.last_action_at = self.time;
+            self.dashes -= 1;
+            self.dashed_at = self.time;
+            self.dash_dir = Vector2::new(self.facing_dir as f32, 0.0);
+
+            // Directional dash
+            self.dash_dir.y = inputDir.y;
+            self.dash_dir.x = inputDir.x;
+            if self.on_ground {
+                self.dash_dir.y = self.dash_dir.y.min(0.0);
+            }
+
+            if self.dash_dir.x == 0.0 && self.dash_dir.y == 0.0 {
+                self.dash_dir.x = self.facing_dir as f32;
+            }
+
+            self.dash_dir = self.dash_dir.normalized();
+        }
+
+        // Apply dash velocity
+        if self.within_grace(self.dashed_at, DASH_TIME) {
+            self.velocity = Vector2::new(
+                self.dash_dir.x * DASH_VELOCITY,
+                self.dash_dir.y * DASH_VELOCITY
+            );
+        } else if self.is_swimming {
+            let speed = ACCEL * dt;
+            if inputDir.x != 0.0 {
+                self.facing_dir = inputDir.x.signum() as i32;
+                self.velocity.x = Self::move_toward(self.velocity.x, inputDir.x * SWIM_SPEED, speed);
+            }
+            if inputDir.y != 0.0 {
+                self.velocity.y = Self::move_toward(self.velocity.y, inputDir.y * SWIM_SPEED, speed);
+            }
+        } else {
+            // Horizontal movement
+            let mut speed = ACCEL * dt;
+            if self.within_grace(self.wall_jumped_at, WALLJUMP_EFFECT_TIME) {
+                speed *= WALLJUMP_EFFECT_STRENGTH;
+            }
+
+            if self.within_grace(self.dashed_at, DASH_EXTENDED_TIME) {
+                speed /= (self.time - self.dashed_at) / DASH_EXTENDED_TIME * DASH_CONTROL_MODIFER;
+            }
+            if !self.within_grace(self.wall_jumped_at, WALLJUMP_LOCK_TIME) {
+                // Regular movement
+                if inputDir.x != 0.0 {
+                    self.velocity.x = Self::move_toward(self.velocity.x, inputDir.x * SPEED, speed);
+                    self.facing_dir = inputDir.x.signum() as i32;
+                } else {
+                    self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
+                }
+            }
+        }
+
+        self.apply_movement_and_collision(dt, terrain);
+        self.last_velocity = self.velocity;
+
+        self.raycast_max_length = MAX_RAYCAST_HOOK;
+        let raycast_start = self.position + Vector2::new(self.width / 2.0, self.height / 2.0);
+        let rayresult = self.raycast(raycast_start, raycast_start + raycast_direction * self.raycast_max_length, terrain);
+        self.raycast_end_pos = rayresult.final_position;
+        self.raycast_hit_tile = if rayresult.hit {
+            Some((rayresult.final_position.x, rayresult.final_position.y))
+        } else {
+            None
+        };
+    }
+
+    fn raycast(
+        &self,
+        start: Vector2,
+        end: Vector2,
+        terrain: &Terrain
+    ) -> RaycastResult {
+        // DDA (Digital Differential Analyzer) ray-grid traversal algorithm
+        // https://lodev.org/cgtutor/raycasting.html
+        let posX = start.x;
+        let posY = start.y;
+        let dx = end.x - start.x;
+        let dy = end.y - start.y;
+        let distance2 = dx * dx + dy * dy;
+
+        let buffer = 0.125;
+        let deltaDistX = (1.0 / dx).abs();
+        let deltaDistY = (1.0 / dy).abs();
+        let mut mapX = start.x.floor() as i32;
+        let mut mapY = start.y.floor() as i32;
+        let mut hit_vertical;
+
+        let mut sideDistX;
+        let mut sideDistY;
+        let stepX;
+        let stepY;
+
+        if dx < 0.0 {
+            stepX = -1;
+            sideDistX = (posX - mapX as f32) * deltaDistX;
+        } else {
+            stepX = 1;
+            sideDistX = (mapX as f32 + 1.0 - posX) * deltaDistX;
+        }
+        if dy < 0.0 {
+            stepY = -1;
+            sideDistY = (posY - mapY as f32) * deltaDistY;
+        } else {
+            stepY = 1;
+            sideDistY = (mapY as f32 + 1.0 - posY) * deltaDistY;
+        }
+
+        let mut vx = 0.0;
+        let mut vy = 0.0;
+        while vx * vx + vy * vy < distance2 {
+            if terrain.solid_terrain_at(mapX, mapY) {
+                return RaycastResult {
+                    final_position: Vector2::new(vx + start.x, vy + start.y),
+                    hit: true,
+                }
+            }
+
+            //jump to next map square, either in x-direction, or in y-direction
+            if sideDistX < sideDistY {
+                sideDistX += deltaDistX;
+                mapX += stepX;
+                hit_vertical = true;
+            } else {
+                sideDistY += deltaDistY;
+                mapY += stepY;
+                hit_vertical = false;
+            }
+
+            if !hit_vertical {
+                vy = (mapY + (1 - stepY) / 2) as f32
+                    - start.y
+                    - if end.y < start.y { buffer } else { 0.0 };
+                vx = vy / (dy / dx);
+            } else {
+                vx = (mapX + (1 - stepX) / 2) as f32
+                    - start.x
+                    - if end.x < start.x { buffer } else { 0.0 };
+                vy = (dy / dx) * vx;
+            }
+        }
+
+
+        RaycastResult {
+            final_position: end,
+            hit: false
+        }
+    }
+
+    fn apply_movement_and_collision(&mut self, dt: f32, terrain: &Terrain) {
+        let buffer = 0.125;
+        let doubleBuffer = buffer * 2.0;
+        let stepSize = 1.0 / 8.0;
+
+        let targetX = self.position.x + self.velocity.x * dt;
+        let mut dx = self.position.x;
+        while dx != targetX {
+            dx = Self::move_toward(dx, targetX, stepSize);
+            if let Some((tx, _)) = terrain.collides_with_solid_terrain(dx, self.position.y + buffer,
+                self.width, self.height - doubleBuffer) {
+                if self.velocity.x > 0.0 {
+                    dx = tx - self.width;
+                } else if self.velocity.x < 0.0 {
+                    dx = tx + 1.0;
+                }
+                self.velocity.x = 0.0;
+                break
+            }
+        }
+        self.position.x = dx;
+
+
+        let targetY = self.position.y + self.velocity.y * dt;
+        let mut dy = self.position.y;
+        while dy != targetY {
+            dy = Self::move_toward(dy, targetY, stepSize);
+            if let Some((_, ty)) = terrain.collides_with_solid_terrain(self.position.x + buffer, dy,
+                self.width - doubleBuffer, self.height) {
+                if self.velocity.y > 0.0 {
+                    self.on_ground = true;
+                    dy = ty - self.height;
+                } else {
+                    dy = ty + 1.0;
+                }
+                self.velocity.y = 0.0;
+                break
+            }
+        }
+        self.position.y = dy;
+
+        if self.on_ground {
+            if let None = terrain.collides_with_solid_terrain(self.position.x + buffer, self.position.y + stepSize,
+                self.width - doubleBuffer, self.height) {
+                self.on_ground = false
+            }
+        }
+
+        self.apply_corner_correction(terrain);
+    }
+
+    fn apply_corner_correction(&mut self, _terrain: &Terrain) {
+        if self.velocity.y >= 0.0 {
+            return;
+        }
+        // TODO: Move a small amount to avoid clipping corners when jumping up
+    }
+
+    fn check_wall(&self, terrain: &Terrain) -> bool {
+        let buffer = 0.05;
+        terrain.collides_with_solid_terrain(self.position.x + buffer * self.facing_dir as f32, self.position.y + buffer, self.width, self.height - 2.0 * buffer).is_some()
+    }
+
+    fn check_in_water(&self, terrain: &Terrain) -> bool {
+        let center_x = (self.position.x + self.width / 2.0) as i32;
+        let center_y = (self.position.y + self.height / 2.0) as i32;
+        terrain.liquid_terrain_at(center_x, center_y)
+    }
+
+    fn exit_dash_handler(&mut self, terrain: &Terrain) {
+        let mut wiggleY = 0.0;
+        let mut wiggleX = 0.0;
+        while let Some(_) = terrain.collides_with_solid_terrain(self.position.x + wiggleX, self.position.y + wiggleY, self.width, self.height) {
+            wiggleY = (wiggleY.abs() + 0.1) * wiggleY.signum() * -1.0;
+            if wiggleY.abs() > 2.0 {
+                wiggleY = 0.0;
+                wiggleX = (wiggleX.abs() + 0.1) * wiggleX.signum() * -1.0;
+            }
+        }
+
+        self.position.x += wiggleX;
+        self.position.y += wiggleY;
+    }
+
+    fn jump(&mut self, strength_mod: f32) {
+        self.last_action_at = self.time;
+        self.velocity.y = JUMP_VELOCITY * strength_mod;
+        self.gravity_reduction = JUMP_GRAVITY_REDUCTION;
+        self.try_jumped_at = 0.0;
+        self.is_jumping = true;
+
+        if self.is_dashing {
+            self.dash_dir.y -= 0.5;
+            self.dash_dir.x *= 1.5;
+        }
+    }
+
+    fn within_grace(&self, time: f32, period: f32) -> bool {
+        time + period > self.time
+    }
+
+    fn move_toward(current: f32, target: f32, max_delta: f32) -> f32 {
+        if (target - current).abs() <= max_delta {
+            target
+        } else {
+            current + max_delta * (target - current).signum()
+        }
+    }
+}
