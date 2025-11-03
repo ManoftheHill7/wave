@@ -31,6 +31,12 @@ impl TerrainGenerator {
                     } else {
                         BlockType::Air
                     }
+                } else if wx < 10 && wy < 10 {
+                    if wy > -1 {
+                        BlockType::Sand
+                    } else {
+                        BlockType::Air
+                    }
                 } else if wy == height {
                     BlockType::Grass
                 } else if wy > height {
