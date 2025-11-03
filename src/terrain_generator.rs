@@ -25,7 +25,13 @@ impl TerrainGenerator {
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
 
-                let block_type = if wy == height {
+                let block_type = if wx < 0 {
+                    if wy > 0 {
+                        BlockType::Water
+                    } else {
+                        BlockType::Air
+                    }
+                } else if wy == height {
                     BlockType::Grass
                 } else if wy > height {
                     BlockType::Dirt

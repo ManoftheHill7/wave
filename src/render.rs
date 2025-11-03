@@ -21,7 +21,7 @@ pub fn render(
 }
 
 pub fn render_terrain(d: &mut RaylibDrawHandle, terrain: &Terrain, px: i32, py: i32, textures: &TextureManager) {
-    let range = 50;
+    let range = 200;
     for x in (px - range)..(px + range) {
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
@@ -207,7 +207,7 @@ pub fn render_player(
             Color::GREEN
         );
     }
-    if false {
+    if true {
         d.draw_line_ex(
             Vector2::new(player_center_x, player_center_y),
             Vector2::new(raycast_end_x, raycast_end_y),

@@ -21,8 +21,10 @@ impl WorldState {
         let px = self.player.position.x as i32;
         let py = self.player.position.y as i32;
 
-        for dx in -3..=3 {
-            for dy in -3..=3 {
+        let loaded_chunk_radius = 6;
+
+        for dx in -loaded_chunk_radius..=loaded_chunk_radius {
+            for dy in -loaded_chunk_radius..=loaded_chunk_radius {
                 let cx = (px + dx * 32) / 32;
                 let cy = (py + dy * 32) / 32;
                 let chunk_coord = ChunkCoord { x: cx, y: cy };

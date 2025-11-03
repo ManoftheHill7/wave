@@ -2,7 +2,7 @@ use raylib::prelude::*;
 use texture_manager_macro::generate_texture_manager;
 
 generate_texture_manager!("assets");
-const PIXELS_PER_WORLD_UNIT: f32 = 24.0;
+const PIXELS_PER_WORLD_UNIT: f32 = 12.0; // 24
 
 mod render;
 mod world;
