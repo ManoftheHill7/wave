@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
 
-pub const CHUNK_SIZE: usize = 32;
+pub const CHUNK_SIZE: usize = 128;
 
 // Block types enum
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,6 +30,7 @@ pub struct ChunkCoord {
     pub y: i32,
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Chunk {
     blocks: [Block; CHUNK_SIZE * CHUNK_SIZE],
     pub coord: ChunkCoord,
@@ -44,12 +45,12 @@ impl Chunk {
     }
 
     pub fn get_block(&self, local_x: usize, local_y: usize) -> Block {
-        let index = local_y * 32 + local_x;
+        let index = local_y * CHUNK_SIZE + local_x;
         self.blocks[index]
     }
 
     pub fn set_block(&mut self, local_x: usize, local_y: usize, block: Block) {
-        let index = local_y * 32 + local_x;
+        let index = local_y * CHUNK_SIZE + local_x;
         self.blocks[index] = block;
     }
 }
@@ -64,7 +65,7 @@ impl Terrain {
     pub fn new(seed: u64) -> Self {
         Terrain {
             chunks: HashMap::new(),
-            chunk_size: 32,
+            chunk_size: CHUNK_SIZE as i32,
             generator: TerrainGenerator::new(seed),
         }
     }
