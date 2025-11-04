@@ -1,42 +1,52 @@
 use crate::terrain::{Block, BlockType, Chunk, ChunkCoord, CHUNK_SIZE};
 use noise::{NoiseFn, Perlin};
 
+const SEA_LEVEL: i32 = 0;
+const BEACH_HEIGHT: i32 = -10;
+
 pub struct TerrainGenerator {
     seed: u64,
+    noise: Perlin,
 }
 
 impl TerrainGenerator {
     pub fn new(seed: u64) -> Self {
-        TerrainGenerator { seed }
+        let noise = Perlin::new(seed as u32);
+        TerrainGenerator { seed, noise }
     }
 
     pub fn generate_chunk(&self, coord: ChunkCoord) -> Chunk {
+        return if coord.x < 0 {
+            self.generate_ocean_chunk(coord)
+        } else if coord.x == 0 && (coord.y == -1 || coord.y == 0) {
+            self.generate_beach_chunk(coord)
+        } else if coord.y == -1 {
+            self.generate_hill_chunk(coord)
+        } else if coord.y < 0 {
+            self.generate_sky_chunk(coord)
+        } else {
+            self.generate_tunnels_chunk(coord)
+        }
+    }
+
+    pub fn generate_hill_chunk(&self, coord: ChunkCoord) -> Chunk {
         let mut chunk = Chunk::new(coord);
         let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
-        let noiseDetail = 150;
+        let noiseDetail = 100;
         let noiseHeight = 10;
-        let noise = Perlin::new(1);
 
+        // Starts to show flaws if x>14000
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
-            let height_f = noiseHeight as f64 * noise.get([wx as f64 * (1.0 / noiseDetail as f64)]);
-            let height = height_f as i32 + coord.x;
-            dbg!(height);
+            let height_f = noiseHeight as f64 * self.noise.get([wx as f64 * (1.0 / noiseDetail as f64)]);
+            let height = height_f as i32 - coord.x + BEACH_HEIGHT;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
 
-                let block_type = if wx < 0 {
-                    if wy > 0 {
-                        BlockType::Water
-                    } else {
-                        BlockType::Air
-                    }
-                } else if wy == height {
+                let block_type = if wy == height {
                     BlockType::Grass
                 } else if wy > height {
                     BlockType::Dirt
-                } else if wy > height + 10 {
-                    BlockType::Stone
                 } else {
                     BlockType::Air
                 };
@@ -46,6 +56,133 @@ impl TerrainGenerator {
         }
         // self.add_tree(&mut chunk, 15, 1, 10, 20, coord);
         // self.add_tree(&mut chunk, -10, 1, 10, 60, coord);
+        chunk
+    }
+
+    pub fn generate_tunnels_chunk(&self, coord: ChunkCoord) -> Chunk {
+        let mut chunk = Chunk::new(coord);
+        let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
+        let noiseDetail = 8.0;
+        let air_percent = 0.5;
+        for lx in 0..CHUNK_SIZE {
+            let wx = coord.x * chunk_size + lx as i32;
+            for ly in 0..CHUNK_SIZE {
+                let wy = coord.y * chunk_size + ly as i32;
+                let nv = (1.0 + self.noise.get([wx as f64 / noiseDetail, wy as f64 / noiseDetail])) / 2.0;
+                let block_type = if air_percent > nv {
+                    BlockType::Air
+                } else {
+                    BlockType::Stone
+                };
+                chunk.set_block(lx, ly, Block { block_type });
+            }
+        }
+        self.clean_jaggies(chunk, 3)
+    }
+
+    pub fn clean_jaggies(&self, chunk: Chunk, iterations: usize) -> Chunk {
+        if iterations == 0 {
+            return chunk;
+        }
+
+        let min_neighbours = 4;
+        let mut newChunk = chunk;
+
+        for lx in 0..CHUNK_SIZE {
+            for ly in 0..CHUNK_SIZE {
+                let mut nc = 0;
+                for nx in (lx as i32 -1)..(lx as i32)+1 {
+                    for ny in (ly as i32 -1)..(ly as i32)+1 {
+                        if nx >= 0 && ny >= 0 && nx < CHUNK_SIZE as i32 && ny < CHUNK_SIZE as i32 {
+                            if chunk.get_block(nx as usize, ny as usize).block_type != BlockType::Air {
+                                nc += 1;
+                            }
+                        } else {
+                            nc += 1;
+                        }
+                    }
+                }
+
+                if nc < min_neighbours {
+                    newChunk.set_block(lx, ly, Block { block_type: BlockType::Air })
+                }
+            }
+        }
+
+
+
+        return newChunk
+    }
+
+    pub fn generate_ocean_chunk(&self, coord: ChunkCoord) -> Chunk {
+        let mut chunk = Chunk::new(coord);
+        let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
+
+        for lx in 0..CHUNK_SIZE {
+            // let wx = coord.x * chunk_size + lx as i32;
+            for ly in 0..CHUNK_SIZE {
+                let wy = coord.y * chunk_size + ly as i32;
+                let block_type = if wy > SEA_LEVEL {
+                    BlockType::Water
+                } else {
+                    BlockType::Air
+                };
+
+                chunk.set_block(lx, ly, Block { block_type });
+            }
+        }
+        chunk
+    }
+
+    pub fn generate_sky_chunk(&self, coord: ChunkCoord) -> Chunk {
+        let mut chunk = Chunk::new(coord);
+        for lx in 0..CHUNK_SIZE {
+            for ly in 0..CHUNK_SIZE {
+                chunk.set_block(lx, ly, Block { block_type: BlockType::Air });
+            }
+        }
+        chunk
+    }
+
+    pub fn generate_beach_chunk(&self, coord: ChunkCoord) -> Chunk {
+        let mut chunk = Chunk::new(coord);
+        let chunk_size: i32 = CHUNK_SIZE as i32;
+
+        let inflection_x = 32;
+        let little_slope = -0.25;
+        let big_slope = -2.0;
+        let offset_right = BEACH_HEIGHT as f32 - (chunk_size - inflection_x) as f32 * little_slope;
+        let offset_left = offset_right - big_slope * inflection_x as f32;
+
+        for lx in 0..CHUNK_SIZE {
+            let wx = coord.x * chunk_size + lx as i32;
+            for ly in 0..CHUNK_SIZE {
+                let wy = coord.y * chunk_size + ly as i32;
+                let block_type = if wx <= inflection_x {
+                    if ((offset_left + wx as f32 * big_slope) as i32) < wy {
+                        BlockType::Sand
+                    } else {
+                        if wy > SEA_LEVEL {
+                            BlockType::Water
+                        } else {
+                            BlockType::Air
+                        }
+                    }
+                } else {
+                    if ((offset_right + (wx - inflection_x) as f32 * little_slope) as i32) < wy {
+                        BlockType::Sand
+                    } else {
+                        if wy > SEA_LEVEL {
+                            BlockType::Water
+                        } else {
+                            BlockType::Air
+                        }
+                    }
+                };
+
+                chunk.set_block(lx, ly, Block { block_type });
+            }
+        }
         chunk
     }
 
@@ -106,5 +243,5 @@ impl TerrainGenerator {
             let ly = (wy - chunk_coord.y * chunk_size) as usize;
             (lx, ly)
     }
-
 }
+

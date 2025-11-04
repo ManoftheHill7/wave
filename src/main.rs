@@ -1,8 +1,19 @@
 use raylib::prelude::*;
 use texture_manager_macro::generate_texture_manager;
+use std::sync::OnceLock;
 
 generate_texture_manager!("assets");
-const PIXELS_PER_WORLD_UNIT: f32 = 12.0; // 24
+
+static PIXELS_PER_WORLD_UNIT: OnceLock<f32> = OnceLock::new();
+
+fn pixels_per_world_unit() -> f32 {
+    *PIXELS_PER_WORLD_UNIT.get_or_init(|| {
+        std::env::var("PPW")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(24.0)
+    })
+}
 
 mod render;
 mod world;
@@ -23,8 +34,8 @@ fn update_controller_raycast_for_mouse(
     let mouse_screen = rl.get_mouse_position();
     let mouse_world = rl.get_screen_to_world2D(mouse_screen, camera);
 
-    let dx = mouse_world.x - (player.position.x + player.width / 2.0) * PIXELS_PER_WORLD_UNIT;
-    let dy = mouse_world.y - (player.position.y + player.height / 2.0) * PIXELS_PER_WORLD_UNIT;
+    let dx = mouse_world.x - (player.position.x + player.width / 2.0) * pixels_per_world_unit();
+    let dy = mouse_world.y - (player.position.y + player.height / 2.0) * pixels_per_world_unit();
     let distance = (dx * dx + dy * dy).sqrt();
 
     if distance > 0.0001 {
@@ -101,8 +112,8 @@ fn main() {
     let mut camera_velocity = Vector2::zero();
     let mut camera = Camera2D {
         target: Vector2::new(
-            world_state.player.position.x * PIXELS_PER_WORLD_UNIT,
-            world_state.player.position.y * PIXELS_PER_WORLD_UNIT,
+            world_state.player.position.x * pixels_per_world_unit(),
+            world_state.player.position.y * pixels_per_world_unit(),
         ),
         offset: Vector2::new(rl.get_screen_width() as f32 / 2.0, rl.get_screen_height() as f32 / 2.0),
         rotation: 0.0,
@@ -119,6 +130,9 @@ fn main() {
         if rl.is_key_pressed(KeyboardKey::KEY_SLASH) {
             debug_enabled = !debug_enabled;
         }
+        if rl.is_key_pressed(KeyboardKey::KEY_APOSTROPHE) {
+            world_state.ghost_mode = !world_state.ghost_mode;
+        }
 
         controller.update(&rl);
         update_controller_raycast_for_mouse(&rl, &camera, &mut controller, &world_state.player);
@@ -128,8 +142,8 @@ fn main() {
         smooth_camera_to_target(
             &mut camera,
             &mut camera_velocity,
-            world_state.player.position.x * PIXELS_PER_WORLD_UNIT,
-            world_state.player.position.y * PIXELS_PER_WORLD_UNIT,
+            world_state.player.position.x * pixels_per_world_unit(),
+            world_state.player.position.y * pixels_per_world_unit(),
             dt,
             0.12
         );
@@ -152,7 +166,7 @@ fn main() {
         // Draw HUD
         if debug_enabled {
             d.draw_text(&format!("Pos: ({:.2}, {:.2})", world_state.player.position.x, world_state.player.position.y), 10, 10, 20, Color::DARKGRAY);
-            d.draw_text("Controls: WASD/Arrows=Move, Space=Jump, C=Climb, Shift/X=Dash, Toggle Controls=/", 500, 10, 16, Color::BLACK);
+            d.draw_text("Controls: WASD/Arrows=Move, Space=Jump, C=Climb, Shift/X=Dash, Toggle Controls=/, Toggle Ghost='", 500, 10, 16, Color::BLACK);
             d.draw_text(&format!("FPS: {}", d.get_fps()), 1500, 10, 20, Color::GRAY);
 
             d.draw_text(&format!("Vel: ({:.2}, {:.2})", world_state.player.velocity.x, world_state.player.velocity.y), 10, 35, 20, Color::DARKGRAY);

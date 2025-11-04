@@ -28,7 +28,9 @@ pub const CORNER_CORRECTION_AMOUNT: i32 = 5;
 pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.25;
 
 pub const BASE_HEIGHT: f32 = 2.0;
-pub const DASH_HEIGHT: f32 = 1.0;
+pub const DASH_HEIGHT: f32 = 0.9;
+pub const BASE_WIDTH: f32 = 1.3;
+pub const DASH_WIDTH: f32 = 0.9;
 
 pub const WATER_BUOYANCY: f32 = -GRAVITY / 2.0;
 pub const WATER_DRAG: f32 = 0.9;
@@ -97,8 +99,8 @@ impl Player {
         Player {
             position: Vector2::new(x, y),
             velocity: Vector2::zero(),
-            height: 2.0,
-            width: 1.3,
+            height: BASE_HEIGHT,
+            width: BASE_WIDTH,
             facing_dir: 1,
 
             on_ground: false,
@@ -132,6 +134,40 @@ impl Player {
         }
     }
 
+    pub fn update_ghost(&mut self, dt: f32, terrain: &Terrain, controller: &Controller) {
+        let inputDir = controller.input_dir;
+        self.is_swimming = true;
+
+        let speed = 5.0 * ACCEL * dt;
+        let swim_speed = if controller.dash_held {
+            self.time += dt;
+            self.time += dt;
+            SWIM_SPEED * 8.0
+        } else {
+            self.time += dt;
+            SWIM_SPEED * 3.0
+        };
+
+        if inputDir.x != 0.0 {
+            self.facing_dir = inputDir.x.signum() as i32;
+        }
+        self.velocity.x = Self::move_toward(self.velocity.x, inputDir.x * swim_speed, speed);
+        self.velocity.y = Self::move_toward(self.velocity.y, inputDir.y * swim_speed, speed);
+
+        self.position += self.velocity * dt;
+
+
+        self.raycast_max_length = MAX_RAYCAST_HOOK;
+        let raycast_start = self.position + Vector2::new(self.width / 2.0, self.height / 2.0);
+        let rayresult = self.raycast(raycast_start, raycast_start + controller.raycast_direction * self.raycast_max_length, terrain);
+        self.raycast_end_pos = rayresult.final_position;
+        self.raycast_hit_tile = if rayresult.hit {
+            Some((rayresult.final_position.x, rayresult.final_position.y))
+        } else {
+            None
+        };
+    }
+
     pub fn update(&mut self, dt: f32, terrain: &Terrain, controller: &Controller) {
         let dash_pressed = controller.dash_pressed;
         let jump_pressed = controller.jump_pressed;
@@ -150,6 +186,11 @@ impl Player {
             DASH_HEIGHT
         } else {
             BASE_HEIGHT
+        };
+        self.width = if self.is_dashing {
+            DASH_WIDTH
+        } else {
+            BASE_WIDTH
         };
 
         if self.just_finished_dashing {

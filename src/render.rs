@@ -2,7 +2,7 @@ use raylib::prelude::*;
 use crate::world::WorldState;
 use crate::player::Player;
 use crate::terrain::{Terrain, BlockType};
-use crate::{TextureManager, PIXELS_PER_WORLD_UNIT};
+use crate::{TextureManager, pixels_per_world_unit};
 
 type ShaderLocs = (i32, i32, i32, i32);
 
@@ -21,7 +21,7 @@ pub fn render(
 }
 
 pub fn render_terrain(d: &mut RaylibDrawHandle, terrain: &Terrain, px: i32, py: i32, textures: &TextureManager) {
-    let range = 200;
+    let range = 900 / pixels_per_world_unit() as i32;
     for x in (px - range)..(px + range) {
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
@@ -117,8 +117,8 @@ pub fn render_player(
     let fudgeY = 0.5;
     let fudgeX_off = 0.75;
     let fudgeY_off = 1.0;
-    let tw = rw * PIXELS_PER_WORLD_UNIT * (1.0 + fudgeX);
-    let th = rh * PIXELS_PER_WORLD_UNIT * (1.0 + fudgeY);
+    let tw = rw * pixels_per_world_unit() * (1.0 + fudgeX);
+    let th = rh * pixels_per_world_unit() * (1.0 + fudgeY);
 
     let exhaustion_level = 1.0 - (player.climb_stamina / crate::player::CLIMB_STAMINA);
     let palette = &COLOR_PALETTES[player.dashes as usize];
@@ -177,8 +177,8 @@ pub fn render_player(
                 texture.height as f32
             ),
             Rectangle::new(
-                player.position.x * PIXELS_PER_WORLD_UNIT - PIXELS_PER_WORLD_UNIT * fudgeX_off + tw / 2.0,
-                player.position.y * PIXELS_PER_WORLD_UNIT - PIXELS_PER_WORLD_UNIT * fudgeY_off + th / 2.0,
+                player.position.x * pixels_per_world_unit() - pixels_per_world_unit() * fudgeX_off + tw / 2.0,
+                player.position.y * pixels_per_world_unit() - pixels_per_world_unit() * fudgeY_off + th / 2.0,
                 tw, th
             ),
             Vector2::new(tw / 2.0, th / 2.0),
@@ -189,19 +189,19 @@ pub fn render_player(
 
     // Selected tile
     let player_center_x = (player.position.x + player.width / 2.0) *
-        PIXELS_PER_WORLD_UNIT;
+        pixels_per_world_unit();
     let player_center_y = (player.position.y + player.height / 2.0) *
-        PIXELS_PER_WORLD_UNIT;
-    let raycast_end_x = player.raycast_end_pos.x * PIXELS_PER_WORLD_UNIT;
-    let raycast_end_y = player.raycast_end_pos.y * PIXELS_PER_WORLD_UNIT;
+        pixels_per_world_unit();
+    let raycast_end_x = player.raycast_end_pos.x * pixels_per_world_unit();
+    let raycast_end_y = player.raycast_end_pos.y * pixels_per_world_unit();
 
     if let Some((hit_x, hit_y)) = player.raycast_hit_tile {
         d.draw_rectangle_lines_ex(
             Rectangle::new(
-                hit_x.floor() * PIXELS_PER_WORLD_UNIT,
-                hit_y.floor() * PIXELS_PER_WORLD_UNIT,
-                PIXELS_PER_WORLD_UNIT,
-                PIXELS_PER_WORLD_UNIT,
+                hit_x.floor() * pixels_per_world_unit(),
+                hit_y.floor() * pixels_per_world_unit(),
+                pixels_per_world_unit(),
+                pixels_per_world_unit(),
             ),
             4.0,
             Color::GREEN
@@ -216,10 +216,10 @@ pub fn render_player(
         );
 
         d.draw_rectangle_lines(
-            (player.position.x * PIXELS_PER_WORLD_UNIT) as i32,
-            (player.position.y * PIXELS_PER_WORLD_UNIT) as i32,
-            (player.width * PIXELS_PER_WORLD_UNIT) as i32,
-            (player.height * PIXELS_PER_WORLD_UNIT) as i32,
+            (player.position.x * pixels_per_world_unit()) as i32,
+            (player.position.y * pixels_per_world_unit()) as i32,
+            (player.width * pixels_per_world_unit()) as i32,
+            (player.height * pixels_per_world_unit()) as i32,
             Color::RED);
     }
 }
@@ -234,10 +234,10 @@ pub fn render_tile(d: &mut RaylibDrawHandle, x: f32, y: f32, texture: &Texture2D
             texture.height as f32
         ),
         Rectangle::new(
-            x * PIXELS_PER_WORLD_UNIT,
-            y * PIXELS_PER_WORLD_UNIT,
-            PIXELS_PER_WORLD_UNIT,
-            PIXELS_PER_WORLD_UNIT
+            x * pixels_per_world_unit(),
+            y * pixels_per_world_unit(),
+            pixels_per_world_unit(),
+            pixels_per_world_unit()
         ),
         Vector2::new(0.0, 0.0),
         0.0,
