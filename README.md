@@ -30,6 +30,7 @@ Things required for the games core concept
 - [ ] Dynamic Water
 - [ ] Tidal cycle
 - [ ] Inventory system
+- [ ] Player health/HUD
 - [ ] Tool - Dash
 - [ ] Tool - Pickaxe
 - [ ] Tool - Grappling Hook
@@ -43,6 +44,7 @@ Things required for the games core concept
 
 Things that I would really like to have
 
+- [ ] Save/load/new game
 - [ ] Dynamic lighting
 - [ ] Parallax backgrounds
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
