@@ -25,26 +25,36 @@ Things required for the games core concept
 - [x] Basic character animations (Jump, climb, walk, swim, idle)
 - [x] Basic Tileset
 - [x] Raycast for player tools
-- [ ] Cave generation
+- [x] Cave generation
 - [ ] Dynamic Water
 - [ ] Tidal cycle
 - [ ] Inventory system
+- [ ] Tool - Dash
+- [ ] Tool - Pickaxe
+- [ ] Tool - Grappling Hook
+- [ ] Ore generation
 - [ ] Stala(gm/ct)ites
-- [ ] Enemies
+- [ ] Bat enemies
+- [ ] Mole enemies
 
 ### Tier 2 Tasks
 
 Things that I would really like to have
 
 - [ ] Dynamic lighting
-- [ ] Parallex backgrounds
+- [ ] Parallax backgrounds
 - [ ] Multiple cave biomes as you get deeper
+- [ ] Day night cycle
 - [ ] Forageable foods
 - [ ] Fishing. Maybe like Stardew Valley?
 - [ ] Dungeons. Sets of connected handmade rooms to find important items
+- [ ] Tool - Glider
+- [ ] Multiple cave generation types
+- [ ] Multiple enemy types
 
 ### Tier 3 Tasks
 
 Things I will get to if there is time
 
 - [ ] Relaxed mode. No tidal pressures
+- [ ] Creative mode. Infinite of all resources
