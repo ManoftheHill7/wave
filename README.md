@@ -5,13 +5,13 @@ Name is a placeholder. The concept is a survival crafting game, where when the t
 ## Design decisions
 
 - [DECIDED]: The game is a survival crafting game, but mining is not the focus. The focus is on fun platformer movement
-- [OPEN]: Should the game be a roguelite? Or should it focus more on base building? How quickly should it be able to be beaten?
-- [OPEN]: Should tools have durability? Or once you get a tool, do you have it? Does this include movement tools? Can you repair tools?
-- [OPEN]: Farming? How to do this nicely on a side view 2d
-- [OPEN]: How should healing work? A food system? A potion system? Heal, when resting? No healing ever?
-- [OPEN]: How to indicate to the player the tide will rise? Clock on the hud? Sounds?
+- [DECIDED]: The game is not a roguelike. Basebuilding, and returning to your base is a core gameplay component
+- [DECIDED]: Tools have duribility, broken tools can still be used.
+- [DECIDED]: Farming? No. Only fishing and forging
+- [DECIDED]: Eating food to heal, must be at base
+- [DECIDED]: Clock on HUD. Crafted by items. Sounds indicate rising water.
 - [OPEN]: How to implement water? Static? Cellular automata? Water that rises independent of terrain? Smooth particle hydrodynamics?
-- [OPEN]: Should there be boss battles? How common?
+- [DECIDED]: Should there be boss battles? Unique boss per layer. Probably wont get to this
 
 ## Plan
 
@@ -39,6 +39,7 @@ Things required for the games core concept
 - [ ] Bat enemies
 - [ ] Mole enemies
 - [ ] Crafting system
+- [ ] Crafting recipes
 
 ### Tier 2 Tasks
 
@@ -48,6 +49,7 @@ Things that I would really like to have
 - [ ] Dynamic lighting
 - [ ] Parallax backgrounds
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
+- [ ] Tide clears building items
 - [ ] Multiple cave biomes as you get deeper
 - [ ] Day night cycle
 - [ ] Forageable foods
@@ -57,7 +59,6 @@ Things that I would really like to have
 - [ ] Tool - Glider
 - [ ] Multiple cave generation types
 - [ ] Multiple enemy types
-- [ ] Boss battle
 
 ### Tier 3 Tasks
 
@@ -68,6 +69,8 @@ Things I will get to if there is time
   - [ ] Relaxed mode. No tidal pressures
   - [ ] Creative mode. Infinite of all resources
 - [ ] Decorative tiles for base building
+- [ ] Message in a bottle hints for gameplay
+- [ ] Boss battle
 
 ## Links
 
