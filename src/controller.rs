@@ -4,6 +4,7 @@ pub struct Controller {
     pub dash_pressed: bool,
     pub jump_pressed: bool,
     pub jump_held: bool,
+    pub dash_held: bool,
     pub climb_pressed: bool,
     pub input_dir: Vector2,
     pub raycast_direction: Vector2,
@@ -13,6 +14,7 @@ impl Controller {
     pub fn new() -> Self {
         Controller {
             dash_pressed: false,
+            dash_held: false,
             jump_pressed: false,
             jump_held: false,
             climb_pressed: false,
@@ -23,6 +25,7 @@ impl Controller {
 
     pub fn update(&mut self, rl: &RaylibHandle) {
         self.dash_pressed = rl.is_key_pressed(KeyboardKey::KEY_LEFT_SHIFT) || rl.is_key_pressed(KeyboardKey::KEY_X);
+        self.dash_held = rl.is_key_down(KeyboardKey::KEY_LEFT_SHIFT) || rl.is_key_down(KeyboardKey::KEY_X);
         self.jump_pressed = rl.is_key_pressed(KeyboardKey::KEY_SPACE) || rl.is_key_pressed(KeyboardKey::KEY_Z);
         self.jump_held = rl.is_key_down(KeyboardKey::KEY_SPACE) || rl.is_key_down(KeyboardKey::KEY_Z);
         self.climb_pressed = rl.is_key_down(KeyboardKey::KEY_C);
