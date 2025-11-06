@@ -34,6 +34,50 @@ impl WorldState {
         (((self.tide_timer * TIDE_FREQUENCY + std::f32::consts::PI).cos() + 1.0) * MAX_TIDE_DEPTH / 2.0) as i32
     }
 
+    fn update_tides(&mut self) {
+        use crate::terrain::{Block, LiquidData, CELL_RESOLUTION};
+
+        let tide_level = self.tide_level();
+        let chunk_coords: Vec<_> = self.terrain.chunks.keys().copied().collect();
+
+        for coord in chunk_coords {
+            if let Some(chunk) = self.terrain.chunks.get_mut(&coord) {
+                let chunk_size = CHUNK_SIZE as i32;
+                for lx in 0..CHUNK_SIZE {
+                    for ly in 0..CHUNK_SIZE {
+                        if chunk.get(lx, ly) == Block::Tide {
+                            let wy = coord.y * chunk_size + ly as i32;
+
+                            if wy > tide_level {
+                                // Spawn water if not already there
+                                for cell_y in 0..CELL_RESOLUTION {
+                                    for cell_x in 0..CELL_RESOLUTION {
+                                        chunk.liquid_set(
+                                            lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
+                                            ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
+                                            LiquidData::full()
+                                        );
+                                    }
+                                }
+                            } else {
+                                // Remove water
+                                for cell_y in 0..CELL_RESOLUTION {
+                                    for cell_x in 0..CELL_RESOLUTION {
+                                        chunk.liquid_set(
+                                            lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
+                                            ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
+                                            LiquidData::empty()
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     pub fn update(&mut self, dt: f32, controller: &Controller) {
         if self.ghost_mode {
             self.player.update_ghost(dt, &self.terrain, controller);
@@ -66,5 +110,7 @@ impl WorldState {
         }
 
         self.terrain.unload_distant_chunks(px, py, loaded_chunk_radius + 1);
+
+        self.update_tides();
     }
 }

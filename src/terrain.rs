@@ -85,6 +85,14 @@ impl LiquidData {
             flow_up: false,
         }
     }
+
+    pub fn empty() -> Self {
+        Self::new(0.0)
+    }
+
+    pub fn full() -> Self {
+        Self::new(PRESSURIZED_VOLUME)
+    }
 }
 
 // Chunk coordinate (not block coordinate)
