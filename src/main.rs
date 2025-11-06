@@ -172,6 +172,7 @@ fn main() {
                     world_state.player.on_ground, world_state.player.is_climbing,
                     world_state.player.is_sliding, world_state.player.is_dashing,
                     world_state.player.is_swimming), 10, 60, 20, Color::DARKGRAY);
+            d.draw_text(&format!("Tide: {}", world_state.tide_level()), 10, 85, 20, Color::DARKGRAY);
         }
     }
 }

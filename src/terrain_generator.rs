@@ -65,15 +65,15 @@ impl TerrainGenerator {
         let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
         let noise_detail = 8.0;
         let air_percent = 0.6;
+        let water_spawn_percent = 0.05;
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
                 let nv = (1.0 + self.noise.get([wx as f64 / noise_detail, wy as f64 / noise_detail])) / 2.0;
                 let block_type = if air_percent > nv {
-                    // TODO: remove
-                    if wx >= 204 && wx < 209 && wy < 40 && wy > 34 {
-                        Block::Water
+                    if water_spawn_percent > nv {
+                        Block::Tide
                     } else {
                         Block::Air
                     }

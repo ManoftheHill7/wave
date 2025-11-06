@@ -7,11 +7,15 @@ const LIQUID_UPDATE_TIMER: f32 = 0.04;
 #[cfg(not(debug_assertions))]
 const LIQUID_UPDATE_TIMER: f32 = 0.01;
 
+const MAX_TIDE_DEPTH: f32 = 1000.0;
+const TIDE_FREQUENCY: f32 = 1.0 / 300.0;
+
 pub struct WorldState {
     pub player: Player,
     pub terrain: Terrain,
     pub ghost_mode: bool,
     flow_timer: f32,
+    tide_timer: f32,
 }
 
 impl WorldState {
@@ -22,7 +26,12 @@ impl WorldState {
             terrain: Terrain::new(12345),
             ghost_mode: false,
             flow_timer: 0.0,
+            tide_timer: 0.0
         }
+    }
+
+    pub fn tide_level(&self) -> i32 {
+        (((self.tide_timer * TIDE_FREQUENCY + std::f32::consts::PI).cos() + 1.0) * MAX_TIDE_DEPTH / 2.0) as i32
     }
 
     pub fn update(&mut self, dt: f32, controller: &Controller) {
@@ -31,6 +40,7 @@ impl WorldState {
         } else {
             self.player.update(dt, &self.terrain, controller);
         }
+        self.tide_timer += dt;
         self.flow_timer += dt;
         while self.flow_timer > LIQUID_UPDATE_TIMER {
             self.flow_timer -= LIQUID_UPDATE_TIMER;

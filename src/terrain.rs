@@ -30,6 +30,7 @@ pub enum Block {
     Lava,
     Log,
     Leaf,
+    Tide
 }
 
 #[derive(Debug, Clone, Copy)]
