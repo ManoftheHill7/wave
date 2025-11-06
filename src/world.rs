@@ -8,7 +8,7 @@ const LIQUID_UPDATE_TIMER: f32 = 0.04;
 const LIQUID_UPDATE_TIMER: f32 = 0.01;
 
 const MAX_TIDE_DEPTH: f32 = 1000.0;
-const TIDE_FREQUENCY: f32 = 1.0 / 300.0;
+const TIDE_FREQUENCY: f32 = 1.0 / 120.0;
 
 pub struct WorldState {
     pub player: Player,
@@ -34,6 +34,36 @@ impl WorldState {
         (((self.tide_timer * TIDE_FREQUENCY + std::f32::consts::PI).cos() + 1.0) * MAX_TIDE_DEPTH / 2.0) as i32
     }
 
+    fn initialize_chunk_tides(&mut self, coord: ChunkCoord) {
+        use crate::terrain::{Block, LiquidData, CELL_RESOLUTION};
+
+        let tide_level = self.tide_level();
+
+        if let Some(chunk) = self.terrain.chunks.get_mut(&coord) {
+            let chunk_size = CHUNK_SIZE as i32;
+            for lx in 0..CHUNK_SIZE {
+                for ly in 0..CHUNK_SIZE {
+                    if chunk.get(lx, ly) == Block::Tide {
+                        let wy = coord.y * chunk_size + ly as i32;
+
+                        if wy > tide_level {
+                            // Fill with water on initial load
+                            for cell_y in 0..CELL_RESOLUTION {
+                                for cell_x in 0..CELL_RESOLUTION {
+                                    chunk.liquid_set(
+                                        lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
+                                        ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
+                                        LiquidData::full()
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fn update_tides(&mut self) {
         use crate::terrain::{Block, LiquidData, CELL_RESOLUTION};
 
@@ -50,13 +80,16 @@ impl WorldState {
 
                             if wy > tide_level {
                                 // Spawn water if not already there
-                                for cell_y in 0..CELL_RESOLUTION {
-                                    for cell_x in 0..CELL_RESOLUTION {
-                                        chunk.liquid_set(
-                                            lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
-                                            ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
-                                            LiquidData::full()
-                                        );
+                                let has_water = chunk.liquid_get(lx as f32, ly as f32).volume > 0.0;
+                                if !has_water {
+                                    for cell_y in 0..CELL_RESOLUTION {
+                                        for cell_x in 0..CELL_RESOLUTION {
+                                            chunk.liquid_set(
+                                                lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
+                                                ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
+                                                LiquidData::full()
+                                            );
+                                        }
                                     }
                                 }
                             } else {
@@ -105,6 +138,7 @@ impl WorldState {
 
                 if !self.terrain.chunks.contains_key(&chunk_coord) {
                     self.terrain.load_chunk(chunk_coord);
+                    self.initialize_chunk_tides(chunk_coord);
                 }
             }
         }
