@@ -6,9 +6,9 @@ pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
 pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
 pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
 
-// CELL_RESOLUTION > 1 is too slow in debug mode
+// CELL_RESOLUTION 4 is too slow in debug mode
 #[cfg(debug_assertions)]
-pub const CELL_RESOLUTION: usize = 1;
+pub const CELL_RESOLUTION: usize = 2;
 #[cfg(not(debug_assertions))]
 pub const CELL_RESOLUTION: usize = 4;
 
@@ -432,28 +432,43 @@ impl Terrain {
     }
 
     pub fn flow(&mut self) {
+        use rayon::prelude::*;
+
         let chunk_coords: Vec<ChunkCoord> = self.chunks.keys().copied().collect();
 
-        for chunk_coord in &chunk_coords {
-            let neighbor_up_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y - 1 };
-            let neighbor_down_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y + 1 };
-            let neighbor_left_coord = ChunkCoord { x: chunk_coord.x - 1, y: chunk_coord.y };
-            let neighbor_right_coord = ChunkCoord { x: chunk_coord.x + 1, y: chunk_coord.y };
+        // Partition chunks into checkerboard pattern to avoid adjacent chunk conflicts
+        let (phase_0, phase_1): (Vec<_>, Vec<_>) = chunk_coords
+            .into_iter()
+            .partition(|coord| (coord.x + coord.y) % 2 == 0);
 
+        // Wrapper to make the pointer Send/Sync (safe due to checkerboard access pattern)
+        #[derive(Clone, Copy)]
+        struct SyncPtr(*mut HashMap<ChunkCoord, Chunk>);
+        unsafe impl Send for SyncPtr {}
+        unsafe impl Sync for SyncPtr {}
+
+        let chunks_ptr = SyncPtr(&mut self.chunks as *mut HashMap<ChunkCoord, Chunk>);
+
+        // Process phase 0 chunks in parallel (no two are adjacent)
+        phase_0.par_iter().for_each(|chunk_coord| {
+            let ptr = chunks_ptr;
             unsafe {
-                let chunks_raw = &mut self.chunks as *mut HashMap<ChunkCoord, Chunk>;
+                let neighbor_up_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y - 1 };
+                let neighbor_down_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y + 1 };
+                let neighbor_left_coord = ChunkCoord { x: chunk_coord.x - 1, y: chunk_coord.y };
+                let neighbor_right_coord = ChunkCoord { x: chunk_coord.x + 1, y: chunk_coord.y };
 
-                let current_chunk = (*chunks_raw).get_mut(chunk_coord)
+                let current_chunk = (*ptr.0).get_mut(chunk_coord)
                     .map(|c| c as *mut Chunk);
 
                 if let Some(current_ptr) = current_chunk {
-                    let neighbor_up = (*chunks_raw).get_mut(&neighbor_up_coord)
+                    let neighbor_up = (*ptr.0).get_mut(&neighbor_up_coord)
                         .map(|c| c as *mut Chunk);
-                    let neighbor_down = (*chunks_raw).get_mut(&neighbor_down_coord)
+                    let neighbor_down = (*ptr.0).get_mut(&neighbor_down_coord)
                         .map(|c| c as *mut Chunk);
-                    let neighbor_left = (*chunks_raw).get_mut(&neighbor_left_coord)
+                    let neighbor_left = (*ptr.0).get_mut(&neighbor_left_coord)
                         .map(|c| c as *mut Chunk);
-                    let neighbor_right = (*chunks_raw).get_mut(&neighbor_right_coord)
+                    let neighbor_right = (*ptr.0).get_mut(&neighbor_right_coord)
                         .map(|c| c as *mut Chunk);
 
                     (*current_ptr).flow(
@@ -464,7 +479,39 @@ impl Terrain {
                     );
                 }
             }
-        }
+        });
+
+        // Process phase 1 chunks in parallel (no two are adjacent)
+        phase_1.par_iter().for_each(|chunk_coord| {
+            let ptr = chunks_ptr;
+            unsafe {
+                let neighbor_up_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y - 1 };
+                let neighbor_down_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y + 1 };
+                let neighbor_left_coord = ChunkCoord { x: chunk_coord.x - 1, y: chunk_coord.y };
+                let neighbor_right_coord = ChunkCoord { x: chunk_coord.x + 1, y: chunk_coord.y };
+
+                let current_chunk = (*ptr.0).get_mut(chunk_coord)
+                    .map(|c| c as *mut Chunk);
+
+                if let Some(current_ptr) = current_chunk {
+                    let neighbor_up = (*ptr.0).get_mut(&neighbor_up_coord)
+                        .map(|c| c as *mut Chunk);
+                    let neighbor_down = (*ptr.0).get_mut(&neighbor_down_coord)
+                        .map(|c| c as *mut Chunk);
+                    let neighbor_left = (*ptr.0).get_mut(&neighbor_left_coord)
+                        .map(|c| c as *mut Chunk);
+                    let neighbor_right = (*ptr.0).get_mut(&neighbor_right_coord)
+                        .map(|c| c as *mut Chunk);
+
+                    (*current_ptr).flow(
+                        neighbor_up.map(|p| &mut *p),
+                        neighbor_down.map(|p| &mut *p),
+                        neighbor_left.map(|p| &mut *p),
+                        neighbor_right.map(|p| &mut *p),
+                    );
+                }
+            }
+        });
     }
 
     pub fn at(&self, x: i32, y: i32) -> Block {

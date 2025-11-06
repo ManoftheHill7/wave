@@ -79,17 +79,13 @@ impl WorldState {
                             let wy = coord.y * chunk_size + ly as i32;
 
                             if wy > tide_level {
-                                // Spawn water if not already there
-                                let has_water = chunk.liquid_get(lx as f32, ly as f32).volume > 0.0;
-                                if !has_water {
-                                    for cell_y in 0..CELL_RESOLUTION {
-                                        for cell_x in 0..CELL_RESOLUTION {
-                                            chunk.liquid_set(
-                                                lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
-                                                ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
-                                                LiquidData::full()
-                                            );
-                                        }
+                                for cell_y in 0..CELL_RESOLUTION {
+                                    for cell_x in 0..CELL_RESOLUTION {
+                                        chunk.liquid_set(
+                                            lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
+                                            ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
+                                            LiquidData::full()
+                                        );
                                     }
                                 }
                             } else {
