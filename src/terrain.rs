@@ -2,10 +2,13 @@ use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
 
 pub const CHUNK_SIZE: usize = 128;
+pub const CELL_RESOLUTION: usize = 1;
+pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
+pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
 
 // Block types enum
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum BlockType {
+pub enum Block {
     Air,
     Dirt,
     Stone,
@@ -17,10 +20,25 @@ pub enum BlockType {
     Leaf,
 }
 
-// Individual block
 #[derive(Debug, Clone, Copy)]
-pub struct Block {
-    pub block_type: BlockType,
+pub struct LiquidData {
+    pub volume: f32, // 0.0 is none, 1.0 is full, more then 1.0 is pressurized
+    pub flow_left: bool,
+    pub flow_right: bool,
+    pub flow_down: bool,
+    pub flow_up: bool,
+}
+
+impl LiquidData {
+    fn new(volume: f32) -> Self {
+        LiquidData {
+            volume,
+            flow_left: false,
+            flow_right: false,
+            flow_down: false,
+            flow_up: false,
+        }
+    }
 }
 
 // Chunk coordinate (not block coordinate)
@@ -33,25 +51,52 @@ pub struct ChunkCoord {
 #[derive(Debug, Clone, Copy)]
 pub struct Chunk {
     blocks: [Block; CHUNK_SIZE * CHUNK_SIZE],
+    cells: [LiquidData; CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],
     pub coord: ChunkCoord,
 }
 
 impl Chunk {
     pub fn new(coord: ChunkCoord) -> Self {
         Chunk {
-            blocks: [Block { block_type: BlockType::Air }; CHUNK_SIZE * CHUNK_SIZE],
+            blocks: [Block::Air; CHUNK_SIZE * CHUNK_SIZE],
+            cells: [LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],
             coord,
         }
     }
 
-    pub fn get_block(&self, local_x: usize, local_y: usize) -> Block {
+    pub fn get(&self, local_x: usize, local_y: usize) -> Block {
         let index = local_y * CHUNK_SIZE + local_x;
         self.blocks[index]
     }
 
-    pub fn set_block(&mut self, local_x: usize, local_y: usize, block: Block) {
+    pub fn set(&mut self, local_x: usize, local_y: usize, block: Block) {
         let index = local_y * CHUNK_SIZE + local_x;
-        self.blocks[index] = block;
+        if block == Block::Water {
+            let w = CHUNK_SIZE ;
+            let lx = local_x as f32;
+            let ly = local_y as f32;
+            for cell_y in 0..CELL_RESOLUTION {
+                for cell_x in 0..CELL_RESOLUTION {
+                    self.liquid_set(lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
+                        ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
+                        LiquidData::new(1.0));
+                }
+            }
+        } else {
+            self.blocks[index] = block;
+        }
+    }
+
+    pub fn liquid_get(&self, local_x: f32, local_y: f32) -> LiquidData {
+        let cx = local_x * CELL_RESOLUTION as f32;
+        let cy = local_y * CELL_RESOLUTION as f32;
+        self.cells[(cy * CHUNK_SIZE as f32 + cx) as usize]
+    }
+
+    pub fn liquid_set(&mut self, local_x: f32, local_y: f32, ld: LiquidData) {
+        let cx = local_x * CELL_RESOLUTION as f32;
+        let cy = local_y * CELL_RESOLUTION as f32;
+        self.cells[(cy * CHUNK_SIZE as f32 + cx) as usize] = ld
     }
 }
 
@@ -70,31 +115,49 @@ impl Terrain {
         }
     }
 
+    pub fn flow(&mut self) {
+    }
+
     pub fn at(&self, x: i32, y: i32) -> Block {
         let chunk_coord = self.world_to_chunk(x, y);
         let local_coord = self.world_to_local(x, y);
 
         if let Some(chunk) = self.chunks.get(&chunk_coord) {
-            chunk.get_block(local_coord.0, local_coord.1)
+            chunk.get(local_coord.0, local_coord.1)
         } else {
-            Block { block_type: BlockType::Air }
+            Block::Air
+        }
+    }
+
+    pub fn liquid_at(&self, x: f32, y: f32) -> LiquidData {
+        let xi = x as i32;
+        let yi = y as i32;
+        let chunk_coord = self.world_to_chunk(xi, yi);
+        let local_coord = self.world_to_local(xi, yi);
+
+        if let Some(chunk) = self.chunks.get(&chunk_coord) {
+            chunk.liquid_get(local_coord.0 as f32 + x.fract(), local_coord.1 as f32 + y.fract())
+        } else {
+            LiquidData::new(0.0)
         }
     }
 
     pub fn solid_terrain_at(&self, x: i32, y: i32) -> bool {
-        matches!(self.at(x, y).block_type,
-            BlockType::Dirt |
-            BlockType::Stone |
-            BlockType::Grass |
-            BlockType::Sand |
-            BlockType::Log |
-            BlockType::Leaf)
+        matches!(self.at(x, y),
+            Block::Dirt |
+            Block::Stone |
+            Block::Grass |
+            Block::Sand |
+            Block::Log |
+            Block::Leaf)
     }
 
     pub fn liquid_terrain_at(&self, x: i32, y: i32) -> bool {
-        matches!(self.at(x, y).block_type,
-            BlockType::Water |
-            BlockType::Lava)
+        // matches!(self.at(x, y), Block::Water | Block::Lava)
+        self.liquid_at(x as f32, y as f32).volume +
+            self.liquid_at(x as f32 + CELL_OFFSET, y as f32).volume +
+            self.liquid_at(x as f32, y as f32 + CELL_OFFSET).volume +
+            self.liquid_at(x as f32 + CELL_OFFSET, y as f32 + CELL_OFFSET).volume > 0.5
     }
 
     pub fn collides_with_solid_terrain(&self, x: f32, y: f32, width: f32, height: f32) -> Option<(f32, f32)> {
@@ -123,7 +186,7 @@ impl Terrain {
         }
 
         if let Some(chunk) = self.chunks.get_mut(&chunk_coord) {
-            chunk.set_block(local_coord.0, local_coord.1, block);
+            chunk.set(local_coord.0, local_coord.1, block);
         }
     }
 
