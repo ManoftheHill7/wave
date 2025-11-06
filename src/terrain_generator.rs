@@ -85,12 +85,14 @@ impl TerrainGenerator {
         }
         chunk = self.clean_jaggies(chunk, 3);
 
-        for lx in 0..CHUNK_SIZE {
-            let wx = coord.x * chunk_size + lx as i32;
-            for ly in 0..CHUNK_SIZE {
-                let wy = coord.y * chunk_size + ly as i32;
-                if wy > 40 && chunk.get(lx, ly) == Block::Air {
-                    chunk.set(lx, ly, Block::Water);
+        if false {
+            for lx in 0..CHUNK_SIZE {
+                let wx = coord.x * chunk_size + lx as i32;
+                for ly in 0..CHUNK_SIZE {
+                    let wy = coord.y * chunk_size + ly as i32;
+                    if wy > 40 && chunk.get(lx, ly) == Block::Air {
+                        chunk.set(lx, ly, Block::Water);
+                    }
                 }
             }
         }
@@ -176,7 +178,9 @@ impl TerrainGenerator {
             let wx = coord.x * chunk_size + lx as i32;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
-                let block_type = if wx <= inflection_x {
+                let block_type = if wy > SEA_FLOOR {
+                    Block::Sand
+                } else if wx <= inflection_x {
                     if ((offset_left + wx as f32 * big_slope) as i32) < wy {
                         Block::Sand
                     } else {

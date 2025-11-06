@@ -1,12 +1,15 @@
 use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
-use raylib::math::Vector2;
 
 pub const CHUNK_SIZE: usize = 128;
-pub const CELL_RESOLUTION: usize = 2;
+pub const CELL_RESOLUTION: usize = 1;
 pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
 pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
 pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
+
+const FLOW_RATE: f32 = 1.0;
+const PRESSURIZED_VOLUME: f32 = 1.1;
+const MIN_FLOW: f32 = NO_LIQUID_THRESHOLD;
 
 // Block types enum
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,6 +23,25 @@ pub enum Block {
     Lava,
     Log,
     Leaf,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct FlowData {
+    pub up: f32,
+    pub down: f32,
+    pub left: f32,
+    pub right: f32,
+}
+
+impl FlowData {
+    fn zero() -> Self {
+        FlowData {
+            up: 0.0,
+            down: 0.0,
+            left: 0.0,
+            right: 0.0,
+        }
+    }
 }
 
 impl Block {
@@ -37,7 +59,7 @@ impl Block {
 #[derive(Debug, Clone, Copy)]
 pub struct LiquidData {
     pub volume: f32, // 0.0 is none, 1.0 is full, more then 1.0 is pressurized
-    pub flow: Vector2,
+    pub flow: FlowData,
     pub flow_left: bool,
     pub flow_right: bool,
     pub flow_down: bool,
@@ -48,7 +70,7 @@ impl LiquidData {
     fn new(volume: f32) -> Self {
         LiquidData {
             volume,
-            flow: Vector2::zero(),
+            flow: FlowData::zero(),
             flow_left: false,
             flow_right: false,
             flow_down: false,
@@ -95,7 +117,7 @@ impl Chunk {
                 for cell_x in 0..CELL_RESOLUTION {
                     self.liquid_set(lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
                         ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
-                        LiquidData::new(1.0));
+                        LiquidData::new(PRESSURIZED_VOLUME));
                 }
             }
         } else {
@@ -122,16 +144,13 @@ impl Chunk {
                        mut neighbor_right: Option<&mut Chunk>) {
         let cells_per_chunk_axis = CHUNK_SIZE * CELL_RESOLUTION;
 
-        const FLOW_RATE: f32 = 1.0;
-        const PRESSURIZED_VOLUME: f32 = 1.05;
-        const MIN_FLOW: f32 = NO_LIQUID_THRESHOLD;
 
-        // Step 1: Calculate flow vectors for each cell
+        // Step 1: Calculate flow values for each cell
         for cell_y in 0..cells_per_chunk_axis {
             for cell_x in 0..cells_per_chunk_axis {
                 let cell_index = cell_y * cells_per_chunk_axis + cell_x;
 
-                self.cells[cell_index].flow = Vector2::zero();
+                self.cells[cell_index].flow = FlowData::zero();
                 self.cells[cell_index].flow_down = false;
                 self.cells[cell_index].flow_up = false;
                 self.cells[cell_index].flow_left = false;
@@ -196,8 +215,10 @@ impl Chunk {
                     }};
                 }
 
-                let mut flow_x = 0.0;
-                let mut flow_y = 0.0;
+                let mut flow_down = 0.0;
+                let mut flow_up = 0.0;
+                let mut flow_left = 0.0;
+                let mut flow_right = 0.0;
 
                 // Gravity (downward)
                 if let Some(down_volume) = get_neighbor_volume!(down) {
@@ -205,18 +226,18 @@ impl Chunk {
                         let available_space = PRESSURIZED_VOLUME - down_volume;
                         let transfer = FLOW_RATE.min(current_volume).min(available_space);
                         if transfer > MIN_FLOW {
-                            flow_y += transfer;
+                            flow_down = transfer;
                         }
                     }
                 }
 
-                // Horizontal equalization
+                // Horizontal equalization - use smaller fraction to reduce oscillation
                 if let Some(left_volume) = get_neighbor_volume!(left) {
                     let diff = current_volume - left_volume;
                     if diff > NO_LIQUID_THRESHOLD {
-                        let transfer = (diff * 0.5 * FLOW_RATE).min(current_volume);
+                        let transfer = (diff * 0.25).min(current_volume);
                         if transfer > MIN_FLOW {
-                            flow_x -= transfer;
+                            flow_left = transfer;
                         }
                     }
                 }
@@ -224,9 +245,9 @@ impl Chunk {
                 if let Some(right_volume) = get_neighbor_volume!(right) {
                     let diff = current_volume - right_volume;
                     if diff > NO_LIQUID_THRESHOLD {
-                        let transfer = (diff * 0.5 * FLOW_RATE).min(current_volume);
+                        let transfer = (diff * 0.25).min(current_volume);
                         if transfer > MIN_FLOW {
-                            flow_x += transfer;
+                            flow_right = transfer;
                         }
                     }
                 }
@@ -239,13 +260,32 @@ impl Chunk {
                             let available_space = 1.0 - up_volume;
                             let transfer = (pressure * FLOW_RATE).min(available_space);
                             if transfer > MIN_FLOW {
-                                flow_y -= transfer;
+                                flow_up = transfer;
                             }
                         }
                     }
                 }
 
-                self.cells[cell_index].flow = Vector2::new(flow_x, flow_y);
+                // Normalize flows so total doesn't exceed current volume
+                let total_flow = flow_up + flow_down + flow_left + flow_right;
+                if total_flow > current_volume - MIN_FLOW {
+                    let scale = (current_volume - MIN_FLOW).max(0.0) / total_flow.max(MIN_FLOW);
+                    flow_up *= scale;
+                    flow_down *= scale;
+                    flow_left *= scale;
+                    flow_right *= scale;
+                }
+
+                // Smoothly interpolate towards desired flow (momentum/inertia)
+                const FLOW_SMOOTHING: f32 = 0.5; // 0 = instant, 1 = no change
+                let current_flow = self.cells[cell_index].flow;
+
+                self.cells[cell_index].flow = FlowData {
+                    up: current_flow.up * FLOW_SMOOTHING + flow_up * (1.0 - FLOW_SMOOTHING),
+                    down: current_flow.down * FLOW_SMOOTHING + flow_down * (1.0 - FLOW_SMOOTHING),
+                    left: current_flow.left * FLOW_SMOOTHING + flow_left * (1.0 - FLOW_SMOOTHING),
+                    right: current_flow.right * FLOW_SMOOTHING + flow_right * (1.0 - FLOW_SMOOTHING),
+                };
             }
         }
 
@@ -255,7 +295,7 @@ impl Chunk {
                 let cell_index = cell_y * cells_per_chunk_axis + cell_x;
                 let flow = self.cells[cell_index].flow;
 
-                if flow.x.abs() < MIN_FLOW && flow.y.abs() < MIN_FLOW {
+                if flow.up < MIN_FLOW && flow.down < MIN_FLOW && flow.left < MIN_FLOW && flow.right < MIN_FLOW {
                     continue;
                 }
 
@@ -315,42 +355,38 @@ impl Chunk {
                 }
 
                 // Apply downward flow
-                if flow.y > MIN_FLOW {
+                if flow.down > MIN_FLOW {
                     if let Some(target_ptr) = get_neighbor_ptr!(down) {
-                        let transfer = flow.y.min(self.cells[cell_index].volume);
-                        (*target_ptr).volume += transfer;
+                        (*target_ptr).volume += flow.down;
                         (*target_ptr).flow_down = true;
-                        self.cells[cell_index].volume -= transfer;
-                    }
-                }
-
-                // Apply upward flow
-                if flow.y < -MIN_FLOW {
-                    if let Some(target_ptr) = get_neighbor_ptr!(up) {
-                        let transfer = (-flow.y).min(self.cells[cell_index].volume);
-                        (*target_ptr).volume += transfer;
-                        (*target_ptr).flow_up = true;
-                        self.cells[cell_index].volume -= transfer;
+                        self.cells[cell_index].volume -= flow.down;
                     }
                 }
 
                 // Apply leftward flow
-                if flow.x < -MIN_FLOW {
+                if flow.left > MIN_FLOW {
                     if let Some(target_ptr) = get_neighbor_ptr!(left) {
-                        let transfer = (-flow.x).min(self.cells[cell_index].volume);
-                        (*target_ptr).volume += transfer;
+                        (*target_ptr).volume += flow.left;
                         (*target_ptr).flow_left = true;
-                        self.cells[cell_index].volume -= transfer;
+                        self.cells[cell_index].volume -= flow.left;
                     }
                 }
 
                 // Apply rightward flow
-                if flow.x > MIN_FLOW {
+                if flow.right > MIN_FLOW {
                     if let Some(target_ptr) = get_neighbor_ptr!(right) {
-                        let transfer = flow.x.min(self.cells[cell_index].volume);
-                        (*target_ptr).volume += transfer;
+                        (*target_ptr).volume += flow.right;
                         (*target_ptr).flow_right = true;
-                        self.cells[cell_index].volume -= transfer;
+                        self.cells[cell_index].volume -= flow.right;
+                    }
+                }
+
+                // Apply upward flow
+                if flow.up > MIN_FLOW {
+                    if let Some(target_ptr) = get_neighbor_ptr!(up) {
+                        (*target_ptr).volume += flow.up;
+                        (*target_ptr).flow_up = true;
+                        self.cells[cell_index].volume -= flow.up;
                     }
                 }
             }
