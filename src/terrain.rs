@@ -143,47 +143,35 @@ impl Chunk {
                 let current_blocked = self.blocks[tile_index].is_solid();
 
                 macro_rules! get_neighbor_ptr {
-                    (down) => { get_neighbor_ptr!(@vertical cell_y, 1, <, cells_per_chunk_axis as i32, neighbor_down,
-                        tile_x, cell_x) };
-                    (up) => { get_neighbor_ptr!(@vertical cell_y, -1, >=, 0, neighbor_up,
-                        (CHUNK_SIZE - 1) * CHUNK_SIZE + tile_x, (cells_per_chunk_axis - 1) * cells_per_chunk_axis + cell_x) };
-                    (left) => { get_neighbor_ptr!(@horizontal cell_x, -1, >=, 0, neighbor_left,
-                        tile_y * CHUNK_SIZE + (CHUNK_SIZE - 1), cell_y * cells_per_chunk_axis + (cells_per_chunk_axis - 1)) };
-                    (right) => { get_neighbor_ptr!(@horizontal cell_x, 1, <, cells_per_chunk_axis as i32, neighbor_right,
-                        tile_y * CHUNK_SIZE, cell_y * cells_per_chunk_axis) };
+                    (down) => { get_neighbor_ptr!(cell_y as i32 + 1 < cells_per_chunk_axis as i32, neighbor_down,
+                        tile_x,
+                        cell_x,
+                        (cell_y as usize + 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
+                        ((cell_y as i32 + 1) as usize) * cells_per_chunk_axis + cell_x
+                    )};
+                    (up) => { get_neighbor_ptr!(cell_y as i32 - 1 >= 0, neighbor_up,
+                        (CHUNK_SIZE - 1) * CHUNK_SIZE + tile_x,
+                        (cells_per_chunk_axis - 1) * cells_per_chunk_axis + cell_x,
+                        (cell_y as usize - 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
+                        ((cell_y as i32 - 1) as usize) * cells_per_chunk_axis + cell_x
+                    )};
+                    (left) => { get_neighbor_ptr!(cell_x as i32 - 1 >= 0, neighbor_left,
+                        tile_y * CHUNK_SIZE + (CHUNK_SIZE - 1),
+                        cell_y * cells_per_chunk_axis + (cells_per_chunk_axis - 1),
+                        tile_y * CHUNK_SIZE + ((cell_x as i32 - 1) as usize) / CELL_RESOLUTION,
+                        cell_y * cells_per_chunk_axis + ((cell_x as i32 - 1) as usize)
+                    )};
+                    (right) => { get_neighbor_ptr!(cell_x as i32 + 1 < cells_per_chunk_axis as i32, neighbor_right,
+                        tile_y * CHUNK_SIZE,
+                        cell_y * cells_per_chunk_axis,
+                        tile_y * CHUNK_SIZE + ((cell_x as i32 + 1) as usize) / CELL_RESOLUTION,
+                        cell_y * cells_per_chunk_axis + ((cell_x as i32 + 1) as usize)
+                    )};
 
-                    (@vertical $coord:expr, $delta:expr, $cmp:tt, $bound:expr, $neighbor:expr,
-                     $cross_tile:expr, $cross_cell:expr) => {{
-                        let n = $coord as i32 + $delta;
-                        if n $cmp $bound {
-                            let neighbor_tile = (n as usize) / CELL_RESOLUTION;
-                            let tile_idx = neighbor_tile * CHUNK_SIZE + tile_x;
-                            if !self.blocks[tile_idx].is_solid() {
-                                let neighbor_idx = (n as usize) * cells_per_chunk_axis + cell_x;
-                                Some(&mut self.cells[neighbor_idx] as *mut LiquidData)
-                            } else {
-                                None
-                            }
-                        } else if let Some(ref mut chunk) = $neighbor {
-                            if !chunk.blocks[$cross_tile].is_solid() {
-                                Some(&mut chunk.cells[$cross_cell] as *mut LiquidData)
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    }};
-
-                    (@horizontal $coord:expr, $delta:expr, $cmp:tt, $bound:expr, $neighbor:expr,
-                     $cross_tile:expr, $cross_cell:expr) => {{
-                        let n = $coord as i32 + $delta;
-                        if n $cmp $bound {
-                            let neighbor_tile = (n as usize) / CELL_RESOLUTION;
-                            let tile_idx = tile_y * CHUNK_SIZE + neighbor_tile;
-                            if !self.blocks[tile_idx].is_solid() {
-                                let neighbor_idx = cell_y * cells_per_chunk_axis + (n as usize);
-                                Some(&mut self.cells[neighbor_idx] as *mut LiquidData)
+                    ($in_chunk:expr, $neighbor:expr, $cross_tile:expr, $cross_cell:expr, $tile_idx:expr, $neighbour_idx:expr) => {{
+                        if $in_chunk {
+                            if !self.blocks[$tile_idx].is_solid() {
+                                Some(&mut self.cells[$neighbour_idx] as *mut LiquidData)
                             } else {
                                 None
                             }
@@ -288,13 +276,11 @@ impl Terrain {
         let chunk_coords: Vec<ChunkCoord> = self.chunks.keys().copied().collect();
 
         for chunk_coord in &chunk_coords {
-            // Get neighbor chunk coordinates
             let neighbor_up_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y - 1 };
             let neighbor_down_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y + 1 };
             let neighbor_left_coord = ChunkCoord { x: chunk_coord.x - 1, y: chunk_coord.y };
             let neighbor_right_coord = ChunkCoord { x: chunk_coord.x + 1, y: chunk_coord.y };
 
-            // Build list of unique coordinates we need
             let mut coords = vec![*chunk_coord];
             if self.chunks.contains_key(&neighbor_up_coord) && neighbor_up_coord != *chunk_coord {
                 coords.push(neighbor_up_coord);
@@ -312,7 +298,6 @@ impl Terrain {
                 coords.push(neighbor_right_coord);
             }
 
-            // Use raw pointers to get multiple mutable references
             unsafe {
                 let chunks_raw = &mut self.chunks as *mut HashMap<ChunkCoord, Chunk>;
 
