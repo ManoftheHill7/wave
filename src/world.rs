@@ -6,14 +6,17 @@ pub struct WorldState {
     pub player: Player,
     pub terrain: Terrain,
     pub ghost_mode: bool,
+    flow_timer: f32,
 }
 
 impl WorldState {
     pub fn new() -> Self {
         WorldState {
-            player: Player::new(85.0, -1.0),
+            // player: Player::new(85.0, -1.0),
+            player: Player::new(215.0, 39.0),
             terrain: Terrain::new(12345),
             ghost_mode: false,
+            flow_timer: 0.0,
         }
     }
 
@@ -23,17 +26,20 @@ impl WorldState {
         } else {
             self.player.update(dt, &self.terrain, controller);
         }
+        self.flow_timer += dt;
+        if self.flow_timer > 0.1 {
+            self.flow_timer = 0.0;
+            self.terrain.flow(); // Water simulation
+        }
 
         let px = self.player.position.x as i32;
         let py = self.player.position.y as i32;
 
-        let loaded_chunk_radiusy = 5;
-        let loaded_chunk_radiusx = 7;
-        let unload_chunk_radius = loaded_chunk_radiusy.max(loaded_chunk_radiusx);
+        let loaded_chunk_radius = 1;
 
         let chunk_size = CHUNK_SIZE as i32;
-        for dx in -loaded_chunk_radiusx..=loaded_chunk_radiusx {
-            for dy in -1..=loaded_chunk_radiusy {
+        for dx in -loaded_chunk_radius..=loaded_chunk_radius {
+            for dy in -loaded_chunk_radius..=loaded_chunk_radius {
                 let cx = (px + dx * chunk_size) / chunk_size;
                 let cy = (py + dy * chunk_size) / chunk_size;
                 let chunk_coord = ChunkCoord { x: cx, y: cy };
@@ -44,6 +50,6 @@ impl WorldState {
             }
         }
 
-        self.terrain.unload_distant_chunks(px, py, unload_chunk_radius);
+        self.terrain.unload_distant_chunks(px, py, loaded_chunk_radius);
     }
 }

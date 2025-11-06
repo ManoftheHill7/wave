@@ -135,7 +135,7 @@ impl Player {
     }
 
     pub fn update_ghost(&mut self, dt: f32, terrain: &Terrain, controller: &Controller) {
-        let inputDir = controller.input_dir;
+        let input_dir = controller.input_dir;
         self.is_swimming = true;
 
         let speed = 5.0 * ACCEL * dt;
@@ -148,11 +148,11 @@ impl Player {
             SWIM_SPEED * 3.0
         };
 
-        if inputDir.x != 0.0 {
-            self.facing_dir = inputDir.x.signum() as i32;
+        if input_dir.x != 0.0 {
+            self.facing_dir = input_dir.x.signum() as i32;
         }
-        self.velocity.x = Self::move_toward(self.velocity.x, inputDir.x * swim_speed, speed);
-        self.velocity.y = Self::move_toward(self.velocity.y, inputDir.y * swim_speed, speed);
+        self.velocity.x = Self::move_toward(self.velocity.x, input_dir.x * swim_speed, speed);
+        self.velocity.y = Self::move_toward(self.velocity.y, input_dir.y * swim_speed, speed);
 
         self.position += self.velocity * dt;
 
@@ -173,15 +173,15 @@ impl Player {
         let jump_pressed = controller.jump_pressed;
         let jump_held = controller.jump_held;
         let climb_pressed = controller.climb_pressed;
-        let inputDir = controller.input_dir;
+        let input_dir = controller.input_dir;
         let raycast_direction = controller.raycast_direction;
 
         self.time += dt;
 
         // Update dashing state
-        let wasDashing = self.is_dashing;
+        let was_dashing = self.is_dashing;
         self.is_dashing = self.within_grace(self.dashed_at, DASH_TIME);
-        self.just_finished_dashing = wasDashing && !self.is_dashing;
+        self.just_finished_dashing = was_dashing && !self.is_dashing;
         self.height = if self.is_dashing {
             DASH_HEIGHT
         } else {
@@ -241,7 +241,7 @@ impl Player {
             self.climb_stamina -= dt;
             self.is_climbing = true;
             self.velocity.y = 0.0;
-            self.velocity.y = Self::move_toward(self.velocity.y, inputDir.y * CLIMB_SPEED, CLIMB_SPEED);
+            self.velocity.y = Self::move_toward(self.velocity.y, input_dir.y * CLIMB_SPEED, CLIMB_SPEED);
         }
 
         // Jump handling
@@ -305,8 +305,8 @@ impl Player {
             self.dash_dir = Vector2::new(self.facing_dir as f32, 0.0);
 
             // Directional dash
-            self.dash_dir.y = inputDir.y;
-            self.dash_dir.x = inputDir.x;
+            self.dash_dir.y = input_dir.y;
+            self.dash_dir.x = input_dir.x;
             if self.on_ground {
                 self.dash_dir.y = self.dash_dir.y.min(0.0);
             }
@@ -326,12 +326,12 @@ impl Player {
             );
         } else if self.is_swimming {
             let speed = ACCEL * dt;
-            if inputDir.x != 0.0 {
-                self.facing_dir = inputDir.x.signum() as i32;
-                self.velocity.x = Self::move_toward(self.velocity.x, inputDir.x * SWIM_SPEED, speed);
+            if input_dir.x != 0.0 {
+                self.facing_dir = input_dir.x.signum() as i32;
+                self.velocity.x = Self::move_toward(self.velocity.x, input_dir.x * SWIM_SPEED, speed);
             }
-            if inputDir.y != 0.0 {
-                self.velocity.y = Self::move_toward(self.velocity.y, inputDir.y * SWIM_SPEED, speed);
+            if input_dir.y != 0.0 {
+                self.velocity.y = Self::move_toward(self.velocity.y, input_dir.y * SWIM_SPEED, speed);
             }
         } else {
             // Horizontal movement
@@ -345,9 +345,9 @@ impl Player {
             }
             if !self.within_grace(self.wall_jumped_at, WALLJUMP_LOCK_TIME) {
                 // Regular movement
-                if inputDir.x != 0.0 {
-                    self.velocity.x = Self::move_toward(self.velocity.x, inputDir.x * SPEED, speed);
-                    self.facing_dir = inputDir.x.signum() as i32;
+                if input_dir.x != 0.0 {
+                    self.velocity.x = Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
+                    self.facing_dir = input_dir.x.signum() as i32;
                 } else {
                     self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
                 }
@@ -376,43 +376,43 @@ impl Player {
     ) -> RaycastResult {
         // DDA (Digital Differential Analyzer) ray-grid traversal algorithm
         // https://lodev.org/cgtutor/raycasting.html
-        let posX = start.x;
-        let posY = start.y;
+        let pos_x = start.x;
+        let pos_y = start.y;
         let dx = end.x - start.x;
         let dy = end.y - start.y;
         let distance2 = dx * dx + dy * dy;
 
         let buffer = 0.125;
-        let deltaDistX = (1.0 / dx).abs();
-        let deltaDistY = (1.0 / dy).abs();
-        let mut mapX = start.x.floor() as i32;
-        let mut mapY = start.y.floor() as i32;
+        let delta_dist_x = (1.0 / dx).abs();
+        let delta_dist_y = (1.0 / dy).abs();
+        let mut map_x = start.x.floor() as i32;
+        let mut map_y = start.y.floor() as i32;
         let mut hit_vertical;
 
-        let mut sideDistX;
-        let mut sideDistY;
-        let stepX;
-        let stepY;
+        let mut side_dist_x;
+        let mut side_dist_y;
+        let step_x;
+        let step_y;
 
         if dx < 0.0 {
-            stepX = -1;
-            sideDistX = (posX - mapX as f32) * deltaDistX;
+            step_x = -1;
+            side_dist_x = (pos_x - map_x as f32) * delta_dist_x;
         } else {
-            stepX = 1;
-            sideDistX = (mapX as f32 + 1.0 - posX) * deltaDistX;
+            step_x = 1;
+            side_dist_x = (map_x as f32 + 1.0 - pos_x) * delta_dist_x;
         }
         if dy < 0.0 {
-            stepY = -1;
-            sideDistY = (posY - mapY as f32) * deltaDistY;
+            step_y = -1;
+            side_dist_y = (pos_y - map_y as f32) * delta_dist_y;
         } else {
-            stepY = 1;
-            sideDistY = (mapY as f32 + 1.0 - posY) * deltaDistY;
+            step_y = 1;
+            side_dist_y = (map_y as f32 + 1.0 - pos_y) * delta_dist_y;
         }
 
         let mut vx = 0.0;
         let mut vy = 0.0;
         while vx * vx + vy * vy < distance2 {
-            if terrain.solid_terrain_at(mapX, mapY) {
+            if terrain.solid_terrain_at(map_x, map_y) {
                 return RaycastResult {
                     final_position: Vector2::new(vx + start.x, vy + start.y),
                     hit: true,
@@ -420,23 +420,23 @@ impl Player {
             }
 
             //jump to next map square, either in x-direction, or in y-direction
-            if sideDistX < sideDistY {
-                sideDistX += deltaDistX;
-                mapX += stepX;
+            if side_dist_x < side_dist_y {
+                side_dist_x += delta_dist_x;
+                map_x += step_x;
                 hit_vertical = true;
             } else {
-                sideDistY += deltaDistY;
-                mapY += stepY;
+                side_dist_y += delta_dist_y;
+                map_y += step_y;
                 hit_vertical = false;
             }
 
             if !hit_vertical {
-                vy = (mapY + (1 - stepY) / 2) as f32
+                vy = (map_y + (1 - step_y) / 2) as f32
                     - start.y
                     - if end.y < start.y { buffer } else { 0.0 };
                 vx = vy / (dy / dx);
             } else {
-                vx = (mapX + (1 - stepX) / 2) as f32
+                vx = (map_x + (1 - step_x) / 2) as f32
                     - start.x
                     - if end.x < start.x { buffer } else { 0.0 };
                 vy = (dy / dx) * vx;
@@ -452,15 +452,15 @@ impl Player {
 
     fn apply_movement_and_collision(&mut self, dt: f32, terrain: &Terrain) {
         let buffer = 0.125;
-        let doubleBuffer = buffer * 2.0;
-        let stepSize = 1.0 / 8.0;
+        let double_buffer = buffer * 2.0;
+        let step_size = 1.0 / 8.0;
 
-        let targetX = self.position.x + self.velocity.x * dt;
+        let target_x = self.position.x + self.velocity.x * dt;
         let mut dx = self.position.x;
-        while dx != targetX {
-            dx = Self::move_toward(dx, targetX, stepSize);
+        while dx != target_x {
+            dx = Self::move_toward(dx, target_x, step_size);
             if let Some((tx, _)) = terrain.collides_with_solid_terrain(dx, self.position.y + buffer,
-                self.width, self.height - doubleBuffer) {
+                self.width, self.height - double_buffer) {
                 if self.velocity.x > 0.0 {
                     dx = tx - self.width;
                 } else if self.velocity.x < 0.0 {
@@ -473,12 +473,12 @@ impl Player {
         self.position.x = dx;
 
 
-        let targetY = self.position.y + self.velocity.y * dt;
+        let target_y = self.position.y + self.velocity.y * dt;
         let mut dy = self.position.y;
-        while dy != targetY {
-            dy = Self::move_toward(dy, targetY, stepSize);
+        while dy != target_y {
+            dy = Self::move_toward(dy, target_y, step_size);
             if let Some((_, ty)) = terrain.collides_with_solid_terrain(self.position.x + buffer, dy,
-                self.width - doubleBuffer, self.height) {
+                self.width - double_buffer, self.height) {
                 if self.velocity.y > 0.0 {
                     self.on_ground = true;
                     dy = ty - self.height;
@@ -492,8 +492,8 @@ impl Player {
         self.position.y = dy;
 
         if self.on_ground {
-            if let None = terrain.collides_with_solid_terrain(self.position.x + buffer, self.position.y + stepSize,
-                self.width - doubleBuffer, self.height) {
+            if let None = terrain.collides_with_solid_terrain(self.position.x + buffer, self.position.y + step_size,
+                self.width - double_buffer, self.height) {
                 self.on_ground = false
             }
         }
@@ -520,18 +520,18 @@ impl Player {
     }
 
     fn exit_dash_handler(&mut self, terrain: &Terrain) {
-        let mut wiggleY = 0.0;
-        let mut wiggleX = 0.0;
-        while let Some(_) = terrain.collides_with_solid_terrain(self.position.x + wiggleX, self.position.y + wiggleY, self.width, self.height) {
-            wiggleY = (wiggleY.abs() + 0.1) * wiggleY.signum() * -1.0;
-            if wiggleY.abs() > 2.0 {
-                wiggleY = 0.0;
-                wiggleX = (wiggleX.abs() + 0.1) * wiggleX.signum() * -1.0;
+        let mut wiggle_y = 0.0;
+        let mut wiggle_x = 0.0;
+        while let Some(_) = terrain.collides_with_solid_terrain(self.position.x + wiggle_x, self.position.y + wiggle_y, self.width, self.height) {
+            wiggle_y = (wiggle_y.abs() + 0.1) * wiggle_y.signum() * -1.0;
+            if wiggle_y.abs() > 2.0 {
+                wiggle_y = 0.0;
+                wiggle_x = (wiggle_x.abs() + 0.1) * wiggle_x.signum() * -1.0;
             }
         }
 
-        self.position.x += wiggleX;
-        self.position.y += wiggleY;
+        self.position.x += wiggle_x;
+        self.position.y += wiggle_y;
     }
 
     fn jump(&mut self, strength_mod: f32) {
