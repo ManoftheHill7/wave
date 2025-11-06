@@ -86,7 +86,7 @@ pub struct ChunkCoord {
     pub y: i32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Chunk {
     blocks: [Block; CHUNK_SIZE * CHUNK_SIZE],
     cells: [LiquidData; CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],

@@ -105,7 +105,7 @@ impl TerrainGenerator {
         }
 
         let min_neighbours = 4;
-        let mut new_chunk = chunk;
+        let mut new_chunk = chunk.clone();
 
         for lx in 0..CHUNK_SIZE {
             for ly in 0..CHUNK_SIZE {
