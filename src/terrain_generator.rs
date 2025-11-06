@@ -64,7 +64,7 @@ impl TerrainGenerator {
         let mut chunk = Chunk::new(coord);
         let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
         let noise_detail = 8.0;
-        let air_percent = 0.5;
+        let air_percent = 0.6;
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
             for ly in 0..CHUNK_SIZE {
@@ -83,7 +83,6 @@ impl TerrainGenerator {
                 chunk.set(lx, ly, block_type);
             }
         }
-        chunk = self.clean_jaggies(chunk, 3);
 
         if false {
             for lx in 0..CHUNK_SIZE {
@@ -97,40 +96,6 @@ impl TerrainGenerator {
             }
         }
         return chunk;
-    }
-
-    pub fn clean_jaggies(&self, chunk: Chunk, iterations: usize) -> Chunk {
-        if iterations == 0 {
-            return chunk;
-        }
-
-        let min_neighbours = 4;
-        let mut new_chunk = chunk.clone();
-
-        for lx in 0..CHUNK_SIZE {
-            for ly in 0..CHUNK_SIZE {
-                let mut nc = 0;
-                for nx in (lx as i32 -1)..(lx as i32)+1 {
-                    for ny in (ly as i32 -1)..(ly as i32)+1 {
-                        if nx >= 0 && ny >= 0 && nx < CHUNK_SIZE as i32 && ny < CHUNK_SIZE as i32 {
-                            if chunk.get(nx as usize, ny as usize) != Block::Air {
-                                nc += 1;
-                            }
-                        } else {
-                            nc += 1;
-                        }
-                    }
-                }
-
-                if nc < min_neighbours {
-                    new_chunk.set(lx, ly, Block::Air)
-                }
-            }
-        }
-
-
-
-        return new_chunk
     }
 
     pub fn generate_ocean_chunk(&self, coord: ChunkCoord) -> Chunk {

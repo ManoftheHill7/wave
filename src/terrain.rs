@@ -2,7 +2,8 @@ use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
 
 pub const CHUNK_SIZE: usize = 128;
-pub const CELL_RESOLUTION: usize = 4;
+pub const CELL_RESOLUTION: usize = 1; // Can be up to 6 when run in release mode, struggles past 1
+                                      // in develop mode
 pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
 pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
 pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
@@ -90,18 +91,18 @@ pub struct ChunkCoord {
 
 #[derive(Debug, Clone)]
 pub struct Chunk {
-    blocks: Box<[Block; CHUNK_SIZE * CHUNK_SIZE]>,
-    cells: Box<[LiquidData; CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE]>,
-    cells_next: Box<[LiquidData; CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE]>,
+    blocks: Vec<Block>,
+    cells: Vec<LiquidData>,
+    cells_next: Vec<LiquidData>,
     pub coord: ChunkCoord,
 }
 
 impl Chunk {
     pub fn new(coord: ChunkCoord) -> Self {
         Chunk {
-            blocks: Box::new([Block::Air; CHUNK_SIZE * CHUNK_SIZE]),
-            cells: Box::new([LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE]),
-            cells_next: Box::new([LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE]),
+            blocks: vec![Block::Air; CHUNK_SIZE * CHUNK_SIZE],
+            cells: vec![LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],
+            cells_next: vec![LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],
             coord,
         }
     }
@@ -408,7 +409,8 @@ impl Chunk {
         }
 
         // Step 3: Swap buffers - cells_next becomes the new cells
-        std::mem::swap(&mut self.cells, &mut self.cells_next);
+        // Use ptr::swap to ensure we're just swapping pointers, not copying data
+        std::ptr::swap(&mut self.cells, &mut self.cells_next);
     }
 }
 
