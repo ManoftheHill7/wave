@@ -2,16 +2,15 @@ use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
 
 pub const CHUNK_SIZE: usize = 128;
+pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
+pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
+pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
 
 // CELL_RESOLUTION > 1 is too slow in debug mode
 #[cfg(debug_assertions)]
 pub const CELL_RESOLUTION: usize = 1;
 #[cfg(not(debug_assertions))]
 pub const CELL_RESOLUTION: usize = 4;
-
-pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
-pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
-pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
 
 const FLOW_RATE: f32 = 1.0;
 const PRESSURIZED_VOLUME: f32 = 1.01;
