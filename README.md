@@ -31,6 +31,7 @@ Things required for the games core concept
 - [x] Tidal cycle
 - [ ] Inventory system
 - [ ] Player health/HUD
+- [ ] Player Breath hold
 - [ ] Tool - Dash
 - [ ] Tool - Pickaxe
 - [ ] Tool - Grappling Hook
