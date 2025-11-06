@@ -2,6 +2,7 @@ use crate::terrain::{Terrain, ChunkCoord, CHUNK_SIZE};
 use crate::player::Player;
 use crate::controller::Controller;
 
+const LIQUID_UPDATE_TIMER: f32 = 0.01;
 pub struct WorldState {
     pub player: Player,
     pub terrain: Terrain,
@@ -27,9 +28,9 @@ impl WorldState {
             self.player.update(dt, &self.terrain, controller);
         }
         self.flow_timer += dt;
-        if self.flow_timer > 0.1 {
-            self.flow_timer = 0.0;
-            self.terrain.flow(); // Water simulation
+        while self.flow_timer > LIQUID_UPDATE_TIMER {
+            self.flow_timer -= LIQUID_UPDATE_TIMER;
+            self.terrain.flow();
         }
 
         let px = self.player.position.x as i32;
