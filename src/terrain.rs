@@ -8,9 +8,9 @@ pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
 
 // CELL_RESOLUTION 4 is too slow in debug mode
 #[cfg(debug_assertions)]
-pub const CELL_RESOLUTION: usize = 2;
+pub const CELL_RESOLUTION: usize = 1;
 #[cfg(not(debug_assertions))]
-pub const CELL_RESOLUTION: usize = 4;
+pub const CELL_RESOLUTION: usize = 2;
 
 const FLOW_RATE: f32 = 1.0;
 const PRESSURIZED_VOLUME: f32 = 1.01;
@@ -128,14 +128,13 @@ impl Chunk {
     pub fn set(&mut self, local_x: usize, local_y: usize, block: Block) {
         let index = local_y * CHUNK_SIZE + local_x;
         if block == Block::Water {
-            let _w = CHUNK_SIZE ;
             let lx = local_x as f32;
             let ly = local_y as f32;
             for cell_y in 0..CELL_RESOLUTION {
                 for cell_x in 0..CELL_RESOLUTION {
                     self.liquid_set(lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
                         ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
-                        LiquidData::new(PRESSURIZED_VOLUME));
+                        LiquidData::full());
                 }
             }
         } else {

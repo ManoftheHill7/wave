@@ -31,7 +31,7 @@ impl WorldState {
     }
 
     pub fn tide_level(&self) -> i32 {
-        (((self.tide_timer * TIDE_FREQUENCY + std::f32::consts::PI).cos() + 1.0) * MAX_TIDE_DEPTH / 2.0) as i32
+        (((self.tide_timer * TIDE_FREQUENCY + std::f32::consts::PI).sin() + 1.0) * MAX_TIDE_DEPTH / 2.0) as i32
     }
 
     fn initialize_chunk_tides(&mut self, coord: ChunkCoord) {
@@ -43,21 +43,12 @@ impl WorldState {
             let chunk_size = CHUNK_SIZE as i32;
             for lx in 0..CHUNK_SIZE {
                 for ly in 0..CHUNK_SIZE {
-                    if chunk.get(lx, ly) == Block::Tide {
+                    if !chunk.get(lx, ly).is_solid() {
                         let wy = coord.y * chunk_size + ly as i32;
-
-                        if wy > tide_level {
-                            // Fill with water on initial load
-                            for cell_y in 0..CELL_RESOLUTION {
-                                for cell_x in 0..CELL_RESOLUTION {
-                                    chunk.liquid_set(
-                                        lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
-                                        ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
-                                        LiquidData::full()
-                                    );
-                                }
-                            }
+                        if wy < tide_level {
+                            continue
                         }
+                        chunk.set(lx, ly, Block::Water);
                     }
                 }
             }
@@ -75,19 +66,10 @@ impl WorldState {
                 let chunk_size = CHUNK_SIZE as i32;
                 for lx in 0..CHUNK_SIZE {
                     for ly in 0..CHUNK_SIZE {
+                        let wy = coord.y * chunk_size + ly as i32;
                         if chunk.get(lx, ly) == Block::Tide {
-                            let wy = coord.y * chunk_size + ly as i32;
-
                             if wy > tide_level {
-                                for cell_y in 0..CELL_RESOLUTION {
-                                    for cell_x in 0..CELL_RESOLUTION {
-                                        chunk.liquid_set(
-                                            lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
-                                            ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
-                                            LiquidData::full()
-                                        );
-                                    }
-                                }
+                                chunk.set(lx, ly, Block::Water);
                             } else {
                                 // Remove water
                                 for cell_y in 0..CELL_RESOLUTION {
@@ -100,6 +82,8 @@ impl WorldState {
                                     }
                                 }
                             }
+                        } else if wy > tide_level + 100 {
+                            chunk.set(lx, ly, Block::Water);
                         }
                     }
                 }

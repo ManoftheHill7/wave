@@ -26,7 +26,7 @@ pub fn render_terrain(d: &mut RaylibDrawHandle, terrain: &Terrain, px: i32, py: 
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
 
-            if block != Block::Air {
+            if block.is_solid() {
                 let texture = match block {
                     Block::Dirt => &textures.tiles.dirt,
                     Block::Stone => &textures.tiles.stone,
@@ -37,7 +37,7 @@ pub fn render_terrain(d: &mut RaylibDrawHandle, terrain: &Terrain, px: i32, py: 
                     Block::Log => &textures.tiles.log,
                     Block::Leaf => &textures.tiles.leaves,
                     Block::Air => continue,
-                    Block::Tide => &textures.tiles.lava,
+                    Block::Tide => continue,
                 };
 
                 render_tile(d, x as f32, y as f32, texture);
