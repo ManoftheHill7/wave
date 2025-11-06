@@ -2,8 +2,13 @@ use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
 
 pub const CHUNK_SIZE: usize = 128;
-pub const CELL_RESOLUTION: usize = 1; // Can be up to 6 when run in release mode, struggles past 1
-                                      // in develop mode
+
+// CELL_RESOLUTION > 1 is too slow in debug mode
+#[cfg(debug_assertions)]
+pub const CELL_RESOLUTION: usize = 1;
+#[cfg(not(debug_assertions))]
+pub const CELL_RESOLUTION: usize = 4;
+
 pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
 pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
 pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
@@ -149,7 +154,6 @@ impl Chunk {
                        mut neighbor_right: Option<&mut Chunk>) {
         let cells_per_chunk_axis = CHUNK_SIZE * CELL_RESOLUTION;
 
-        // Initialize cells_next with current volume (preserve volume, clear flow)
         for i in 0..self.cells.len() {
             self.cells_next[i].volume = self.cells[i].volume;
             self.cells_next[i].flow = FlowData::zero();
@@ -159,14 +163,13 @@ impl Chunk {
             self.cells_next[i].flow_right = false;
         }
 
-        // Step 1: Calculate flow values for each cell
+        // Calculate flow values for each cell
         for cell_y in 0..cells_per_chunk_axis {
             for cell_x in 0..cells_per_chunk_axis {
                 let cell_index = cell_y * cells_per_chunk_axis + cell_x;
 
                 let current_volume = self.cells[cell_index].volume;
                 if current_volume < NO_LIQUID_THRESHOLD {
-                    // Skip empty cells - don't reset flow data
                     continue;
                 }
 
@@ -181,7 +184,6 @@ impl Chunk {
                     continue;
                 }
 
-                // Reset flow flags
                 self.cells[cell_index].flow_down = false;
                 self.cells[cell_index].flow_up = false;
                 self.cells[cell_index].flow_left = false;
@@ -237,7 +239,7 @@ impl Chunk {
                 let mut flow_left = 0.0;
                 let mut flow_right = 0.0;
 
-                // Gravity (downward)
+                // Gravity
                 if let Some(down_volume) = get_neighbor_volume!(down) {
                     if down_volume < PRESSURIZED_VOLUME {
                         let available_space = PRESSURIZED_VOLUME - down_volume;
@@ -248,7 +250,7 @@ impl Chunk {
                     }
                 }
 
-                // Horizontal equalization - use smaller fraction to reduce oscillation
+                // Horizontal equalization
                 if let Some(left_volume) = get_neighbor_volume!(left) {
                     let diff = current_volume - left_volume;
                     if diff > NO_LIQUID_THRESHOLD {
@@ -269,7 +271,7 @@ impl Chunk {
                     }
                 }
 
-                // Pressure (upward)
+                // Pressure
                 if current_volume > 1.0 {
                     if let Some(up_volume) = get_neighbor_volume!(up) {
                         if up_volume < 1.0 {
@@ -283,7 +285,6 @@ impl Chunk {
                     }
                 }
 
-                // Normalize flows so total doesn't exceed current volume
                 let total_flow = flow_up + flow_down + flow_left + flow_right;
                 if total_flow > current_volume - MIN_FLOW {
                     let scale = (current_volume - MIN_FLOW).max(0.0) / total_flow.max(MIN_FLOW);
@@ -304,8 +305,7 @@ impl Chunk {
             }
         }
 
-        // Step 2: Apply flow to move water between cells
-        // Write to cells_next, read from cells - this prevents water duplication
+        // Apply flow to move water
         for cell_y in 0..cells_per_chunk_axis {
             for cell_x in 0..cells_per_chunk_axis {
                 let cell_index = cell_y * cells_per_chunk_axis + cell_x;
@@ -370,7 +370,6 @@ impl Chunk {
                     }};
                 }
 
-                // Apply downward flow
                 if flow.down > MIN_FLOW {
                     if let Some(target_ptr) = get_neighbor_ptr!(down) {
                         (*target_ptr).volume += flow.down;
@@ -379,7 +378,6 @@ impl Chunk {
                     }
                 }
 
-                // Apply leftward flow
                 if flow.left > MIN_FLOW {
                     if let Some(target_ptr) = get_neighbor_ptr!(left) {
                         (*target_ptr).volume += flow.left;
@@ -388,7 +386,6 @@ impl Chunk {
                     }
                 }
 
-                // Apply rightward flow
                 if flow.right > MIN_FLOW {
                     if let Some(target_ptr) = get_neighbor_ptr!(right) {
                         (*target_ptr).volume += flow.right;
@@ -397,7 +394,6 @@ impl Chunk {
                     }
                 }
 
-                // Apply upward flow
                 if flow.up > MIN_FLOW {
                     if let Some(target_ptr) = get_neighbor_ptr!(up) {
                         (*target_ptr).volume += flow.up;
@@ -408,8 +404,6 @@ impl Chunk {
             }
         }
 
-        // Step 3: Swap buffers - cells_next becomes the new cells
-        // Use ptr::swap to ensure we're just swapping pointers, not copying data
         std::ptr::swap(&mut self.cells, &mut self.cells_next);
     }
 }
