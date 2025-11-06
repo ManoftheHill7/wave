@@ -1,7 +1,7 @@
 use raylib::prelude::*;
 use crate::world::WorldState;
 use crate::player::Player;
-use crate::terrain::{Terrain, Block, CELL_RESOLUTION};
+use crate::terrain::{Terrain, Block, CELL_RESOLUTION, NO_LIQUID_THRESHOLD};
 use crate::{TextureManager, pixels_per_world_unit};
 
 type ShaderLocs = (i32, i32, i32, i32);
@@ -55,22 +55,22 @@ pub fn render_terrain(d: &mut RaylibDrawHandle, terrain: &Terrain, px: i32, py: 
     }
 }
 
-// Color palettes: (original_0, replace_0)
+// Maps to uniforms (original_0, replace_0)
 const COLOR_PALETTES: &[([f32; 4], [f32; 4])] = &[
     // Blue scarf
     (
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // original_0: red scarf
-        [0.0, 0.5, 1.0, 1.0],      // replace_0: blue scarf
+        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
+        [0.0, 0.5, 1.0, 1.0],
     ),
     // Red scarf
     (
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // original_0: red scarf
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // replace_0: red scarf
+        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
+        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
     ),
-    // Extra dash palette - pink scarf
+    // Pink scarf
     (
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // original_0: red scarf
-        [172.0 / 255.0, 50.0 / 255.0, 172.0 / 255.0, 1.0], // replace_0: red scarf
+        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
+        [172.0 / 255.0, 50.0 / 255.0, 172.0 / 255.0, 1.0],
     ),
 ];
 
@@ -197,7 +197,6 @@ pub fn render_player(
         );
     }
 
-    // Selected tile
     let player_center_x = (player.position.x + player.width / 2.0) *
         pixels_per_world_unit();
     let player_center_y = (player.position.y + player.height / 2.0) *
@@ -235,15 +234,27 @@ pub fn render_player(
 }
 
 pub fn render_water(d: &mut RaylibDrawHandle, terrain: &Terrain, x: f32, y: f32) {
-    let amount = terrain.liquid_at(x, y).volume;
-    if amount > 0.0 {
-        let chance = d.get_random_value::<i32>(0..9999) == 0;
+    let ld = terrain.liquid_at(x, y);
+    let amount = ld.volume;
+    if amount > NO_LIQUID_THRESHOLD {
+        let volume_clamped = amount.min(1.0).max(0.0);
+
+        let intensity = volume_clamped.powf(0.5);
+        let r = (100.0 * (1.0 - intensity)) as u8;
+        let g = (150.0 * (1.0 - intensity) + 100.0 * intensity) as u8;
+        let b = (255.0 * (0.3 + 0.7 * intensity)) as u8;
+        let a = (255.0 * intensity.max(0.3)) as u8;
+
+        let cell_size: i32 = (pixels_per_world_unit() / CELL_RESOLUTION as f32) as i32;
+        let fill_height: i32 = if ld.flow_down { cell_size } else { (cell_size as f32 * volume_clamped) as i32 };
+        let y_offset: i32 = cell_size - fill_height;
+
         d.draw_rectangle(
             (x * pixels_per_world_unit()) as i32,
-            (y * pixels_per_world_unit()) as i32,
-            (pixels_per_world_unit() / CELL_RESOLUTION as f32) as i32,
-            (pixels_per_world_unit() / CELL_RESOLUTION as f32) as i32,
-            if chance { Color::SKYBLUE } else { Color::BLUE }
+            (y * pixels_per_world_unit()) as i32 + y_offset,
+            cell_size,
+            fill_height,
+            Color::new(r, g, b, a)
         );
     }
 }

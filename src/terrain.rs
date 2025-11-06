@@ -2,9 +2,10 @@ use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
 
 pub const CHUNK_SIZE: usize = 128;
-pub const CELL_RESOLUTION: usize = 1;
+pub const CELL_RESOLUTION: usize = 2;
 pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
 pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
+pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
 
 // Block types enum
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -18,6 +19,18 @@ pub enum Block {
     Lava,
     Log,
     Leaf,
+}
+
+impl Block {
+    pub fn is_solid(self) -> bool {
+        matches!(self,
+            Block::Dirt |
+            Block::Stone |
+            Block::Grass |
+            Block::Sand |
+            Block::Log |
+            Block::Leaf)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -72,7 +85,7 @@ impl Chunk {
     pub fn set(&mut self, local_x: usize, local_y: usize, block: Block) {
         let index = local_y * CHUNK_SIZE + local_x;
         if block == Block::Water {
-            let w = CHUNK_SIZE ;
+            let _w = CHUNK_SIZE ;
             let lx = local_x as f32;
             let ly = local_y as f32;
             for cell_y in 0..CELL_RESOLUTION {
@@ -90,13 +103,169 @@ impl Chunk {
     pub fn liquid_get(&self, local_x: f32, local_y: f32) -> LiquidData {
         let cx = local_x * CELL_RESOLUTION as f32;
         let cy = local_y * CELL_RESOLUTION as f32;
-        self.cells[(cy * CHUNK_SIZE as f32 + cx) as usize]
+        self.cells[(cy * CHUNK_SIZE as f32 * CELL_RESOLUTION as f32 + cx) as usize]
     }
 
     pub fn liquid_set(&mut self, local_x: f32, local_y: f32, ld: LiquidData) {
         let cx = local_x * CELL_RESOLUTION as f32;
         let cy = local_y * CELL_RESOLUTION as f32;
-        self.cells[(cy * CHUNK_SIZE as f32 + cx) as usize] = ld
+        self.cells[(cy * CHUNK_SIZE as f32 * CELL_RESOLUTION as f32 + cx) as usize] = ld
+    }
+
+    pub unsafe fn flow(&mut self,
+                       mut neighbor_up: Option<&mut Chunk>,
+                       mut neighbor_down: Option<&mut Chunk>,
+                       mut neighbor_left: Option<&mut Chunk>,
+                       mut neighbor_right: Option<&mut Chunk>) {
+        let cells_per_chunk_axis = CHUNK_SIZE * CELL_RESOLUTION;
+
+        for cell_y in (0..cells_per_chunk_axis).rev() {
+            for cell_x in 0..cells_per_chunk_axis {
+                let cell_index = cell_y * cells_per_chunk_axis + cell_x;
+                self.cells[cell_index].flow_down = false;
+                self.cells[cell_index].flow_up = false;
+                self.cells[cell_index].flow_left = false;
+                self.cells[cell_index].flow_right = false;
+            }
+        }
+        for cell_y in (0..cells_per_chunk_axis).rev() {
+            for cell_x in 0..cells_per_chunk_axis {
+                let cell_index = cell_y * cells_per_chunk_axis + cell_x;
+                let current_cell = self.cells[cell_index];
+
+                if current_cell.volume < 0.0001 {
+                    continue;
+                }
+
+                let tile_x = cell_x / CELL_RESOLUTION;
+                let tile_y = cell_y / CELL_RESOLUTION;
+                let tile_index = tile_y * CHUNK_SIZE + tile_x;
+                let current_blocked = self.blocks[tile_index].is_solid();
+
+                macro_rules! get_neighbor_ptr {
+                    (down) => { get_neighbor_ptr!(@vertical cell_y, 1, <, cells_per_chunk_axis as i32, neighbor_down,
+                        tile_x, cell_x) };
+                    (up) => { get_neighbor_ptr!(@vertical cell_y, -1, >=, 0, neighbor_up,
+                        (CHUNK_SIZE - 1) * CHUNK_SIZE + tile_x, (cells_per_chunk_axis - 1) * cells_per_chunk_axis + cell_x) };
+                    (left) => { get_neighbor_ptr!(@horizontal cell_x, -1, >=, 0, neighbor_left,
+                        tile_y * CHUNK_SIZE + (CHUNK_SIZE - 1), cell_y * cells_per_chunk_axis + (cells_per_chunk_axis - 1)) };
+                    (right) => { get_neighbor_ptr!(@horizontal cell_x, 1, <, cells_per_chunk_axis as i32, neighbor_right,
+                        tile_y * CHUNK_SIZE, cell_y * cells_per_chunk_axis) };
+
+                    (@vertical $coord:expr, $delta:expr, $cmp:tt, $bound:expr, $neighbor:expr,
+                     $cross_tile:expr, $cross_cell:expr) => {{
+                        let n = $coord as i32 + $delta;
+                        if n $cmp $bound {
+                            let neighbor_tile = (n as usize) / CELL_RESOLUTION;
+                            let tile_idx = neighbor_tile * CHUNK_SIZE + tile_x;
+                            if !self.blocks[tile_idx].is_solid() {
+                                let neighbor_idx = (n as usize) * cells_per_chunk_axis + cell_x;
+                                Some(&mut self.cells[neighbor_idx] as *mut LiquidData)
+                            } else {
+                                None
+                            }
+                        } else if let Some(ref mut chunk) = $neighbor {
+                            if !chunk.blocks[$cross_tile].is_solid() {
+                                Some(&mut chunk.cells[$cross_cell] as *mut LiquidData)
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    }};
+
+                    (@horizontal $coord:expr, $delta:expr, $cmp:tt, $bound:expr, $neighbor:expr,
+                     $cross_tile:expr, $cross_cell:expr) => {{
+                        let n = $coord as i32 + $delta;
+                        if n $cmp $bound {
+                            let neighbor_tile = (n as usize) / CELL_RESOLUTION;
+                            let tile_idx = tile_y * CHUNK_SIZE + neighbor_tile;
+                            if !self.blocks[tile_idx].is_solid() {
+                                let neighbor_idx = cell_y * cells_per_chunk_axis + (n as usize);
+                                Some(&mut self.cells[neighbor_idx] as *mut LiquidData)
+                            } else {
+                                None
+                            }
+                        } else if let Some(ref mut chunk) = $neighbor {
+                            if !chunk.blocks[$cross_tile].is_solid() {
+                                Some(&mut chunk.cells[$cross_cell] as *mut LiquidData)
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    }};
+                }
+
+                if !current_blocked && current_cell.volume > NO_LIQUID_THRESHOLD {
+                    const FLOW_RATE: f32 = 1.0;
+                    const PRESSURIZED_VOLUME: f32 = 1.05;
+                    const MIN_FLOW: f32 = NO_LIQUID_THRESHOLD;
+
+
+                    // Gravity
+                    if let Some(target_ptr) = get_neighbor_ptr!(down) {
+                        let target_volume = (*target_ptr).volume;
+                        if target_volume < PRESSURIZED_VOLUME {
+                            let available_space = PRESSURIZED_VOLUME - target_volume;
+                            let transfer = FLOW_RATE.min(self.cells[cell_index].volume).min(available_space);
+                            if transfer > MIN_FLOW {
+                                (*target_ptr).volume += transfer;
+                                (*target_ptr).flow_down = true;
+                                self.cells[cell_index].volume -= transfer;
+                            }
+                        }
+                    }
+
+                    // Equalization
+                    macro_rules! try_horizontal_flow {
+                        ($dir:ident, $flow_flag:ident) => {
+                            let current_volume = self.cells[cell_index].volume;
+                            if current_volume > NO_LIQUID_THRESHOLD {
+                                if let Some(target_ptr) = get_neighbor_ptr!($dir) {
+                                    let target_volume = (*target_ptr).volume;
+                                    let diff = current_volume - target_volume;
+                                    if diff > NO_LIQUID_THRESHOLD {
+                                        let transfer = (diff * 0.5 * FLOW_RATE).min(self.cells[cell_index].volume);
+                                        if transfer > MIN_FLOW {
+                                            (*target_ptr).volume += transfer;
+                                            (*target_ptr).$flow_flag = true;
+                                            self.cells[cell_index].volume -= transfer;
+                                        }
+                                    }
+                                }
+                            }
+                        };
+                    }
+                    try_horizontal_flow!(left, flow_left);
+                    try_horizontal_flow!(right, flow_right);
+
+                    // Pressure
+                    let current_volume = self.cells[cell_index].volume;
+                    if current_volume > 1.0 {
+                        if let Some(target_ptr) = get_neighbor_ptr!(up) {
+                            let target_volume = (*target_ptr).volume;
+                            if target_volume < 1.0 {
+                                let pressure = current_volume - 1.0;
+                                let available_space = 1.0 - target_volume;
+                                let transfer = (pressure * FLOW_RATE).min(available_space);
+                                if transfer > MIN_FLOW {
+                                    (*target_ptr).volume += transfer;
+                                    (*target_ptr).flow_up = true;
+                                    self.cells[cell_index].volume -= transfer;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if current_blocked {
+                    self.cells[cell_index].volume = 0.0;
+                }
+            }
+        }
     }
 }
 
@@ -116,6 +285,59 @@ impl Terrain {
     }
 
     pub fn flow(&mut self) {
+        let chunk_coords: Vec<ChunkCoord> = self.chunks.keys().copied().collect();
+
+        for chunk_coord in &chunk_coords {
+            // Get neighbor chunk coordinates
+            let neighbor_up_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y - 1 };
+            let neighbor_down_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y + 1 };
+            let neighbor_left_coord = ChunkCoord { x: chunk_coord.x - 1, y: chunk_coord.y };
+            let neighbor_right_coord = ChunkCoord { x: chunk_coord.x + 1, y: chunk_coord.y };
+
+            // Build list of unique coordinates we need
+            let mut coords = vec![*chunk_coord];
+            if self.chunks.contains_key(&neighbor_up_coord) && neighbor_up_coord != *chunk_coord {
+                coords.push(neighbor_up_coord);
+            }
+            if self.chunks.contains_key(&neighbor_down_coord) && neighbor_down_coord != *chunk_coord
+                && !coords.contains(&neighbor_down_coord) {
+                coords.push(neighbor_down_coord);
+            }
+            if self.chunks.contains_key(&neighbor_left_coord) && neighbor_left_coord != *chunk_coord
+                && !coords.contains(&neighbor_left_coord) {
+                coords.push(neighbor_left_coord);
+            }
+            if self.chunks.contains_key(&neighbor_right_coord) && neighbor_right_coord != *chunk_coord
+                && !coords.contains(&neighbor_right_coord) {
+                coords.push(neighbor_right_coord);
+            }
+
+            // Use raw pointers to get multiple mutable references
+            unsafe {
+                let chunks_raw = &mut self.chunks as *mut HashMap<ChunkCoord, Chunk>;
+
+                let current_chunk = (*chunks_raw).get_mut(chunk_coord)
+                    .map(|c| c as *mut Chunk);
+
+                if let Some(current_ptr) = current_chunk {
+                    let neighbor_up = (*chunks_raw).get_mut(&neighbor_up_coord)
+                        .map(|c| c as *mut Chunk);
+                    let neighbor_down = (*chunks_raw).get_mut(&neighbor_down_coord)
+                        .map(|c| c as *mut Chunk);
+                    let neighbor_left = (*chunks_raw).get_mut(&neighbor_left_coord)
+                        .map(|c| c as *mut Chunk);
+                    let neighbor_right = (*chunks_raw).get_mut(&neighbor_right_coord)
+                        .map(|c| c as *mut Chunk);
+
+                    (*current_ptr).flow(
+                        neighbor_up.map(|p| &mut *p),
+                        neighbor_down.map(|p| &mut *p),
+                        neighbor_left.map(|p| &mut *p),
+                        neighbor_right.map(|p| &mut *p),
+                    );
+                }
+            }
+        }
     }
 
     pub fn at(&self, x: i32, y: i32) -> Block {
@@ -143,13 +365,7 @@ impl Terrain {
     }
 
     pub fn solid_terrain_at(&self, x: i32, y: i32) -> bool {
-        matches!(self.at(x, y),
-            Block::Dirt |
-            Block::Stone |
-            Block::Grass |
-            Block::Sand |
-            Block::Log |
-            Block::Leaf)
+        self.at(x, y).is_solid()
     }
 
     pub fn liquid_terrain_at(&self, x: i32, y: i32) -> bool {

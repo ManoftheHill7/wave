@@ -2,6 +2,7 @@ use crate::terrain::{Block, Chunk, ChunkCoord, CHUNK_SIZE};
 use noise::{NoiseFn, Perlin};
 
 const SEA_LEVEL: i32 = 0;
+const SEA_FLOOR: i32 = 80;
 const BEACH_HEIGHT: i32 = -10;
 
 pub struct TerrainGenerator {
@@ -124,12 +125,12 @@ impl TerrainGenerator {
         let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
 
         for lx in 0..CHUNK_SIZE {
-            // let wx = coord.x * chunk_size + lx as i32;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
-                let block_type = if wy > SEA_LEVEL {
-                    // Block::Water
-                    Block::Air
+                let block_type = if wy > SEA_FLOOR {
+                    Block::Sand
+                } else if wy > SEA_LEVEL {
+                    Block::Water
                 } else {
                     Block::Air
                 };
@@ -169,8 +170,7 @@ impl TerrainGenerator {
                         Block::Sand
                     } else {
                         if wy > SEA_LEVEL {
-                            // Block::Water
-                            Block::Air
+                            Block::Water
                         } else {
                             Block::Air
                         }
@@ -180,8 +180,7 @@ impl TerrainGenerator {
                         Block::Sand
                     } else {
                         if wy > SEA_LEVEL {
-                            // Block::Water
-                            Block::Air
+                            Block::Water
                         } else {
                             Block::Air
                         }
@@ -202,7 +201,7 @@ impl TerrainGenerator {
         let trunk_height = (height as f32 * 0.6).ceil() as i32;
         let canopy_height = height - trunk_height;
 
-        // Generate main trunk
+        // Trunk
         for i in 0..trunk_height {
             let trunk_y = y - i;
 
@@ -212,6 +211,7 @@ impl TerrainGenerator {
             }
         }
 
+        // Leaves
         let canopy_base_y = y - trunk_height;
         for layer in 0..canopy_height {
             let canopy_y = canopy_base_y - layer;

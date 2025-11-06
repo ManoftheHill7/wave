@@ -49,14 +49,12 @@ struct RaycastResult {
 }
 
 pub struct Player {
-    // Position and physics
     pub position: Vector2,
     pub velocity: Vector2,
     pub height: f32,
     pub width: f32,
     pub facing_dir: i32,
 
-    // State flags
     pub on_ground: bool,
     pub is_jumping: bool,
     pub is_dashing: bool,
@@ -66,26 +64,21 @@ pub struct Player {
     pub just_landed: bool,
     pub just_finished_dashing: bool,
 
-    // Timers (using f32 for elapsed time)
     pub last_on_ground: f32,
     pub last_in_water: f32,
     pub try_jumped_at: f32,
     pub wall_jumped_at: f32,
     pub dashed_at: f32,
     pub last_action_at: f32,
-    pub time: f32,  // Game time tracker
+    pub time: f32,
 
-    // Resources
     pub dashes: i32,
     pub climb_stamina: f32,
 
-    // Physics modifiers
     pub gravity_reduction: f32,
 
-    // Dash state
     pub dash_dir: Vector2,
 
-    // Cached values
     pub landing_speed: Vector2,
     pub last_velocity: Vector2,
 
@@ -215,21 +208,19 @@ impl Player {
 
             self.landing_speed = self.velocity;
         }
+        self.velocity.y = self.velocity.y.clamp(-TERMINAL_VELOCITY, TERMINAL_VELOCITY);
 
         if !self.is_swimming && self.within_grace(self.last_in_water, SWIM_EXIT_TIME) {
             self.is_swimming = true;
         }
 
 
-        // Terminal velocity
-        self.velocity.y = self.velocity.y.clamp(-TERMINAL_VELOCITY, TERMINAL_VELOCITY);
 
-        // Wall detection
         let on_wall = self.check_wall(terrain);
 
         // Wall slide
         self.is_sliding = false;
-        if on_wall && self.velocity.y > 0.0 {
+        if on_wall && self.velocity.y > 0.0 && !self.is_swimming {
             self.is_sliding = true;
             self.velocity.y *= WALLSLIDE_FRICTION;
         }
