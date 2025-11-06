@@ -115,7 +115,7 @@ fn main() {
 
 
     let mut debug_enabled = true;
-    let mut updating = false;
+    let mut updating = true;
     world_state.update(0.0, &controller);
 
     while !rl.window_should_close() {
