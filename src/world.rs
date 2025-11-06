@@ -2,7 +2,8 @@ use crate::terrain::{Terrain, ChunkCoord, CHUNK_SIZE};
 use crate::player::Player;
 use crate::controller::Controller;
 
-const LIQUID_UPDATE_TIMER: f32 = 0.01;
+// Liquid update timer - adjust based on performance needs
+const LIQUID_UPDATE_TIMER: f32 = 0.016;
 pub struct WorldState {
     pub player: Player,
     pub terrain: Terrain,

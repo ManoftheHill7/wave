@@ -2,14 +2,16 @@ use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
 
 pub const CHUNK_SIZE: usize = 128;
-pub const CELL_RESOLUTION: usize = 1;
+pub const CELL_RESOLUTION: usize = 4;
 pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
 pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
 pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
 
 const FLOW_RATE: f32 = 1.0;
-const PRESSURIZED_VOLUME: f32 = 1.1;
+const PRESSURIZED_VOLUME: f32 = 1.01;
 const MIN_FLOW: f32 = NO_LIQUID_THRESHOLD;
+const FLOW_SMOOTHING: f32 = 0.5; // 0 = instant, 1 = no change
+const HORIZONTAL_FLOW_SCALE: f32 = 0.5;
 
 // Block types enum
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -88,16 +90,18 @@ pub struct ChunkCoord {
 
 #[derive(Debug, Clone)]
 pub struct Chunk {
-    blocks: [Block; CHUNK_SIZE * CHUNK_SIZE],
-    cells: [LiquidData; CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],
+    blocks: Box<[Block; CHUNK_SIZE * CHUNK_SIZE]>,
+    cells: Box<[LiquidData; CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE]>,
+    cells_next: Box<[LiquidData; CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE]>,
     pub coord: ChunkCoord,
 }
 
 impl Chunk {
     pub fn new(coord: ChunkCoord) -> Self {
         Chunk {
-            blocks: [Block::Air; CHUNK_SIZE * CHUNK_SIZE],
-            cells: [LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],
+            blocks: Box::new([Block::Air; CHUNK_SIZE * CHUNK_SIZE]),
+            cells: Box::new([LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE]),
+            cells_next: Box::new([LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE]),
             coord,
         }
     }
@@ -144,20 +148,24 @@ impl Chunk {
                        mut neighbor_right: Option<&mut Chunk>) {
         let cells_per_chunk_axis = CHUNK_SIZE * CELL_RESOLUTION;
 
+        // Initialize cells_next with current volume (preserve volume, clear flow)
+        for i in 0..self.cells.len() {
+            self.cells_next[i].volume = self.cells[i].volume;
+            self.cells_next[i].flow = FlowData::zero();
+            self.cells_next[i].flow_down = false;
+            self.cells_next[i].flow_up = false;
+            self.cells_next[i].flow_left = false;
+            self.cells_next[i].flow_right = false;
+        }
 
         // Step 1: Calculate flow values for each cell
         for cell_y in 0..cells_per_chunk_axis {
             for cell_x in 0..cells_per_chunk_axis {
                 let cell_index = cell_y * cells_per_chunk_axis + cell_x;
 
-                self.cells[cell_index].flow = FlowData::zero();
-                self.cells[cell_index].flow_down = false;
-                self.cells[cell_index].flow_up = false;
-                self.cells[cell_index].flow_left = false;
-                self.cells[cell_index].flow_right = false;
-
                 let current_volume = self.cells[cell_index].volume;
                 if current_volume < NO_LIQUID_THRESHOLD {
+                    // Skip empty cells - don't reset flow data
                     continue;
                 }
 
@@ -167,8 +175,16 @@ impl Chunk {
                 let current_blocked = self.blocks[tile_index].is_solid();
 
                 if current_blocked {
+                    self.cells[cell_index].volume = 0.0;
+                    self.cells[cell_index].flow = FlowData::zero();
                     continue;
                 }
+
+                // Reset flow flags
+                self.cells[cell_index].flow_down = false;
+                self.cells[cell_index].flow_up = false;
+                self.cells[cell_index].flow_left = false;
+                self.cells[cell_index].flow_right = false;
 
                 macro_rules! get_neighbor_volume {
                     (down) => { get_neighbor_volume!(cell_y as i32 + 1 < cells_per_chunk_axis as i32, neighbor_down,
@@ -235,7 +251,7 @@ impl Chunk {
                 if let Some(left_volume) = get_neighbor_volume!(left) {
                     let diff = current_volume - left_volume;
                     if diff > NO_LIQUID_THRESHOLD {
-                        let transfer = (diff * 0.25).min(current_volume);
+                        let transfer = (diff * HORIZONTAL_FLOW_SCALE).min(current_volume);
                         if transfer > MIN_FLOW {
                             flow_left = transfer;
                         }
@@ -245,7 +261,7 @@ impl Chunk {
                 if let Some(right_volume) = get_neighbor_volume!(right) {
                     let diff = current_volume - right_volume;
                     if diff > NO_LIQUID_THRESHOLD {
-                        let transfer = (diff * 0.25).min(current_volume);
+                        let transfer = (diff * HORIZONTAL_FLOW_SCALE).min(current_volume);
                         if transfer > MIN_FLOW {
                             flow_right = transfer;
                         }
@@ -276,8 +292,6 @@ impl Chunk {
                     flow_right *= scale;
                 }
 
-                // Smoothly interpolate towards desired flow (momentum/inertia)
-                const FLOW_SMOOTHING: f32 = 0.5; // 0 = instant, 1 = no change
                 let current_flow = self.cells[cell_index].flow;
 
                 self.cells[cell_index].flow = FlowData {
@@ -290,7 +304,8 @@ impl Chunk {
         }
 
         // Step 2: Apply flow to move water between cells
-        for cell_y in (0..cells_per_chunk_axis).rev() {
+        // Write to cells_next, read from cells - this prevents water duplication
+        for cell_y in 0..cells_per_chunk_axis {
             for cell_x in 0..cells_per_chunk_axis {
                 let cell_index = cell_y * cells_per_chunk_axis + cell_x;
                 let flow = self.cells[cell_index].flow;
@@ -305,7 +320,7 @@ impl Chunk {
                 let current_blocked = self.blocks[tile_index].is_solid();
 
                 if current_blocked {
-                    self.cells[cell_index].volume = 0.0;
+                    self.cells_next[cell_index].volume = 0.0;
                     continue;
                 }
 
@@ -338,13 +353,13 @@ impl Chunk {
                     ($in_chunk:expr, $neighbor:expr, $cross_tile:expr, $cross_cell:expr, $tile_idx:expr, $neighbour_idx:expr) => {{
                         if $in_chunk {
                             if !self.blocks[$tile_idx].is_solid() {
-                                Some(&mut self.cells[$neighbour_idx] as *mut LiquidData)
+                                Some(&mut self.cells_next[$neighbour_idx] as *mut LiquidData)
                             } else {
                                 None
                             }
                         } else if let Some(ref mut chunk) = $neighbor {
                             if !chunk.blocks[$cross_tile].is_solid() {
-                                Some(&mut chunk.cells[$cross_cell] as *mut LiquidData)
+                                Some(&mut chunk.cells_next[$cross_cell] as *mut LiquidData)
                             } else {
                                 None
                             }
@@ -359,7 +374,7 @@ impl Chunk {
                     if let Some(target_ptr) = get_neighbor_ptr!(down) {
                         (*target_ptr).volume += flow.down;
                         (*target_ptr).flow_down = true;
-                        self.cells[cell_index].volume -= flow.down;
+                        self.cells_next[cell_index].volume -= flow.down;
                     }
                 }
 
@@ -368,7 +383,7 @@ impl Chunk {
                     if let Some(target_ptr) = get_neighbor_ptr!(left) {
                         (*target_ptr).volume += flow.left;
                         (*target_ptr).flow_left = true;
-                        self.cells[cell_index].volume -= flow.left;
+                        self.cells_next[cell_index].volume -= flow.left;
                     }
                 }
 
@@ -377,7 +392,7 @@ impl Chunk {
                     if let Some(target_ptr) = get_neighbor_ptr!(right) {
                         (*target_ptr).volume += flow.right;
                         (*target_ptr).flow_right = true;
-                        self.cells[cell_index].volume -= flow.right;
+                        self.cells_next[cell_index].volume -= flow.right;
                     }
                 }
 
@@ -386,11 +401,14 @@ impl Chunk {
                     if let Some(target_ptr) = get_neighbor_ptr!(up) {
                         (*target_ptr).volume += flow.up;
                         (*target_ptr).flow_up = true;
-                        self.cells[cell_index].volume -= flow.up;
+                        self.cells_next[cell_index].volume -= flow.up;
                     }
                 }
             }
         }
+
+        // Step 3: Swap buffers - cells_next becomes the new cells
+        std::mem::swap(&mut self.cells, &mut self.cells_next);
     }
 }
 
@@ -417,23 +435,6 @@ impl Terrain {
             let neighbor_down_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y + 1 };
             let neighbor_left_coord = ChunkCoord { x: chunk_coord.x - 1, y: chunk_coord.y };
             let neighbor_right_coord = ChunkCoord { x: chunk_coord.x + 1, y: chunk_coord.y };
-
-            let mut coords = vec![*chunk_coord];
-            if self.chunks.contains_key(&neighbor_up_coord) && neighbor_up_coord != *chunk_coord {
-                coords.push(neighbor_up_coord);
-            }
-            if self.chunks.contains_key(&neighbor_down_coord) && neighbor_down_coord != *chunk_coord
-                && !coords.contains(&neighbor_down_coord) {
-                coords.push(neighbor_down_coord);
-            }
-            if self.chunks.contains_key(&neighbor_left_coord) && neighbor_left_coord != *chunk_coord
-                && !coords.contains(&neighbor_left_coord) {
-                coords.push(neighbor_left_coord);
-            }
-            if self.chunks.contains_key(&neighbor_right_coord) && neighbor_right_coord != *chunk_coord
-                && !coords.contains(&neighbor_right_coord) {
-                coords.push(neighbor_right_coord);
-            }
 
             unsafe {
                 let chunks_raw = &mut self.chunks as *mut HashMap<ChunkCoord, Chunk>;
