@@ -115,6 +115,8 @@ fn main() {
 
 
     let mut debug_enabled = true;
+    let mut updating = false;
+    world_state.update(0.0, &controller);
 
     while !rl.window_should_close() {
         let dt = rl.get_frame_time();
@@ -125,11 +127,16 @@ fn main() {
         if rl.is_key_pressed(KeyboardKey::KEY_APOSTROPHE) {
             world_state.ghost_mode = !world_state.ghost_mode;
         }
+        if rl.is_key_pressed(KeyboardKey::KEY_ENTER) {
+            updating = !updating;
+        }
 
         controller.update(&rl);
         update_controller_raycast_for_mouse(&rl, &camera, &mut controller, &world_state.player);
 
-        world_state.update(dt, &controller);
+        if updating {
+            world_state.update(dt, &controller);
+        }
 
         smooth_camera_to_target(
             &mut camera,
@@ -157,7 +164,7 @@ fn main() {
 
         if debug_enabled {
             d.draw_text(&format!("Pos: ({:.2}, {:.2})", world_state.player.position.x, world_state.player.position.y), 10, 10, 20, Color::DARKGRAY);
-            d.draw_text("Controls: WASD/Arrows=Move, Space=Jump, C=Climb, Shift/X=Dash, Toggle Controls=/, Toggle Ghost='", 500, 10, 16, Color::BLACK);
+            d.draw_text("Controls: WASD/Arrows=Move, Space=Jump, C=Climb, Shift/X=Dash, Toggle Controls=/, Toggle Ghost=', Play/Pause=Enter", 500, 10, 16, Color::BLACK);
             d.draw_text(&format!("FPS: {}", d.get_fps()), 1500, 10, 20, Color::GRAY);
 
             d.draw_text(&format!("Vel: ({:.2}, {:.2})", world_state.player.velocity.x, world_state.player.velocity.y), 10, 35, 20, Color::DARKGRAY);

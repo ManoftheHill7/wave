@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
+use raylib::math::Vector2;
 
 pub const CHUNK_SIZE: usize = 128;
 pub const CELL_RESOLUTION: usize = 2;
@@ -36,6 +37,7 @@ impl Block {
 #[derive(Debug, Clone, Copy)]
 pub struct LiquidData {
     pub volume: f32, // 0.0 is none, 1.0 is full, more then 1.0 is pressurized
+    pub flow: Vector2,
     pub flow_left: bool,
     pub flow_right: bool,
     pub flow_down: bool,
@@ -46,6 +48,7 @@ impl LiquidData {
     fn new(volume: f32) -> Self {
         LiquidData {
             volume,
+            flow: Vector2::zero(),
             flow_left: false,
             flow_right: false,
             flow_down: false,
@@ -119,21 +122,23 @@ impl Chunk {
                        mut neighbor_right: Option<&mut Chunk>) {
         let cells_per_chunk_axis = CHUNK_SIZE * CELL_RESOLUTION;
 
-        for cell_y in (0..cells_per_chunk_axis).rev() {
+        const FLOW_RATE: f32 = 1.0;
+        const PRESSURIZED_VOLUME: f32 = 1.05;
+        const MIN_FLOW: f32 = NO_LIQUID_THRESHOLD;
+
+        // Step 1: Calculate flow vectors for each cell
+        for cell_y in 0..cells_per_chunk_axis {
             for cell_x in 0..cells_per_chunk_axis {
                 let cell_index = cell_y * cells_per_chunk_axis + cell_x;
+
+                self.cells[cell_index].flow = Vector2::zero();
                 self.cells[cell_index].flow_down = false;
                 self.cells[cell_index].flow_up = false;
                 self.cells[cell_index].flow_left = false;
                 self.cells[cell_index].flow_right = false;
-            }
-        }
-        for cell_y in (0..cells_per_chunk_axis).rev() {
-            for cell_x in 0..cells_per_chunk_axis {
-                let cell_index = cell_y * cells_per_chunk_axis + cell_x;
-                let current_cell = self.cells[cell_index];
 
-                if current_cell.volume < 0.0001 {
+                let current_volume = self.cells[cell_index].volume;
+                if current_volume < NO_LIQUID_THRESHOLD {
                     continue;
                 }
 
@@ -141,6 +146,128 @@ impl Chunk {
                 let tile_y = cell_y / CELL_RESOLUTION;
                 let tile_index = tile_y * CHUNK_SIZE + tile_x;
                 let current_blocked = self.blocks[tile_index].is_solid();
+
+                if current_blocked {
+                    continue;
+                }
+
+                macro_rules! get_neighbor_volume {
+                    (down) => { get_neighbor_volume!(cell_y as i32 + 1 < cells_per_chunk_axis as i32, neighbor_down,
+                        tile_x,
+                        cell_x,
+                        (cell_y as usize + 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
+                        ((cell_y as i32 + 1) as usize) * cells_per_chunk_axis + cell_x
+                    )};
+                    (up) => { get_neighbor_volume!(cell_y as i32 - 1 >= 0, neighbor_up,
+                        (CHUNK_SIZE - 1) * CHUNK_SIZE + tile_x,
+                        (cells_per_chunk_axis - 1) * cells_per_chunk_axis + cell_x,
+                        (cell_y as usize - 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
+                        ((cell_y as i32 - 1) as usize) * cells_per_chunk_axis + cell_x
+                    )};
+                    (left) => { get_neighbor_volume!(cell_x as i32 - 1 >= 0, neighbor_left,
+                        tile_y * CHUNK_SIZE + (CHUNK_SIZE - 1),
+                        cell_y * cells_per_chunk_axis + (cells_per_chunk_axis - 1),
+                        tile_y * CHUNK_SIZE + ((cell_x as i32 - 1) as usize) / CELL_RESOLUTION,
+                        cell_y * cells_per_chunk_axis + ((cell_x as i32 - 1) as usize)
+                    )};
+                    (right) => { get_neighbor_volume!(cell_x as i32 + 1 < cells_per_chunk_axis as i32, neighbor_right,
+                        tile_y * CHUNK_SIZE,
+                        cell_y * cells_per_chunk_axis,
+                        tile_y * CHUNK_SIZE + ((cell_x as i32 + 1) as usize) / CELL_RESOLUTION,
+                        cell_y * cells_per_chunk_axis + ((cell_x as i32 + 1) as usize)
+                    )};
+
+                    ($in_chunk:expr, $neighbor:expr, $cross_tile:expr, $cross_cell:expr, $tile_idx:expr, $neighbour_idx:expr) => {{
+                        if $in_chunk {
+                            if !self.blocks[$tile_idx].is_solid() {
+                                Some(self.cells[$neighbour_idx].volume)
+                            } else {
+                                None
+                            }
+                        } else if let Some(ref chunk) = $neighbor {
+                            if !chunk.blocks[$cross_tile].is_solid() {
+                                Some(chunk.cells[$cross_cell].volume)
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    }};
+                }
+
+                let mut flow_x = 0.0;
+                let mut flow_y = 0.0;
+
+                // Gravity (downward)
+                if let Some(down_volume) = get_neighbor_volume!(down) {
+                    if down_volume < PRESSURIZED_VOLUME {
+                        let available_space = PRESSURIZED_VOLUME - down_volume;
+                        let transfer = FLOW_RATE.min(current_volume).min(available_space);
+                        if transfer > MIN_FLOW {
+                            flow_y += transfer;
+                        }
+                    }
+                }
+
+                // Horizontal equalization
+                if let Some(left_volume) = get_neighbor_volume!(left) {
+                    let diff = current_volume - left_volume;
+                    if diff > NO_LIQUID_THRESHOLD {
+                        let transfer = (diff * 0.5 * FLOW_RATE).min(current_volume);
+                        if transfer > MIN_FLOW {
+                            flow_x -= transfer;
+                        }
+                    }
+                }
+
+                if let Some(right_volume) = get_neighbor_volume!(right) {
+                    let diff = current_volume - right_volume;
+                    if diff > NO_LIQUID_THRESHOLD {
+                        let transfer = (diff * 0.5 * FLOW_RATE).min(current_volume);
+                        if transfer > MIN_FLOW {
+                            flow_x += transfer;
+                        }
+                    }
+                }
+
+                // Pressure (upward)
+                if current_volume > 1.0 {
+                    if let Some(up_volume) = get_neighbor_volume!(up) {
+                        if up_volume < 1.0 {
+                            let pressure = current_volume - 1.0;
+                            let available_space = 1.0 - up_volume;
+                            let transfer = (pressure * FLOW_RATE).min(available_space);
+                            if transfer > MIN_FLOW {
+                                flow_y -= transfer;
+                            }
+                        }
+                    }
+                }
+
+                self.cells[cell_index].flow = Vector2::new(flow_x, flow_y);
+            }
+        }
+
+        // Step 2: Apply flow to move water between cells
+        for cell_y in (0..cells_per_chunk_axis).rev() {
+            for cell_x in 0..cells_per_chunk_axis {
+                let cell_index = cell_y * cells_per_chunk_axis + cell_x;
+                let flow = self.cells[cell_index].flow;
+
+                if flow.x.abs() < MIN_FLOW && flow.y.abs() < MIN_FLOW {
+                    continue;
+                }
+
+                let tile_x = cell_x / CELL_RESOLUTION;
+                let tile_y = cell_y / CELL_RESOLUTION;
+                let tile_index = tile_y * CHUNK_SIZE + tile_x;
+                let current_blocked = self.blocks[tile_index].is_solid();
+
+                if current_blocked {
+                    self.cells[cell_index].volume = 0.0;
+                    continue;
+                }
 
                 macro_rules! get_neighbor_ptr {
                     (down) => { get_neighbor_ptr!(cell_y as i32 + 1 < cells_per_chunk_axis as i32, neighbor_down,
@@ -187,70 +314,44 @@ impl Chunk {
                     }};
                 }
 
-                if !current_blocked && current_cell.volume > NO_LIQUID_THRESHOLD {
-                    const FLOW_RATE: f32 = 1.0;
-                    const PRESSURIZED_VOLUME: f32 = 1.05;
-                    const MIN_FLOW: f32 = NO_LIQUID_THRESHOLD;
-
-
-                    // Gravity
+                // Apply downward flow
+                if flow.y > MIN_FLOW {
                     if let Some(target_ptr) = get_neighbor_ptr!(down) {
-                        let target_volume = (*target_ptr).volume;
-                        if target_volume < PRESSURIZED_VOLUME {
-                            let available_space = PRESSURIZED_VOLUME - target_volume;
-                            let transfer = FLOW_RATE.min(self.cells[cell_index].volume).min(available_space);
-                            if transfer > MIN_FLOW {
-                                (*target_ptr).volume += transfer;
-                                (*target_ptr).flow_down = true;
-                                self.cells[cell_index].volume -= transfer;
-                            }
-                        }
-                    }
-
-                    // Equalization
-                    macro_rules! try_horizontal_flow {
-                        ($dir:ident, $flow_flag:ident) => {
-                            let current_volume = self.cells[cell_index].volume;
-                            if current_volume > NO_LIQUID_THRESHOLD {
-                                if let Some(target_ptr) = get_neighbor_ptr!($dir) {
-                                    let target_volume = (*target_ptr).volume;
-                                    let diff = current_volume - target_volume;
-                                    if diff > NO_LIQUID_THRESHOLD {
-                                        let transfer = (diff * 0.5 * FLOW_RATE).min(self.cells[cell_index].volume);
-                                        if transfer > MIN_FLOW {
-                                            (*target_ptr).volume += transfer;
-                                            (*target_ptr).$flow_flag = true;
-                                            self.cells[cell_index].volume -= transfer;
-                                        }
-                                    }
-                                }
-                            }
-                        };
-                    }
-                    try_horizontal_flow!(left, flow_left);
-                    try_horizontal_flow!(right, flow_right);
-
-                    // Pressure
-                    let current_volume = self.cells[cell_index].volume;
-                    if current_volume > 1.0 {
-                        if let Some(target_ptr) = get_neighbor_ptr!(up) {
-                            let target_volume = (*target_ptr).volume;
-                            if target_volume < 1.0 {
-                                let pressure = current_volume - 1.0;
-                                let available_space = 1.0 - target_volume;
-                                let transfer = (pressure * FLOW_RATE).min(available_space);
-                                if transfer > MIN_FLOW {
-                                    (*target_ptr).volume += transfer;
-                                    (*target_ptr).flow_up = true;
-                                    self.cells[cell_index].volume -= transfer;
-                                }
-                            }
-                        }
+                        let transfer = flow.y.min(self.cells[cell_index].volume);
+                        (*target_ptr).volume += transfer;
+                        (*target_ptr).flow_down = true;
+                        self.cells[cell_index].volume -= transfer;
                     }
                 }
 
-                if current_blocked {
-                    self.cells[cell_index].volume = 0.0;
+                // Apply upward flow
+                if flow.y < -MIN_FLOW {
+                    if let Some(target_ptr) = get_neighbor_ptr!(up) {
+                        let transfer = (-flow.y).min(self.cells[cell_index].volume);
+                        (*target_ptr).volume += transfer;
+                        (*target_ptr).flow_up = true;
+                        self.cells[cell_index].volume -= transfer;
+                    }
+                }
+
+                // Apply leftward flow
+                if flow.x < -MIN_FLOW {
+                    if let Some(target_ptr) = get_neighbor_ptr!(left) {
+                        let transfer = (-flow.x).min(self.cells[cell_index].volume);
+                        (*target_ptr).volume += transfer;
+                        (*target_ptr).flow_left = true;
+                        self.cells[cell_index].volume -= transfer;
+                    }
+                }
+
+                // Apply rightward flow
+                if flow.x > MIN_FLOW {
+                    if let Some(target_ptr) = get_neighbor_ptr!(right) {
+                        let transfer = flow.x.min(self.cells[cell_index].volume);
+                        (*target_ptr).volume += transfer;
+                        (*target_ptr).flow_right = true;
+                        self.cells[cell_index].volume -= transfer;
+                    }
                 }
             }
         }

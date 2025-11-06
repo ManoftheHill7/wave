@@ -32,7 +32,7 @@ pub const DASH_HEIGHT: f32 = 0.9;
 pub const BASE_WIDTH: f32 = 1.3;
 pub const DASH_WIDTH: f32 = 0.9;
 
-pub const WATER_BUOYANCY: f32 = -GRAVITY / 2.0;
+pub const WATER_BUOYANCY: f32 = -GRAVITY / 4.0;
 pub const WATER_DRAG: f32 = 0.9;
 pub const SWIM_SPEED: f32 = 8.0;
 pub const SWIM_EXIT_TIME: f32 = 0.10;

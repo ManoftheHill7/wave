@@ -2,7 +2,7 @@ use crate::terrain::{Block, Chunk, ChunkCoord, CHUNK_SIZE};
 use noise::{NoiseFn, Perlin};
 
 const SEA_LEVEL: i32 = 0;
-const SEA_FLOOR: i32 = 80;
+const SEA_FLOOR: i32 = 30;
 const BEACH_HEIGHT: i32 = -10;
 
 pub struct TerrainGenerator {
@@ -83,7 +83,18 @@ impl TerrainGenerator {
                 chunk.set(lx, ly, block_type);
             }
         }
-        self.clean_jaggies(chunk, 3)
+        chunk = self.clean_jaggies(chunk, 3);
+
+        for lx in 0..CHUNK_SIZE {
+            let wx = coord.x * chunk_size + lx as i32;
+            for ly in 0..CHUNK_SIZE {
+                let wy = coord.y * chunk_size + ly as i32;
+                if wy > 40 && chunk.get(lx, ly) == Block::Air {
+                    chunk.set(lx, ly, Block::Water);
+                }
+            }
+        }
+        return chunk;
     }
 
     pub fn clean_jaggies(&self, chunk: Chunk, iterations: usize) -> Chunk {

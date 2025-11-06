@@ -51,6 +51,6 @@ impl WorldState {
             }
         }
 
-        self.terrain.unload_distant_chunks(px, py, loaded_chunk_radius);
+        self.terrain.unload_distant_chunks(px, py, loaded_chunk_radius + 1);
     }
 }
