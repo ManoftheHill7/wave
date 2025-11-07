@@ -10,8 +10,10 @@ Raw Materials
 * Flaxseed
 * Canola
 * Fish
+
   * \[Common and rare salt water variety]
   * \[Cave variety?]
+
 * Squid
 * Clam
 * Conch Shell
@@ -20,11 +22,14 @@ Raw Materials
 * Lava
 * Obsidian
 * Crystals and Gems
+
   * Amethyst
   * Diamond
   * Ruby
   * Emerald
+
 * Ores
+
   * Coal Ore
   * Tin Ore
   * Copper Ore
@@ -42,40 +47,67 @@ Raw Materials
 Tools/Player Items
 
 * Pickaxe
+
   * Starts at Stone for upgrades
-    * Upgrades increase speed, area, and ability to mine higher tiered ores
-* Spade
-  * Starts at Stone for upgrades
-    * Upgrades increase speed and area
+
+    * Upgrades increase speed and ability to mine higher tiered ores \[area?]
+
 * Spear
+
   * Starts at Stone for upgrades
-    * Upgrades increase damage, distance, and speed
+
+    * Upgrades increase damage, distance, and less cooldown
+
 * Lamp
+
   * Starts at Bronze for upgrades
+
     * Upgrades increase radius, duration, capacity, and fuel type (Canola Oil or Lumostone)
+
 * Fishing Rod
+
   * Starts at Copper for upgrades
+
     * Upgrades increase catching chance, rarity, and saves bait
+
 * Grappling Hook
+
   * Starts at Iron for upgrades
-    * Upgrades increase speed and distance
+
+    * Upgrades increase retraction speed and distance
+
 * Glider
+
+&nbsp; \*   Upgrades increase gliding angle	
+
 * Boots
+
   * Hover Boots
+
     * When the player runs off a platform, they continue to walk on air for a few seconds. Then gravity takes over normally. (Like in LoZ: OoT)
+
   * Steel Boots
+
     * The player is affected by x2-x4 gravity.
+
   * Air Boots
+
     * The player is affected by x0.25-x0.5 gravity.
+
   * Dash Boots
+
     * The player can run and dash x2-x4 faster.
+
   * Flippers
+
     * Allows the player to swim faster.
 
 Crafting (Workbench)
 
 * Fix Glider with Linen Sheets
+
   * Glider is broken until repaired
+
 * 1 Log = 10 Stick
 * 5 Stick = 6 Wooden Ladder
 * 1 Stick + 1 Coal Ore = 5 Coal Torch
@@ -85,6 +117,7 @@ Crafting (Workbench)
 * 2 Bronze Bar + 1 Conch Shell + 2 Pearl + 3 Glass = Tidalwave Clock (made once)
 * 1 Flax = 2 Rope
 * 10 Flax = 1 Linen Sheet
+* 1 Explosive Powder + Iron Shell = 1 Bomb
 
 Smelting (Furnace)
 
@@ -105,17 +138,23 @@ Smelting (Furnace)
 Smithing (Anvil)
 
 * Upgrade Tools
+
   * stone > copper > bronze > iron > steel > platinum > mithril > ozathinum > torzite > etherealite
+
 * Fix Tools with respective Bars
+
   * Pickaxe has reduced mining speeds varying with tier and area of mining is reduced to 1 block.
   * Spade has reduced digging appears varying with tier and area of digging is reduced to 1 block
   * Spear has reduced damage and speed varying with tier
   * Lamp has reduced radius and duration varying with tier and fuel type
   * Fishing Rod has reduced catching chance varying with tier
   * Grappling Hook has reduced speed, distance, and chance to hook varying with tier
+
 * 5 Bronze Bar = 12 Bronze Ladder
 * 5 Steel Bar = 12 Steel Ladder
+* 1 Iron = 1 Iron Shell
 * 2 Mithril Bar = 1 Bucket
+* 3 Coal Ore + 3 Lumosite Ore = 1 Explosive Dust
 * 1 Diamond = 20 Diamond Dust
 
 Cooking (Cutting Board)
@@ -134,3 +173,8 @@ Cooking (Range)
 * 5 Fish Meat + 3 Flour = Fish Pie
 * 2 Squid Chunks + 1 Flour + 1 Canola Oil = Deep Fried Squid
 * 6 Clam Meat + 2 Mushroom + 1 Bread = Clam Chowder Bread Bowl
+
+Respawn Mechanism
+
+Mermaids rescue you and leave you on the shore. They take the most shiny object (0-1 is assigned to each item) or maybe it's random as payment for the rescue. A pearl is worth 1, so holding onto one will help, but take up an inventory space.
+
