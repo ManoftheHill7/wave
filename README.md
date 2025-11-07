@@ -27,10 +27,11 @@ Things required for the games core concept
 - [x] Basic Tileset
 - [x] Raycast for player tools
 - [x] Cave generation
-- [ ] Dynamic Water
-- [ ] Tidal cycle
+- [x] Dynamic Water
+- [x] Tidal cycle
 - [ ] Inventory system
 - [ ] Player health/HUD
+- [ ] Player Breath hold
 - [ ] Tool - Dash
 - [ ] Tool - Pickaxe
 - [ ] Tool - Grappling Hook
@@ -71,6 +72,7 @@ Things I will get to if there is time
 - [ ] Decorative tiles for base building
 - [ ] Message in a bottle hints for gameplay
 - [ ] Boss battle
+- [ ] Improve water simulation to support natural waves
 
 ## Links
 

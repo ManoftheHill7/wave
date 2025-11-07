@@ -53,29 +53,24 @@ fn smooth_camera_to_target(
 ) {
     let max_speed = 10000.0;
 
-    // Exponential smoothing calculation
     let omega = 2.0 / smooth_time;
     let x = omega * dt;
     let exp = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x);
 
-    // X-axis smoothing
     let change_x = camera.target.x - target_x;
     let temp_x = (camera_velocity.x + omega * change_x) * dt;
     camera_velocity.x = (camera_velocity.x - omega * temp_x) * exp;
 
-    // Clamp velocity to max speed
     if camera_velocity.x.abs() > max_speed {
         camera_velocity.x = camera_velocity.x.signum() * max_speed;
     }
 
     camera.target.x = target_x + (change_x + temp_x) * exp;
 
-    // Y-axis smoothing
     let change_y = camera.target.y - target_y;
     let temp_y = (camera_velocity.y + omega * change_y) * dt;
     camera_velocity.y = (camera_velocity.y - omega * temp_y) * exp;
 
-    // Clamp velocity to max speed
     if camera_velocity.y.abs() > max_speed {
         camera_velocity.y = camera_velocity.y.signum() * max_speed;
     }
@@ -93,14 +88,12 @@ fn main() {
 
     let textures = TextureManager::load(&mut rl, &thread);
 
-    // Load player shader
     let mut player_shader = rl.load_shader(
         &thread,
         Some("shaders/playerShader.vert"),
         Some("shaders/playerShader.frag")
     );
 
-    // Get shader uniform locations
     let loc_original_0 = player_shader.get_shader_location("original_0");
     let loc_replace_0 = player_shader.get_shader_location("replace_0");
     let loc_exhustion = player_shader.get_shader_location("exhustion");
@@ -122,22 +115,28 @@ fn main() {
 
 
     let mut debug_enabled = true;
+    let mut updating = true;
+    world_state.update(0.0, &controller);
 
     while !rl.window_should_close() {
         let dt = rl.get_frame_time();
 
-        // Toggle debug mode with '/' key
         if rl.is_key_pressed(KeyboardKey::KEY_SLASH) {
             debug_enabled = !debug_enabled;
         }
         if rl.is_key_pressed(KeyboardKey::KEY_APOSTROPHE) {
             world_state.ghost_mode = !world_state.ghost_mode;
         }
+        if rl.is_key_pressed(KeyboardKey::KEY_ENTER) {
+            updating = !updating;
+        }
 
         controller.update(&rl);
         update_controller_raycast_for_mouse(&rl, &camera, &mut controller, &world_state.player);
 
-        world_state.update(dt, &controller);
+        if updating {
+            world_state.update(dt, &controller);
+        }
 
         smooth_camera_to_target(
             &mut camera,
@@ -163,10 +162,9 @@ fn main() {
             );
         }
 
-        // Draw HUD
         if debug_enabled {
             d.draw_text(&format!("Pos: ({:.2}, {:.2})", world_state.player.position.x, world_state.player.position.y), 10, 10, 20, Color::DARKGRAY);
-            d.draw_text("Controls: WASD/Arrows=Move, Space=Jump, C=Climb, Shift/X=Dash, Toggle Controls=/, Toggle Ghost='", 500, 10, 16, Color::BLACK);
+            d.draw_text("Controls: WASD/Arrows=Move, Space=Jump, C=Climb, Shift/X=Dash, Toggle Controls=/, Toggle Ghost=', Play/Pause=Enter", 500, 10, 16, Color::BLACK);
             d.draw_text(&format!("FPS: {}", d.get_fps()), 1500, 10, 20, Color::GRAY);
 
             d.draw_text(&format!("Vel: ({:.2}, {:.2})", world_state.player.velocity.x, world_state.player.velocity.y), 10, 35, 20, Color::DARKGRAY);
@@ -174,6 +172,7 @@ fn main() {
                     world_state.player.on_ground, world_state.player.is_climbing,
                     world_state.player.is_sliding, world_state.player.is_dashing,
                     world_state.player.is_swimming), 10, 60, 20, Color::DARKGRAY);
+            d.draw_text(&format!("Tide: {}", world_state.tide_level()), 10, 85, 20, Color::DARKGRAY);
         }
     }
 }

@@ -1,7 +1,7 @@
 use raylib::prelude::*;
 use crate::world::WorldState;
 use crate::player::Player;
-use crate::terrain::{Terrain, BlockType};
+use crate::terrain::{Terrain, Block, CELL_RESOLUTION, NO_LIQUID_THRESHOLD};
 use crate::{TextureManager, pixels_per_world_unit};
 
 type ShaderLocs = (i32, i32, i32, i32);
@@ -26,41 +26,52 @@ pub fn render_terrain(d: &mut RaylibDrawHandle, terrain: &Terrain, px: i32, py: 
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
 
-            if block.block_type != BlockType::Air {
-                let texture = match block.block_type {
-                    BlockType::Dirt => &textures.tiles.dirt,
-                    BlockType::Stone => &textures.tiles.stone,
-                    BlockType::Grass => &textures.tiles.grass,
-                    BlockType::Sand => &textures.tiles.sand,
-                    BlockType::Lava => &textures.tiles.lava,
-                    BlockType::Water => &textures.tiles.water,
-                    BlockType::Log => &textures.tiles.log,
-                    BlockType::Leaf => &textures.tiles.leaves,
-                    BlockType::Air => continue,
+            if block.is_solid() {
+                let texture = match block {
+                    Block::Dirt => &textures.tiles.dirt,
+                    Block::Stone => &textures.tiles.stone,
+                    Block::Grass => &textures.tiles.grass,
+                    Block::Sand => &textures.tiles.sand,
+                    Block::Lava => &textures.tiles.lava,
+                    Block::Water => &textures.tiles.water,
+                    Block::Log => &textures.tiles.log,
+                    Block::Leaf => &textures.tiles.leaves,
+                    Block::Air => continue,
+                    Block::Tide => continue,
                 };
 
                 render_tile(d, x as f32, y as f32, texture);
+            } else {
+                for cell_y in 0..CELL_RESOLUTION {
+                    for cell_x in 0..CELL_RESOLUTION {
+                        render_water(d, terrain,
+                            x as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
+                            y as f32 + cell_y as f32 / CELL_RESOLUTION as f32
+                        );
+                    }
+                }
+
             }
         }
     }
 }
 
-// Color palettes: (original_0, replace_0)
+// Maps to uniforms (original_0, replace_0)
 const COLOR_PALETTES: &[([f32; 4], [f32; 4])] = &[
     // Blue scarf
     (
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // original_0: red scarf
-        [0.0, 0.5, 1.0, 1.0],      // replace_0: blue scarf
+        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
+        [0.0, 0.5, 1.0, 1.0],
     ),
     // Red scarf
     (
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // original_0: red scarf
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // replace_0: red scarf
+        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
+        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
     ),
-    // Extra dash palette - pink scarf
+    // Pink scarf
     (
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // original_0: red scarf
-        [172.0 / 255.0, 50.0 / 255.0, 172.0 / 255.0, 1.0], // replace_0: red scarf
+        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
+        [172.0 / 255.0, 50.0 / 255.0, 172.0 / 255.0, 1.0],
     ),
 ];
 
@@ -77,48 +88,48 @@ pub fn render_player(
         };
     }
 
-    const walkFrameLength: f32 = 0.1;
-    const fallingFrameLength: f32 = 0.2;
-    const idleFrameLength: f32 = 0.25;
-    const swimmingFrameLength: f32 = 0.18;
+    const WALK_FRAME_LENGTH: f32 = 0.1;
+    const FALLING_FRAME_LENGTH: f32 = 0.2;
+    const IDLE_FRAME_LENGTH: f32 = 0.25;
+    const SWIMMING_FRAME_LENGTH: f32 = 0.18;
 
     let mut rotation = 0.0;
 
     let pt = &textures.player.sammi;
     let texture = if player.is_dashing {
         rotation = player.velocity.y.atan2(player.velocity.x).to_degrees();
-        animate!(&pt.dash, walkFrameLength)
+        animate!(&pt.dash, WALK_FRAME_LENGTH)
     } else if player.is_climbing {
         if player.velocity.y != 0.0 {
-            animate!(pt.climb, walkFrameLength)
+            animate!(pt.climb, WALK_FRAME_LENGTH)
         } else {
             &pt.climb[0]
         }
     } else if player.is_swimming {
-        animate!(pt.swimming, swimmingFrameLength)
+        animate!(pt.swimming, SWIMMING_FRAME_LENGTH)
     } else if player.is_sliding {
         &pt.sliding
     } else if player.on_ground {
         if player.velocity.x != 0.0 {
-            animate!(pt.walk, walkFrameLength)
+            animate!(pt.walk, WALK_FRAME_LENGTH)
         } else {
-            animate!(pt.idle, idleFrameLength)
+            animate!(pt.idle, IDLE_FRAME_LENGTH)
         }
     } else {
         if player.velocity.y > 0.0 {
-            animate!(pt.falling, fallingFrameLength)
+            animate!(pt.falling, FALLING_FRAME_LENGTH)
         } else {
             &pt.jumping
         }
     };
     let rw = 1.3;
     let rh = 2.0;
-    let fudgeX = 1.3;
-    let fudgeY = 0.5;
-    let fudgeX_off = 0.75;
-    let fudgeY_off = 1.0;
-    let tw = rw * pixels_per_world_unit() * (1.0 + fudgeX);
-    let th = rh * pixels_per_world_unit() * (1.0 + fudgeY);
+    let fudge_x = 1.3;
+    let fudge_y = 0.5;
+    let fudge_x_off = 0.75;
+    let fudge_y_off = 1.0;
+    let tw = rw * pixels_per_world_unit() * (1.0 + fudge_x);
+    let th = rh * pixels_per_world_unit() * (1.0 + fudge_y);
 
     let exhaustion_level = 1.0 - (player.climb_stamina / crate::player::CLIMB_STAMINA);
     let palette = &COLOR_PALETTES[player.dashes as usize];
@@ -177,8 +188,8 @@ pub fn render_player(
                 texture.height as f32
             ),
             Rectangle::new(
-                player.position.x * pixels_per_world_unit() - pixels_per_world_unit() * fudgeX_off + tw / 2.0,
-                player.position.y * pixels_per_world_unit() - pixels_per_world_unit() * fudgeY_off + th / 2.0,
+                player.position.x * pixels_per_world_unit() - pixels_per_world_unit() * fudge_x_off + tw / 2.0,
+                player.position.y * pixels_per_world_unit() - pixels_per_world_unit() * fudge_y_off + th / 2.0,
                 tw, th
             ),
             Vector2::new(tw / 2.0, th / 2.0),
@@ -187,7 +198,6 @@ pub fn render_player(
         );
     }
 
-    // Selected tile
     let player_center_x = (player.position.x + player.width / 2.0) *
         pixels_per_world_unit();
     let player_center_y = (player.position.y + player.height / 2.0) *
@@ -207,7 +217,7 @@ pub fn render_player(
             Color::GREEN
         );
     }
-    if true {
+    if false {
         d.draw_line_ex(
             Vector2::new(player_center_x, player_center_y),
             Vector2::new(raycast_end_x, raycast_end_y),
@@ -221,6 +231,32 @@ pub fn render_player(
             (player.width * pixels_per_world_unit()) as i32,
             (player.height * pixels_per_world_unit()) as i32,
             Color::RED);
+    }
+}
+
+pub fn render_water(d: &mut RaylibDrawHandle, terrain: &Terrain, x: f32, y: f32) {
+    let ld = terrain.liquid_at(x, y);
+    let amount = ld.volume;
+    if amount > NO_LIQUID_THRESHOLD {
+        let volume_clamped = amount.min(1.0).max(0.0);
+
+        let intensity = volume_clamped.powf(0.5);
+        let r = (100.0 * (1.0 - intensity)) as u8;
+        let g = (150.0 * (1.0 - intensity) + 100.0 * intensity) as u8;
+        let b = (255.0 * (0.3 + 0.7 * intensity)) as u8;
+        let a = (255.0 * intensity.max(0.3)) as u8;
+
+        let cell_size: i32 = (pixels_per_world_unit() / CELL_RESOLUTION as f32) as i32;
+        let fill_height: i32 = if ld.flow_down { cell_size } else { (cell_size as f32 * volume_clamped) as i32 };
+        let y_offset: i32 = cell_size - fill_height;
+
+        d.draw_rectangle(
+            (x * pixels_per_world_unit()) as i32,
+            (y * pixels_per_world_unit()) as i32 + y_offset,
+            cell_size,
+            fill_height,
+            Color::new(r, g, b, a)
+        );
     }
 }
 

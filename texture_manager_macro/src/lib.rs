@@ -7,8 +7,8 @@ use walkdir::WalkDir;
 
 #[derive(Debug)]
 struct FolderNode {
-    textures: Vec<(String, String)>, // (field_name, file_path) - single textures
-    texture_arrays: Vec<(String, Vec<String>)>, // (field_name, vec of file_paths) - frames/variants
+    textures: Vec<(String, String)>,
+    texture_arrays: Vec<(String, Vec<String>)>,
     subfolders: BTreeMap<String, FolderNode>,
 }
 
@@ -29,10 +29,6 @@ fn sanitize_ident(name: &str) -> String {
 }
 
 fn parse_frame_or_variant(file_stem: &str) -> Option<(String, usize)> {
-    // Returns: (basename, frame_number)
-    // Example: "walk_f0" -> Some(("walk", 0))
-    // Example: "idle_v2" -> Some(("idle", 2))
-    
     if let Some(pos) = file_stem.rfind("_f") {
         let base = &file_stem[..pos];
         let num_str = &file_stem[pos + 2..];
@@ -40,7 +36,7 @@ fn parse_frame_or_variant(file_stem: &str) -> Option<(String, usize)> {
             return Some((base.to_string(), num));
         }
     }
-    
+
     if let Some(pos) = file_stem.rfind("_v") {
         let base = &file_stem[..pos];
         let num_str = &file_stem[pos + 2..];
@@ -48,7 +44,7 @@ fn parse_frame_or_variant(file_stem: &str) -> Option<(String, usize)> {
             return Some((base.to_string(), num));
         }
     }
-    
+
     None
 }
 
@@ -59,7 +55,6 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
         return root;
     }
 
-    // First pass: collect all files organized by their parent directory
     let mut files_by_dir: BTreeMap<String, Vec<(String, String, String)>> = BTreeMap::new();
 
     for entry in WalkDir::new(assets_path).min_depth(1) {
@@ -73,7 +68,6 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
                         if let Some(file_stem) = path.file_stem() {
                             let file_stem_str = file_stem.to_string_lossy().to_string();
 
-                            // Get the relative path from assets root
                             let relative_path = path.strip_prefix(assets_path)
                                 .unwrap()
                                 .to_string_lossy()
@@ -81,7 +75,6 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
 
                             let full_path = format!("{}/{}", assets_folder_str, relative_path);
 
-                            // Get parent directory path
                             let parent_relative = path.parent()
                                 .unwrap()
                                 .strip_prefix(assets_path)
@@ -100,9 +93,7 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
         }
     }
 
-    // Second pass: process files by directory and group frames/variants
     for (_dir_path, files) in files_by_dir {
-        // Group files by basename if they're frames or variants
         let mut grouped: BTreeMap<String, BTreeMap<usize, (String, String)>> = BTreeMap::new();
         let mut singles: Vec<(String, String, String)> = Vec::new();
 
@@ -117,9 +108,7 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
             }
         }
 
-        // Process grouped textures (frames/variants)
         for (basename, indexed_files) in grouped {
-            // Convert BTreeMap to sorted Vec by index
             let mut sorted_files: Vec<(usize, String, String)> = indexed_files
                 .into_iter()
                 .map(|(idx, (path, parent))| (idx, path, parent))
@@ -131,7 +120,6 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
                 let field_name = sanitize_ident(&basename);
                 let paths: Vec<String> = sorted_files.into_iter().map(|(_, path, _)| path).collect();
 
-                // Navigate to the correct folder node
                 let mut current_node = &mut root;
                 if !parent_relative.is_empty() {
                     for component in Path::new(&parent_relative).components() {
@@ -146,11 +134,9 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
             }
         }
 
-        // Process single textures
         for (file_stem, full_path, parent_relative) in singles {
             let field_name = sanitize_ident(&file_stem);
 
-            // Navigate to the correct folder node
             let mut current_node = &mut root;
             if !parent_relative.is_empty() {
                 for component in Path::new(&parent_relative).components() {
@@ -173,7 +159,6 @@ fn generate_struct_for_folder(
     node: &FolderNode,
     nested_structs: &mut Vec<proc_macro2::TokenStream>,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
-    // Generate struct name based on full path to avoid conflicts
     let struct_name_str = if folder_path.is_empty() {
         "TextureManager".to_string()
     } else {
@@ -184,11 +169,9 @@ fn generate_struct_for_folder(
     let mut field_declarations = Vec::new();
     let mut load_statements = Vec::new();
 
-    // Sort textures for deterministic output
     let mut sorted_textures = node.textures.clone();
     sorted_textures.sort_by(|a, b| a.0.cmp(&b.0));
 
-    // Add texture fields
     for (field_name, file_path) in &sorted_textures {
         let field_ident = syn::Ident::new(field_name, proc_macro2::Span::call_site());
 
@@ -206,11 +189,9 @@ fn generate_struct_for_folder(
         });
     }
 
-    // Sort texture arrays for deterministic output
     let mut sorted_arrays = node.texture_arrays.clone();
     sorted_arrays.sort_by(|a, b| a.0.cmp(&b.0));
 
-    // Add texture array fields
     for (field_name, file_paths) in &sorted_arrays {
         let field_ident = syn::Ident::new(field_name, proc_macro2::Span::call_site());
 
@@ -234,7 +215,6 @@ fn generate_struct_for_folder(
         });
     }
 
-    // Add subfolder fields
     for (subfolder_name, subfolder_node) in &node.subfolders {
         let new_path = if folder_path.is_empty() {
             subfolder_name.clone()

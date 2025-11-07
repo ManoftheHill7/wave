@@ -1,7 +1,8 @@
-use crate::terrain::{Block, BlockType, Chunk, ChunkCoord, CHUNK_SIZE};
+use crate::terrain::{Block, Chunk, ChunkCoord, CHUNK_SIZE};
 use noise::{NoiseFn, Perlin};
 
 const SEA_LEVEL: i32 = 0;
+const SEA_FLOOR: i32 = 30;
 const BEACH_HEIGHT: i32 = -10;
 
 pub struct TerrainGenerator {
@@ -32,26 +33,26 @@ impl TerrainGenerator {
     pub fn generate_hill_chunk(&self, coord: ChunkCoord) -> Chunk {
         let mut chunk = Chunk::new(coord);
         let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
-        let noiseDetail = 100;
-        let noiseHeight = 10;
+        let noise_detail = 100;
+        let noise_height = 10;
 
         // Starts to show flaws if x>14000
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
-            let height_f = noiseHeight as f64 * self.noise.get([wx as f64 * (1.0 / noiseDetail as f64)]);
+            let height_f = noise_height as f64 * self.noise.get([wx as f64 * (1.0 / noise_detail as f64)]);
             let height = height_f as i32 - coord.x + BEACH_HEIGHT;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
 
                 let block_type = if wy == height {
-                    BlockType::Grass
+                    Block::Grass
                 } else if wy > height {
-                    BlockType::Dirt
+                    Block::Dirt
                 } else {
-                    BlockType::Air
+                    Block::Air
                 };
 
-                chunk.set_block(lx, ly, Block { block_type });
+                chunk.set(lx, ly, block_type);
             }
         }
         // self.add_tree(&mut chunk, 15, 1, 10, 20, coord);
@@ -62,56 +63,39 @@ impl TerrainGenerator {
     pub fn generate_tunnels_chunk(&self, coord: ChunkCoord) -> Chunk {
         let mut chunk = Chunk::new(coord);
         let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
-        let noiseDetail = 8.0;
-        let air_percent = 0.5;
+        let noise_detail = 8.0;
+        let air_percent = 0.6;
+        let water_spawn_percent = 0.05;
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
-                let nv = (1.0 + self.noise.get([wx as f64 / noiseDetail, wy as f64 / noiseDetail])) / 2.0;
+                let nv = (1.0 + self.noise.get([wx as f64 / noise_detail, wy as f64 / noise_detail])) / 2.0;
                 let block_type = if air_percent > nv {
-                    BlockType::Air
+                    if water_spawn_percent > nv {
+                        Block::Tide
+                    } else {
+                        Block::Air
+                    }
                 } else {
-                    BlockType::Stone
+                    Block::Stone
                 };
-                chunk.set_block(lx, ly, Block { block_type });
+                chunk.set(lx, ly, block_type);
             }
         }
-        self.clean_jaggies(chunk, 3)
-    }
 
-    pub fn clean_jaggies(&self, chunk: Chunk, iterations: usize) -> Chunk {
-        if iterations == 0 {
-            return chunk;
-        }
-
-        let min_neighbours = 4;
-        let mut newChunk = chunk;
-
-        for lx in 0..CHUNK_SIZE {
-            for ly in 0..CHUNK_SIZE {
-                let mut nc = 0;
-                for nx in (lx as i32 -1)..(lx as i32)+1 {
-                    for ny in (ly as i32 -1)..(ly as i32)+1 {
-                        if nx >= 0 && ny >= 0 && nx < CHUNK_SIZE as i32 && ny < CHUNK_SIZE as i32 {
-                            if chunk.get_block(nx as usize, ny as usize).block_type != BlockType::Air {
-                                nc += 1;
-                            }
-                        } else {
-                            nc += 1;
-                        }
+        if false {
+            for lx in 0..CHUNK_SIZE {
+                let wx = coord.x * chunk_size + lx as i32;
+                for ly in 0..CHUNK_SIZE {
+                    let wy = coord.y * chunk_size + ly as i32;
+                    if wy > 40 && chunk.get(lx, ly) == Block::Air {
+                        chunk.set(lx, ly, Block::Water);
                     }
                 }
-
-                if nc < min_neighbours {
-                    newChunk.set_block(lx, ly, Block { block_type: BlockType::Air })
-                }
             }
         }
-
-
-
-        return newChunk
+        return chunk;
     }
 
     pub fn generate_ocean_chunk(&self, coord: ChunkCoord) -> Chunk {
@@ -119,16 +103,17 @@ impl TerrainGenerator {
         let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
 
         for lx in 0..CHUNK_SIZE {
-            // let wx = coord.x * chunk_size + lx as i32;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
-                let block_type = if wy > SEA_LEVEL {
-                    BlockType::Water
+                let block_type = if wy > SEA_FLOOR {
+                    Block::Sand
+                } else if wy > SEA_LEVEL {
+                    Block::Water
                 } else {
-                    BlockType::Air
+                    Block::Air
                 };
 
-                chunk.set_block(lx, ly, Block { block_type });
+                chunk.set(lx, ly, block_type);
             }
         }
         chunk
@@ -138,7 +123,7 @@ impl TerrainGenerator {
         let mut chunk = Chunk::new(coord);
         for lx in 0..CHUNK_SIZE {
             for ly in 0..CHUNK_SIZE {
-                chunk.set_block(lx, ly, Block { block_type: BlockType::Air });
+                chunk.set(lx, ly, Block::Air);
             }
         }
         chunk
@@ -158,29 +143,31 @@ impl TerrainGenerator {
             let wx = coord.x * chunk_size + lx as i32;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
-                let block_type = if wx <= inflection_x {
+                let block_type = if wy > SEA_FLOOR {
+                    Block::Sand
+                } else if wx <= inflection_x {
                     if ((offset_left + wx as f32 * big_slope) as i32) < wy {
-                        BlockType::Sand
+                        Block::Sand
                     } else {
                         if wy > SEA_LEVEL {
-                            BlockType::Water
+                            Block::Water
                         } else {
-                            BlockType::Air
+                            Block::Air
                         }
                     }
                 } else {
                     if ((offset_right + (wx - inflection_x) as f32 * little_slope) as i32) < wy {
-                        BlockType::Sand
+                        Block::Sand
                     } else {
                         if wy > SEA_LEVEL {
-                            BlockType::Water
+                            Block::Water
                         } else {
-                            BlockType::Air
+                            Block::Air
                         }
                     }
                 };
 
-                chunk.set_block(lx, ly, Block { block_type });
+                chunk.set(lx, ly, block_type);
             }
         }
         chunk
@@ -194,16 +181,17 @@ impl TerrainGenerator {
         let trunk_height = (height as f32 * 0.6).ceil() as i32;
         let canopy_height = height - trunk_height;
 
-        // Generate main trunk
+        // Trunk
         for i in 0..trunk_height {
             let trunk_y = y - i;
 
             if self.is_in_chunk(x, trunk_y, chunk_coord) {
                 let (lx, ly) = self.world_to_local(x, trunk_y, chunk_coord);
-                chunk.set_block(lx, ly, Block { block_type: BlockType::Log });
+                chunk.set(lx, ly, Block::Log);
             }
         }
 
+        // Leaves
         let canopy_base_y = y - trunk_height;
         for layer in 0..canopy_height {
             let canopy_y = canopy_base_y - layer;
@@ -219,7 +207,7 @@ impl TerrainGenerator {
 
                 if self.is_in_chunk(leaf_x, canopy_y, chunk_coord) {
                     let (lx, ly) = self.world_to_local(leaf_x, canopy_y, chunk_coord);
-                    chunk.set_block(lx, ly, Block { block_type: BlockType::Leaf });
+                    chunk.set(lx, ly, Block::Leaf);
                 }
             }
         }
