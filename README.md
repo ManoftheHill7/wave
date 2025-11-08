@@ -35,7 +35,7 @@ Things required for the games core concept
 - [x] Player health/HUD
 - [x] Tool - Dash
 - [x] Player Breath hold
-- [ ] Tileset variants
+- [x] Tileset variants
 - [ ] Tool - Pickaxe
 - [ ] Tool - Grappling Hook
 - [ ] Ore generation
@@ -54,6 +54,7 @@ Things that I would really like to have
 - [ ] Dynamic lighting
 - [ ] Tool - Lamp
 - [ ] Parallax backgrounds
+- [ ] Improved hitbox/collision handling
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
 - [ ] Tide clears building items
 - [ ] Multiple cave biomes as you get deeper

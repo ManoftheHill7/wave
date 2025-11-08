@@ -11,3 +11,5 @@ syn = "2.0"
 quote = "1.0"
 proc-macro2 = "1.0"
 walkdir = "2.4"
+raylib = "5.0"
+texture_helpers = { path = "../texture_helpers" }

@@ -1,7 +1,7 @@
 use crate::inventory_screen::InventoryScreen;
 use crate::player::Player;
 use crate::terrain::{Block, Terrain, CELL_RESOLUTION, NO_LIQUID_THRESHOLD};
-use crate::{pixels_per_world_unit, GameContext, ShaderLocs};
+use crate::{pixels_per_world_unit, GameContext, Neighbors, ShaderLocs};
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
 
@@ -64,10 +64,19 @@ fn block_texture<'a>(block: Block, textures: &'a crate::TextureManager) -> &'a T
     }
 }
 
-fn render_tile(d: &mut RaylibDrawHandle, x: f32, y: f32, texture: &Texture2D) {
+fn render_tile(
+    d: &mut RaylibDrawHandle,
+    x: f32,
+    y: f32,
+    texture: &Texture2D,
+    src_rect: Option<Rectangle>,
+) {
+    let source = src_rect
+        .unwrap_or_else(|| Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32));
+
     d.draw_texture_pro(
         texture,
-        Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
+        source,
         Rectangle::new(
             x * pixels_per_world_unit(),
             y * pixels_per_world_unit(),
@@ -123,8 +132,32 @@ fn render_terrain(
             let block = terrain.at(x, y);
 
             if block.is_solid() {
-                let texture = block_texture(block, textures);
-                render_tile(d, x as f32, y as f32, texture);
+                // Check if this is a J11 tileset block
+                if block == Block::Stone {
+                    // Gather 8-directional neighbors for autotiling
+                    let neighbors = Neighbors {
+                        up: terrain.solid_terrain_at(x, y - 1),
+                        up_right: terrain.solid_terrain_at(x + 1, y - 1),
+                        right: terrain.solid_terrain_at(x + 1, y),
+                        down_right: terrain.solid_terrain_at(x + 1, y + 1),
+                        down: terrain.solid_terrain_at(x, y + 1),
+                        down_left: terrain.solid_terrain_at(x - 1, y + 1),
+                        left: terrain.solid_terrain_at(x - 1, y),
+                        up_left: terrain.solid_terrain_at(x - 1, y - 1),
+                    };
+
+                    let src_rect = textures.tiles.stone_bricks.get_tile_rect(x, y, &neighbors);
+                    render_tile(
+                        d,
+                        x as f32,
+                        y as f32,
+                        textures.tiles.stone_bricks.texture(),
+                        Some(src_rect),
+                    );
+                } else {
+                    let texture = block_texture(block, textures);
+                    render_tile(d, x as f32, y as f32, texture, None);
+                }
             } else {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
@@ -583,9 +616,7 @@ impl Screen for GameScreen {
                         (0.0, 100.0)
                     }
                 }
-                crate::tools::ToolType::Pickaxe => {
-                    (100.0, 100.0)
-                }
+                crate::tools::ToolType::Pickaxe => (100.0, 100.0),
             };
 
             let durability_bar_y = hud_y + hud_box_size + 2.0;

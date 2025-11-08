@@ -224,8 +224,14 @@ impl Player {
 
         let max_dashes = self.tool_dash.as_ref().map_or(0, |x| x.max_dashes);
         let dash_time = self.tool_dash.as_ref().map_or(0.0, |x| x.dash_time);
-        let dash_extended_time = self.tool_dash.as_ref().map_or(0.0, |x| x.dash_extended_time);
-        let dash_control_modifier = self.tool_dash.as_ref().map_or(0.0, |x| x.dash_control_modifier);
+        let dash_extended_time = self
+            .tool_dash
+            .as_ref()
+            .map_or(0.0, |x| x.dash_extended_time);
+        let dash_control_modifier = self
+            .tool_dash
+            .as_ref()
+            .map_or(0.0, |x| x.dash_control_modifier);
 
         // Update dashing state
         let was_dashing = self.is_dashing;
@@ -621,7 +627,7 @@ impl Player {
         match self.selected_tool {
             Some(ToolType::Dash) => self.manage_dash(controller.raycast_direction),
             Some(ToolType::Pickaxe) => (),
-            None => ()
+            None => (),
         }
     }
 
@@ -631,7 +637,6 @@ impl Player {
             if self.tool_dash.as_mut().unwrap().durability <= 0.0 {
                 self.tool_dash = Some(load_dash("broken"));
             }
-
 
             self.last_action_at = self.time;
             self.dashes -= 1;
