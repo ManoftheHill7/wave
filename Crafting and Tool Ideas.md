@@ -164,7 +164,7 @@ Smithing (Anvil)
   * Fishing Rod has reduced catching chance varying with tier
   * Grappling Hook has reduced speed, distance, and chance to hook varying with tier
 
-* 5 Bronze Bar = 12 Bronze Ladder
+* 5 Copper Bar = 12 Copper Ladder
 * 5 Steel Bar = 12 Steel Ladder
 * 1 Iron = 1 Iron Shell
 * 2 Mithril Bar = 1 Bucket
