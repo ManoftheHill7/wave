@@ -6,6 +6,7 @@ pub enum ToolType {
 
 pub struct ToolDash {
     pub durability: f32,
+    pub max_durability: f32,
     pub max_dashes: i32,
     pub dash_time: f32,
     pub dash_extended_time: f32,
@@ -27,6 +28,7 @@ pub fn load_dash(dt: &str) -> ToolDash {
 
     ToolDash {
         durability: dash.get("durability").unwrap().as_float().unwrap() as f32,
+        max_durability: dash.get("durability").unwrap().as_float().unwrap() as f32,
         max_dashes: dash.get("max_dashes").unwrap().as_integer().unwrap() as i32,
         dash_time: dash.get("dash_time").unwrap().as_float().unwrap() as f32,
         dash_extended_time: dash.get("dash_extended_time").unwrap().as_float().unwrap() as f32,

@@ -510,7 +510,7 @@ impl Screen for GameScreen {
                     self.screen_width as i32,
                     vin_size,
                     color,
-                    color_alpha
+                    color_alpha,
                 );
 
                 // Left vignette
@@ -530,7 +530,7 @@ impl Screen for GameScreen {
                     vin_size,
                     self.screen_height as i32,
                     color,
-                    color_alpha
+                    color_alpha,
                 );
             }
         }
@@ -573,6 +573,64 @@ impl Screen for GameScreen {
                     Color::WHITE,
                 );
             }
+
+            // Draw durability bar for selected tool
+            let (current_durability, max_durability) = match selected_tool {
+                crate::tools::ToolType::Dash => {
+                    if let Some(dash) = &ctx.world_state.player.tool_dash {
+                        (dash.durability, dash.max_durability)
+                    } else {
+                        (0.0, 100.0)
+                    }
+                }
+                crate::tools::ToolType::Pickaxe => {
+                    (100.0, 100.0)
+                }
+            };
+
+            let durability_bar_y = hud_y + hud_box_size + 2.0;
+            let durability_bar_width = hud_box_size;
+            let durability_bar_height = 4.0;
+
+            // Background (dark)
+            d.draw_rectangle(
+                hud_x as i32,
+                durability_bar_y as i32,
+                durability_bar_width as i32,
+                durability_bar_height as i32,
+                Color::new(50, 50, 50, 200),
+            );
+
+            // Calculate durability percentage
+            let durability_percent = (current_durability / max_durability).max(0.0).min(1.0);
+            let filled_width = durability_bar_width * durability_percent;
+
+            // Color changes based on durability
+            let durability_color = if durability_percent > 0.5 {
+                Color::new(100, 255, 100, 255) // Green - good condition
+            } else if durability_percent > 0.25 {
+                Color::new(255, 255, 100, 255) // Yellow - wearing out
+            } else {
+                Color::new(255, 100, 100, 255) // Red - almost broken
+            };
+
+            // Draw filled portion
+            d.draw_rectangle(
+                hud_x as i32,
+                durability_bar_y as i32,
+                filled_width as i32,
+                durability_bar_height as i32,
+                durability_color,
+            );
+
+            // Border
+            d.draw_rectangle_lines(
+                hud_x as i32,
+                durability_bar_y as i32,
+                durability_bar_width as i32,
+                durability_bar_height as i32,
+                Color::new(200, 200, 200, 255),
+            );
         }
 
         hud_x += 50.0;
