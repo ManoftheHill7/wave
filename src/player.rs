@@ -174,11 +174,30 @@ impl Player {
         self.raycast_end_pos = rayresult.final_position;
         if rayresult.hit {
             self.raycast_hit_tile = Some((rayresult.final_position.x, rayresult.final_position.y));
-            self.raycast_last_free_tile = Some((rayresult.last_free_position.x, rayresult.last_free_position.y));
+            self.raycast_last_free_tile = Some((
+                rayresult.last_free_position.x,
+                rayresult.last_free_position.y,
+            ));
         } else {
             self.raycast_hit_tile = None;
             self.raycast_last_free_tile = None;
         };
+    }
+
+    pub fn try_place_block(&mut self, terrain: &mut Terrain) {
+        if let Some(item_type) = self.place_block_type {
+            if let Some((free_x, free_y)) = self.raycast_last_free_tile {
+                if let Some(block) = crate::terrain::Block::from_item_type(item_type) {
+                    let taken = self.inventory.take(item_type, 1);
+                    if taken > 0 {
+                        terrain.set(free_x.floor() as i32, free_y.floor() as i32, block);
+                        if self.inventory.count(item_type) == 0 {
+                            self.place_block_type = None;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     pub fn update(&mut self, dt: f32, terrain: &Terrain, controller: &Controller) {

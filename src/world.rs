@@ -98,6 +98,11 @@ impl WorldState {
         } else {
             self.player.update(dt, &self.terrain, controller);
         }
+
+        if controller.place_pressed {
+            self.player.try_place_block(&mut self.terrain);
+        }
+
         self.tide_timer += dt;
         self.flow_timer += dt;
         while self.flow_timer > LIQUID_UPDATE_TIMER {

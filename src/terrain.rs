@@ -59,6 +59,15 @@ impl Block {
             Block::Dirt | Block::Stone | Block::Grass | Block::Sand | Block::Log | Block::Leaf
         )
     }
+
+    pub fn from_item_type(item_type: crate::inventory::ItemType) -> Option<Block> {
+        use crate::inventory::ItemType;
+        match item_type {
+            ItemType::Dirt => Some(Block::Dirt),
+            ItemType::Stone => Some(Block::Stone),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
