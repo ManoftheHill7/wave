@@ -27,6 +27,9 @@ Raw Materials
   * Diamond
   * Ruby
   * Emerald
+  * Topaz
+  * Jasper
+  * Pearl
 
 * Ores
 
@@ -58,11 +61,25 @@ Tools/Player Items
 
     * Upgrades increase damage, distance, and less cooldown
 
+* Grappling Hook
+
+  * Starts at Iron for upgrades
+
+    * Upgrades increase retraction speed and distance
+
+* Amulet of Dashing
+
+  * Uses metals and gems to make higher tiered amulets
+    
+    * Upgrades increase dash distance and more dashes between landing
+
 * Lamp
 
   * Starts at Bronze for upgrades
 
     * Upgrades increase radius, duration, capacity, and fuel type (Canola Oil or Lumostone)
+    
+    * Doesn't need to be fixed, but must have fuel to work 
 
 * Fishing Rod
 
@@ -70,15 +87,13 @@ Tools/Player Items
 
     * Upgrades increase catching chance, rarity, and saves bait
 
-* Grappling Hook
-
-  * Starts at Iron for upgrades
-
-    * Upgrades increase retraction speed and distance
-
 * Glider
 
-&nbsp; \*   Upgrades increase gliding angle	
+  * Upgrades increase gliding angle
+
+* Backpack
+  
+  * Upgrades increase carrying capacity	
 
 * Boots
 
@@ -117,7 +132,7 @@ Crafting (Workbench)
 * 2 Bronze Bar + 1 Conch Shell + 2 Pearl + 3 Glass = Tidalwave Clock (made once)
 * 1 Flax = 2 Rope
 * 10 Flax = 1 Linen Sheet
-* 1 Explosive Powder + Iron Shell = 1 Bomb
+* 1 Explosive Dust + Iron Shell = 1 Bomb
 
 Smelting (Furnace)
 
@@ -146,7 +161,6 @@ Smithing (Anvil)
   * Pickaxe has reduced mining speeds varying with tier and area of mining is reduced to 1 block.
   * Spade has reduced digging appears varying with tier and area of digging is reduced to 1 block
   * Spear has reduced damage and speed varying with tier
-  * Lamp has reduced radius and duration varying with tier and fuel type
   * Fishing Rod has reduced catching chance varying with tier
   * Grappling Hook has reduced speed, distance, and chance to hook varying with tier
 
@@ -154,7 +168,7 @@ Smithing (Anvil)
 * 5 Steel Bar = 12 Steel Ladder
 * 1 Iron = 1 Iron Shell
 * 2 Mithril Bar = 1 Bucket
-* 3 Coal Ore + 3 Lumosite Ore = 1 Explosive Dust
+* 3 Coal + 3 Lumostone = 1 Explosive Dust
 * 1 Diamond = 20 Diamond Dust
 
 Cooking (Cutting Board)
@@ -176,5 +190,5 @@ Cooking (Range)
 
 Respawn Mechanism
 
-Mermaids rescue you and leave you on the shore. They take the most shiny object (0-1 is assigned to each item) or maybe it's random as payment for the rescue. A pearl is worth 1, so holding onto one will help, but take up an inventory space.
+Mermaids? rescue you and leave you on the shore.
 
