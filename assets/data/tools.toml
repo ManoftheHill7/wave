@@ -1,5 +1,12 @@
+[dash.broken]
+durability = -1.0
+max_dashes = 0
+dash_time = 0.0
+dash_extended_time = 0.0
+dash_control_modifier = 0.0
+
 [dash.basic]
-durability = 100.0
+durability = 30.0
 max_dashes = 1
 dash_time = 0.25
 dash_extended_time = 0.35

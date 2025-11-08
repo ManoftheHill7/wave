@@ -100,7 +100,7 @@ pub struct Player {
 
 impl Player {
     pub fn new(x: f32, y: f32) -> Self {
-        let initial_dash = Some(load_basic_dash());
+        let initial_dash = Some(load_dash("basic"));
         Player {
             position: Vector2::new(x, y),
             velocity: Vector2::zero(),
@@ -622,6 +622,11 @@ impl Player {
     fn manage_dash(&mut self, dir: Vector2) {
         if self.dashes > 0 && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
             self.tool_dash.as_mut().unwrap().durability -= 1.0;
+            if self.tool_dash.as_mut().unwrap().durability <= 0.0 {
+                self.tool_dash = Some(load_dash("broken"));
+            }
+
+
             self.last_action_at = self.time;
             self.dashes -= 1;
             self.dashed_at = self.time;

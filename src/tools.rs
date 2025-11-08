@@ -14,16 +14,16 @@ pub struct ToolDash {
 
 pub struct ToolPickaxe {}
 
-pub fn load_basic_dash() -> ToolDash {
+pub fn load_dash(dt: &str) -> ToolDash {
     let toml_str = include_str!("../assets/data/tools.toml");
     let table: toml::Table = toml::from_str(toml_str).expect("Failed to parse tools.toml");
 
     let dash = table
         .get("dash")
         .and_then(|v| v.as_table())
-        .and_then(|t| t.get("basic"))
+        .and_then(|t| t.get(dt))
         .and_then(|v| v.as_table())
-        .expect("Missing [dash.basic]");
+        .expect((String::new() + "Missing [dash." + dt + "]").as_str());
 
     ToolDash {
         durability: dash.get("durability").unwrap().as_float().unwrap() as f32,
