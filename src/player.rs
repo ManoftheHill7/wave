@@ -41,6 +41,7 @@ pub const MAX_RAYCAST_SPEAR: f32 = 3.0;
 
 pub const INVENTORY_STARTING_WEIGHT: f32 = 100.0;
 pub const STARTING_HEALTH: i32 = 12; // 4 frames of heart * 3 hearts
+pub const MAX_BREATH_HOLD: f32 = 5.0;
 
 #[derive(Debug)]
 struct RaycastResult {
@@ -89,6 +90,7 @@ pub struct Player {
     pub raycast_last_free_tile: Option<(f32, f32)>,
 
     pub health: i32,
+    pub breath: f32,
 
     pub inventory: Inventory,
     pub place_block_type: Option<ItemType>,
@@ -139,6 +141,7 @@ impl Player {
             raycast_end_pos: Vector2::zero(),
 
             health: STARTING_HEALTH,
+            breath: MAX_BREATH_HOLD,
 
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
             place_block_type: None,
@@ -247,6 +250,9 @@ impl Player {
         if self.is_swimming {
             self.last_in_water = self.time;
             self.on_ground = false;
+            self.breath -= dt;
+        } else {
+            self.breath = MAX_BREATH_HOLD;
         }
 
         // Apply gravity
