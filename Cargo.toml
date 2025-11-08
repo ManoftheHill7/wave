@@ -11,3 +11,6 @@ raylib = "5.5.1"
 rayon = "1.10"
 texture_manager_macro = { path = "texture_manager_macro" }
 screen_manager = { path = "screen_manager" }
+
+[build-dependencies]
+toml = "0.8"

@@ -19,6 +19,8 @@ pub fn pixels_per_world_unit() -> f32 {
 
 mod controller;
 mod game_screen;
+mod inventory;
+mod inventory_screen;
 mod player;
 mod terrain;
 mod terrain_generator;
@@ -95,7 +97,10 @@ fn main() {
 
     let mut ctx = GameContext::new(&mut rl, &thread);
     let mut manager = ScreenManager::new(Box::new(GameScreen::new(&ctx)), &mut ctx);
-    manager.clear_color = Color::RAYWHITE;
+
+    use crate::inventory::ItemType;
+    ctx.world_state.player.inventory.add(ItemType::Stone, 3);
+    ctx.world_state.player.inventory.add(ItemType::Dirt, 10);
 
     while !rl.window_should_close() && !manager.is_empty() {
         let dt = rl.get_frame_time();

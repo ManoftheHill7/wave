@@ -1,6 +1,7 @@
+use raylib::prelude::*;
 use crate::controller::Controller;
 use crate::terrain::Terrain;
-use raylib::prelude::*;
+use crate::inventory::Inventory;
 
 pub const ACCEL: f32 = 30.0;
 pub const SPEED: f32 = 12.0;
@@ -40,6 +41,8 @@ pub const SWIM_EXIT_TIME: f32 = 0.10;
 pub const MAX_RAYCAST_PICKAXE: f32 = 2.0;
 pub const MAX_RAYCAST_HOOK: f32 = 10.0;
 pub const MAX_RAYCAST_SPEAR: f32 = 3.0;
+
+pub const INVENTORY_STARTING_WEIGHT: f32 = 100.0;
 
 #[derive(Debug)]
 struct RaycastResult {
@@ -84,6 +87,8 @@ pub struct Player {
     pub raycast_max_length: f32,
     pub raycast_end_pos: Vector2,
     pub raycast_hit_tile: Option<(f32, f32)>,
+
+    pub inventory: Inventory,
 }
 
 impl Player {
@@ -123,6 +128,8 @@ impl Player {
             raycast_max_length: MAX_RAYCAST_SPEAR,
             raycast_hit_tile: None,
             raycast_end_pos: Vector2::zero(),
+
+            inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
         }
     }
 

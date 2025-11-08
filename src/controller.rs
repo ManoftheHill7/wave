@@ -8,6 +8,7 @@ pub struct Controller {
     pub climb_pressed: bool,
     pub input_dir: Vector2,
     pub raycast_direction: Vector2,
+    pub menu_pressed: bool,
 }
 
 impl Controller {
@@ -20,6 +21,7 @@ impl Controller {
             climb_pressed: false,
             input_dir: Vector2::zero(),
             raycast_direction: Vector2::zero(),
+            menu_pressed: false,
         }
     }
 
@@ -63,6 +65,9 @@ impl Controller {
             // Default direction if mouse is exactly at center
             self.raycast_direction = Vector2::new(1.0, 0.0);
         }
+
+        // Track Tab key for menu/inventory
+        self.menu_pressed = rl.is_key_pressed(KeyboardKey::KEY_TAB);
     }
 
     pub fn set_raycast_direction(&mut self, direction: Vector2) {

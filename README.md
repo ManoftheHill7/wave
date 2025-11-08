@@ -29,7 +29,9 @@ Things required for the games core concept
 - [x] Cave generation
 - [x] Dynamic Water
 - [x] Tidal cycle
-- [ ] Inventory system
+- [x] Screen Management System
+- [ ] Item and equipment system
+- [ ] Inventory UI
 - [ ] Player health/HUD
 - [ ] Player Breath hold
 - [ ] Tool - Dash
@@ -80,3 +82,4 @@ Things I will get to if there is time
 - https://www.jgallant.com/2d-liquid-simulator-with-cellular-automaton-in-unity
 - https://lucasschuermann.com/writing/implementing-sph-in-2d
 - https://nothings.org/gamedev/herringbone/herringbone_tiles.html
+- https://opengameart.org/users/technodono

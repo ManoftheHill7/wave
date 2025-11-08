@@ -1,3 +1,4 @@
+use crate::inventory_screen::InventoryScreen;
 use crate::player::Player;
 use crate::terrain::{Block, Terrain, CELL_RESOLUTION, NO_LIQUID_THRESHOLD};
 use crate::{pixels_per_world_unit, GameContext, ShaderLocs};
@@ -356,12 +357,20 @@ impl Screen for GameScreen {
             0.12,
         );
 
+        // Check if Tab is pressed to open inventory
+        if ctx.controller.menu_pressed {
+            return ScreenCommand::Push(Box::new(InventoryScreen::new()));
+        }
+
         ScreenCommand::None
     }
 
-    fn render(&mut self, d: &mut RaylibDrawHandle, ctx: &Self::Context) {
-        self.screen_width = d.get_screen_width() as f32;
-        self.screen_height = d.get_screen_height() as f32;
+    fn render(&mut self, rl: &mut RaylibHandle, thread: &RaylibThread, ctx: &Self::Context) {
+        self.screen_width = rl.get_screen_width() as f32;
+        self.screen_height = rl.get_screen_height() as f32;
+
+        let mut d = rl.begin_drawing(thread);
+        d.clear_background(Color::RAYWHITE);
 
         {
             let mut d2 = d.begin_mode2D(self.camera);

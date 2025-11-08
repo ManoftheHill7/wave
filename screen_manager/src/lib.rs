@@ -47,8 +47,8 @@
 //! }
 //! ```
 
-use std::fmt::Debug;
 use raylib::prelude::*;
+use std::fmt::Debug;
 
 /// Represents possible transitions between screens
 pub enum ScreenCommand<Ctx> {
@@ -112,9 +112,12 @@ pub trait Screen {
     /// Called every frame to render the screen
     ///
     /// # Parameters
-    /// - `d`: Mutable reference to RaylibDrawHandle for rendering
+    /// - `rl`: Mutable reference to RaylibHandle
+    /// - `thread`: Reference to RaylibThread
     /// - `ctx`: Reference to the game context
-    fn render(&mut self, d: &mut RaylibDrawHandle, ctx: &Self::Context);
+    ///
+    /// Note: Each screen is responsible for calling rl.begin_drawing()
+    fn render(&mut self, rl: &mut RaylibHandle, thread: &RaylibThread, ctx: &Self::Context);
 }
 
 /// Manages a stack of screens and handles transitions between them
@@ -135,10 +138,7 @@ impl<Ctx> ScreenManager<Ctx> {
     ///     &mut ctx
     /// );
     /// ```
-    pub fn new(
-        initial_screen: Box<dyn Screen<Context = Ctx>>,
-        ctx: &mut Ctx
-    ) -> Self {
+    pub fn new(initial_screen: Box<dyn Screen<Context = Ctx>>, ctx: &mut Ctx) -> Self {
         let mut manager = Self {
             stack: Vec::new(),
             clear_color: Color::RAYWHITE,
@@ -175,8 +175,7 @@ impl<Ctx> ScreenManager<Ctx> {
 
     /// Render the current screen
     ///
-    /// This automatically calls `begin_drawing()`, clears the background with `clear_color`,
-    /// and calls the screen's render method
+    /// Note: Screens are now responsible for calling rl.begin_drawing() themselves
     ///
     /// # Parameters
     /// - `rl`: Mutable reference to RaylibHandle
@@ -184,34 +183,29 @@ impl<Ctx> ScreenManager<Ctx> {
     /// - `ctx`: Reference to the game context
     pub fn render(&mut self, rl: &mut RaylibHandle, thread: &RaylibThread, ctx: &Ctx) {
         if let Some(screen) = self.stack.last_mut() {
-            let mut d = rl.begin_drawing(thread);
-            d.clear_background(self.clear_color);
-            screen.render(&mut d, ctx);
+            screen.render(rl, thread, ctx);
         }
     }
 
     /// Render all screens in the stack (useful for transparent overlays)
     ///
     /// Renders from bottom to top, allowing you to show dimmed backgrounds.
-    /// This automatically calls `begin_drawing()`, clears the background with `clear_color`,
-    /// and calls each screen's render method
+    /// Note: Screens are now responsible for calling rl.begin_drawing() themselves
     ///
     /// # Parameters
     /// - `rl`: Mutable reference to RaylibHandle
     /// - `thread`: Reference to RaylibThread
     /// - `ctx`: Reference to the game context
     pub fn render_all(&mut self, rl: &mut RaylibHandle, thread: &RaylibThread, ctx: &Ctx) {
-        let mut d = rl.begin_drawing(thread);
-        d.clear_background(self.clear_color);
         for screen in self.stack.iter_mut() {
-            screen.render(&mut d, ctx);
+            screen.render(rl, thread, ctx);
         }
     }
 
     /// Handle a screen command
     fn handle_command(&mut self, command: ScreenCommand<Ctx>, ctx: &mut Ctx) {
         match command {
-            ScreenCommand::None => {},
+            ScreenCommand::None => {}
 
             ScreenCommand::Push(screen) => {
                 if let Some(current) = self.stack.last_mut() {
