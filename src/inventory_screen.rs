@@ -38,26 +38,29 @@ impl InventoryScreen {
         // Collect inventory items
         let inventory_items: Vec<_> = ctx.world_state.player.inventory.iter().collect();
 
-        // Check each slot
-        for (slot_index, item_stack) in inventory_items.iter().enumerate() {
-            if slot_index >= (grid_cols * grid_rows) {
-                break;
-            }
+        // Check all grid slots
+        for row in 0..grid_rows {
+            for col in 0..grid_cols {
+                let slot_x = grid_x + (col as f32 * (slot_size + slot_padding));
+                let slot_y = grid_y + (row as f32 * (slot_size + slot_padding));
 
-            let col = slot_index % grid_cols;
-            let row = slot_index / grid_cols;
-            let slot_x = grid_x + (col as f32 * (slot_size + slot_padding));
-            let slot_y = grid_y + (row as f32 * (slot_size + slot_padding));
+                // Check if mouse is over this slot
+                if mouse_x >= slot_x
+                    && mouse_x <= slot_x + slot_size
+                    && mouse_y >= slot_y
+                    && mouse_y <= slot_y + slot_size
+                {
+                    let slot_index = row * grid_cols + col;
 
-            // Check if mouse is over this slot
-            if mouse_x >= slot_x
-                && mouse_x <= slot_x + slot_size
-                && mouse_y >= slot_y
-                && mouse_y <= slot_y + slot_size
-            {
-                // Set the selected item
-                ctx.world_state.player.place_block_type = Some(item_stack.item_type);
-                break;
+                    // Check if this slot has an item
+                    if let Some(item_stack) = inventory_items.get(slot_index) {
+                        ctx.world_state.player.place_block_type = Some(item_stack.item_type);
+                    } else {
+                        // Empty slot clicked, clear selection
+                        ctx.world_state.player.place_block_type = None;
+                    }
+                    return;
+                }
             }
         }
 
@@ -296,7 +299,8 @@ impl Screen for InventoryScreen {
                     let tool_x = slot_padding * 2.0 + (col as f32 * (slot_size + slot_padding));
 
                     // Check if this tool is selected
-                    let is_selected = ctx.world_state.player.selected_tool == tool_type && tool_type.is_some();
+                    let is_selected =
+                        ctx.world_state.player.selected_tool == tool_type && tool_type.is_some();
 
                     // Draw slot background with highlight if selected
                     let slot_color = if is_selected {

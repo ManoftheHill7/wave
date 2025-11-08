@@ -30,11 +30,12 @@ Things required for the games core concept
 - [x] Dynamic Water
 - [x] Tidal cycle
 - [x] Screen Management System
-- [ ] Item and equipment system
+- [x] Item and equipment system
 - [x] Inventory UI
 - [x] Player health/HUD
-- [ ] Tool - Dash
+- [x] Tool - Dash
 - [ ] Player Breath hold
+- [ ] Tileset variants
 - [ ] Tool - Pickaxe
 - [ ] Tool - Grappling Hook
 - [ ] Ore generation
