@@ -20,9 +20,6 @@ pub const WALLJUMP_EFFECT_TIME: f32 = 0.15;
 pub const WALLJUMP_LOCK_TIME: f32 = 0.1;
 pub const WALLJUMP_X_RELATIVE_STRENGTH: f32 = 0.8;
 pub const WALLSLIDE_FRICTION: f32 = 0.9;
-pub const DASH_TIME: f32 = 0.25;
-pub const DASH_EXTENDED_TIME: f32 = 0.35;
-pub const DASH_CONTROL_MODIFER: f32 = 2.0;
 pub const DASH_VELOCITY: f32 = SPEED * 1.7;
 pub const DASHJUMP_COOLDOWN: f32 = 0.075;
 pub const CORNER_CORRECTION_AMOUNT: i32 = 5;
@@ -222,9 +219,14 @@ impl Player {
 
         self.time += dt;
 
+        let max_dashes = self.tool_dash.as_ref().map_or(0, |x| x.max_dashes);
+        let dash_time = self.tool_dash.as_ref().map_or(0.0, |x| x.dash_time);
+        let dash_extended_time = self.tool_dash.as_ref().map_or(0.0, |x| x.dash_extended_time);
+        let dash_control_modifier = self.tool_dash.as_ref().map_or(0.0, |x| x.dash_control_modifier);
+
         // Update dashing state
         let was_dashing = self.is_dashing;
-        self.is_dashing = self.within_grace(self.dashed_at, DASH_TIME);
+        self.is_dashing = self.within_grace(self.dashed_at, dash_time);
         self.just_finished_dashing = was_dashing && !self.is_dashing;
         self.height = if self.is_dashing {
             DASH_HEIGHT
@@ -326,7 +328,6 @@ impl Player {
 
         // Ground detection
         self.just_landed = false;
-        let max_dashes = self.tool_dash.as_ref().map_or(0, |x| x.max_dashes);
         if self.on_ground {
             if !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
                 self.dashes = max_dashes;
@@ -348,7 +349,7 @@ impl Player {
         }
 
         // Apply dash velocity
-        if self.within_grace(self.dashed_at, DASH_TIME) {
+        if self.within_grace(self.dashed_at, dash_time) {
             self.velocity = Vector2::new(
                 self.dash_dir.x * DASH_VELOCITY,
                 self.dash_dir.y * DASH_VELOCITY,
@@ -371,8 +372,8 @@ impl Player {
                 speed *= WALLJUMP_EFFECT_STRENGTH;
             }
 
-            if self.within_grace(self.dashed_at, DASH_EXTENDED_TIME) {
-                speed /= (self.time - self.dashed_at) / DASH_EXTENDED_TIME * DASH_CONTROL_MODIFER;
+            if self.within_grace(self.dashed_at, dash_extended_time) {
+                speed /= (self.time - self.dashed_at) / dash_extended_time * dash_control_modifier;
             }
             if !self.within_grace(self.wall_jumped_at, WALLJUMP_LOCK_TIME) {
                 // Regular movement
@@ -620,6 +621,7 @@ impl Player {
 
     fn manage_dash(&mut self, dir: Vector2) {
         if self.dashes > 0 && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
+            self.tool_dash.as_mut().unwrap().durability -= 1.0;
             self.last_action_at = self.time;
             self.dashes -= 1;
             self.dashed_at = self.time;
