@@ -291,10 +291,24 @@ fn render_player(
                 pixels_per_world_unit(),
             ),
             4.0,
-            Color::GREEN,
+            Color::RED,
         );
     }
-    if false {
+    if let Some(block) = player.place_block_type {
+        if let Some((free_x, free_y)) = player.raycast_last_free_tile {
+            d.draw_rectangle_lines_ex(
+                Rectangle::new(
+                    free_x.floor() * pixels_per_world_unit(),
+                    free_y.floor() * pixels_per_world_unit(),
+                    pixels_per_world_unit(),
+                    pixels_per_world_unit(),
+                ),
+                4.0,
+                Color::GREEN,
+            );
+        }
+    }
+    if true {
         d.draw_line_ex(
             Vector2::new(player_center_x, player_center_y),
             Vector2::new(raycast_end_x, raycast_end_y),

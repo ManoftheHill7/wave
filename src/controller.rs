@@ -9,6 +9,9 @@ pub struct Controller {
     pub input_dir: Vector2,
     pub raycast_direction: Vector2,
     pub menu_pressed: bool,
+    pub use_tool_pressed: bool,
+    pub place_pressed: bool,
+    pub mouse_position: Vector2, // 0.0 to 1.0
 }
 
 impl Controller {
@@ -22,6 +25,9 @@ impl Controller {
             input_dir: Vector2::zero(),
             raycast_direction: Vector2::zero(),
             menu_pressed: false,
+            use_tool_pressed: false,
+            place_pressed: false,
+            mouse_position: Vector2::zero(),
         }
     }
 
@@ -50,24 +56,30 @@ impl Controller {
             self.input_dir.x = 1.0;
         }
 
-        // Calculate raycast direction from screen center to mouse
-        let mouse_pos = rl.get_mouse_position();
-        let screen_center_x = rl.get_screen_width() as f32 / 2.0;
-        let screen_center_y = rl.get_screen_height() as f32 / 2.0;
+        let mouse_pixel = rl.get_mouse_position();
+        let screen_width = rl.get_screen_width() as f32;
+        let screen_height = rl.get_screen_height() as f32;
 
-        let dx = mouse_pos.x - screen_center_x;
-        let dy = mouse_pos.y - screen_center_y;
+        self.mouse_position =
+            Vector2::new(mouse_pixel.x / screen_width, mouse_pixel.y / screen_height);
+
+        let screen_center_x = screen_width / 2.0;
+        let screen_center_y = screen_height / 2.0;
+
+        let dx = mouse_pixel.x - screen_center_x;
+        let dy = mouse_pixel.y - screen_center_y;
         let distance = (dx * dx + dy * dy).sqrt();
 
         if distance > 0.0001 {
             self.raycast_direction = Vector2::new(dx / distance, dy / distance);
         } else {
-            // Default direction if mouse is exactly at center
             self.raycast_direction = Vector2::new(1.0, 0.0);
         }
 
-        // Track Tab key for menu/inventory
         self.menu_pressed = rl.is_key_pressed(KeyboardKey::KEY_TAB);
+
+        self.use_tool_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_LEFT);
+        self.place_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_RIGHT);
     }
 
     pub fn set_raycast_direction(&mut self, direction: Vector2) {

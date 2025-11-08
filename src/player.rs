@@ -1,7 +1,7 @@
-use raylib::prelude::*;
 use crate::controller::Controller;
+use crate::inventory::{Inventory, ItemType};
 use crate::terrain::Terrain;
-use crate::inventory::Inventory;
+use raylib::prelude::*;
 
 pub const ACCEL: f32 = 30.0;
 pub const SPEED: f32 = 12.0;
@@ -47,6 +47,7 @@ pub const INVENTORY_STARTING_WEIGHT: f32 = 100.0;
 #[derive(Debug)]
 struct RaycastResult {
     final_position: Vector2,
+    last_free_position: Vector2,
     hit: bool,
 }
 
@@ -87,8 +88,10 @@ pub struct Player {
     pub raycast_max_length: f32,
     pub raycast_end_pos: Vector2,
     pub raycast_hit_tile: Option<(f32, f32)>,
+    pub raycast_last_free_tile: Option<(f32, f32)>,
 
     pub inventory: Inventory,
+    pub place_block_type: Option<ItemType>,
 }
 
 impl Player {
@@ -127,9 +130,11 @@ impl Player {
 
             raycast_max_length: MAX_RAYCAST_SPEAR,
             raycast_hit_tile: None,
+            raycast_last_free_tile: None,
             raycast_end_pos: Vector2::zero(),
 
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
+            place_block_type: None,
         }
     }
 
@@ -155,6 +160,10 @@ impl Player {
 
         self.position += self.velocity * dt;
 
+        self.calculated_selected_blocks(terrain, controller);
+    }
+
+    pub fn calculated_selected_blocks(&mut self, terrain: &Terrain, controller: &Controller) {
         self.raycast_max_length = MAX_RAYCAST_HOOK;
         let raycast_start = self.position + Vector2::new(self.width / 2.0, self.height / 2.0);
         let rayresult = self.raycast(
@@ -163,10 +172,12 @@ impl Player {
             terrain,
         );
         self.raycast_end_pos = rayresult.final_position;
-        self.raycast_hit_tile = if rayresult.hit {
-            Some((rayresult.final_position.x, rayresult.final_position.y))
+        if rayresult.hit {
+            self.raycast_hit_tile = Some((rayresult.final_position.x, rayresult.final_position.y));
+            self.raycast_last_free_tile = Some((rayresult.last_free_position.x, rayresult.last_free_position.y));
         } else {
-            None
+            self.raycast_hit_tile = None;
+            self.raycast_last_free_tile = None;
         };
     }
 
@@ -366,19 +377,7 @@ impl Player {
         self.apply_movement_and_collision(dt, terrain);
         self.last_velocity = self.velocity;
 
-        self.raycast_max_length = MAX_RAYCAST_HOOK;
-        let raycast_start = self.position + Vector2::new(self.width / 2.0, self.height / 2.0);
-        let rayresult = self.raycast(
-            raycast_start,
-            raycast_start + raycast_direction * self.raycast_max_length,
-            terrain,
-        );
-        self.raycast_end_pos = rayresult.final_position;
-        self.raycast_hit_tile = if rayresult.hit {
-            Some((rayresult.final_position.x, rayresult.final_position.y))
-        } else {
-            None
-        };
+        self.calculated_selected_blocks(terrain, controller);
     }
 
     fn raycast(&self, start: Vector2, end: Vector2, terrain: &Terrain) -> RaycastResult {
@@ -419,10 +418,13 @@ impl Player {
 
         let mut vx = 0.0;
         let mut vy = 0.0;
+        let mut ox = 0.0;
+        let mut oy = 0.0;
         while vx * vx + vy * vy < distance2 {
             if terrain.solid_terrain_at(map_x, map_y) {
                 return RaycastResult {
                     final_position: Vector2::new(vx + start.x, vy + start.y),
+                    last_free_position: Vector2::new(ox + start.x, oy + start.y),
                     hit: true,
                 };
             }
@@ -438,6 +440,8 @@ impl Player {
                 hit_vertical = false;
             }
 
+            ox = vx;
+            oy = vy;
             if !hit_vertical {
                 vy = (map_y + (1 - step_y) / 2) as f32
                     - start.y
@@ -453,6 +457,7 @@ impl Player {
 
         RaycastResult {
             final_position: end,
+            last_free_position: end,
             hit: false,
         }
     }

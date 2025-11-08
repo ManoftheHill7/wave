@@ -17,6 +17,49 @@ impl InventoryScreen {
             render_target: None,
         }
     }
+
+    fn handle_mouse_click(&mut self, ctx: &mut GameContext) {
+        // Get normalized mouse position (0.0-1.0) from controller
+        let mouse_pos = ctx.controller.mouse_position;
+
+        // Convert normalized coordinates to render texture space (0-400, 0-225)
+        let mouse_x = mouse_pos.x * RENDER_WIDTH as f32;
+        let mouse_y = mouse_pos.y * RENDER_HEIGHT as f32;
+
+        // Check if click is in inventory grid
+        let slot_size = 32.0;
+        let slot_padding = 8.0;
+        let grid_cols = 6;
+        let grid_rows = 4;
+        let grid_x = 8.0;
+        let grid_y = 20.0;
+
+        // Collect inventory items
+        let inventory_items: Vec<_> = ctx.world_state.player.inventory.iter().collect();
+
+        // Check each slot
+        for (slot_index, item_stack) in inventory_items.iter().enumerate() {
+            if slot_index >= (grid_cols * grid_rows) {
+                break;
+            }
+
+            let col = slot_index % grid_cols;
+            let row = slot_index / grid_cols;
+            let slot_x = grid_x + (col as f32 * (slot_size + slot_padding));
+            let slot_y = grid_y + (row as f32 * (slot_size + slot_padding));
+
+            // Check if mouse is over this slot
+            if mouse_x >= slot_x
+                && mouse_x <= slot_x + slot_size
+                && mouse_y >= slot_y
+                && mouse_y <= slot_y + slot_size
+            {
+                // Set the selected item
+                ctx.world_state.player.place_block_type = Some(item_stack.item_type);
+                break;
+            }
+        }
+    }
 }
 
 fn get_item_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) -> &'a Texture2D {
@@ -33,6 +76,12 @@ impl Screen for InventoryScreen {
         if ctx.controller.menu_pressed {
             return ScreenCommand::Pop;
         }
+
+        // Handle mouse clicks for item selection
+        if ctx.controller.use_tool_pressed {
+            self.handle_mouse_click(ctx);
+        }
+
         ScreenCommand::None
     }
 
@@ -60,7 +109,13 @@ impl Screen for InventoryScreen {
             let weight_x = 8.0;
             let weight_y = 8.0;
 
-            d.draw_text(&weight_text, weight_x as i32, weight_y as i32, 10, Color::BLACK);
+            d.draw_text(
+                &weight_text,
+                weight_x as i32,
+                weight_y as i32,
+                10,
+                Color::BLACK,
+            );
 
             // Draw inventory slots grid on the left side
             let slot_texture = &ctx.textures.ui.inventory_slot;
@@ -122,7 +177,13 @@ impl Screen for InventoryScreen {
                 let text_x = slot_x + slot_size - 12.0; // 12px from right for padding
                 let text_y = slot_y + slot_size - 12.0; // 12px from bottom for padding
 
-                d.draw_text(&count_text, text_x as i32+1, text_y as i32 + 1, 10, Color::WHITE);
+                d.draw_text(
+                    &count_text,
+                    text_x as i32 + 1,
+                    text_y as i32 + 1,
+                    10,
+                    Color::WHITE,
+                );
                 d.draw_text(
                     &count_text,
                     text_x as i32,
@@ -169,6 +230,19 @@ impl Screen for InventoryScreen {
             d.draw_texture(slot_texture, helm_x as i32, helm_y as i32, Color::WHITE);
             d.draw_texture(slot_texture, armor_x as i32, armor_y as i32, Color::WHITE);
             d.draw_texture(slot_texture, boots_x as i32, boots_y as i32, Color::WHITE);
+
+            // Draw selected item in right hand slot if set
+            if let Some(selected_item) = ctx.world_state.player.place_block_type {
+                let item_texture = get_item_texture(&selected_item, &ctx.textures);
+                let texture_scale = slot_size / item_texture.width as f32;
+                d.draw_texture_ex(
+                    item_texture,
+                    Vector2::new(right_hand_x, right_hand_y),
+                    0.0,
+                    texture_scale,
+                    Color::WHITE,
+                );
+            }
 
             // Draw tool selection
             let tool_cols = 9;
