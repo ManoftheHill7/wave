@@ -125,11 +125,6 @@ impl Screen for InventoryScreen {
             let grid_cols = 6;
             let grid_rows = 4;
 
-            let grid_width =
-                (slot_size * grid_cols as f32) + (slot_padding * (grid_cols - 1) as f32);
-            let grid_height =
-                (slot_size * grid_rows as f32) + (slot_padding * (grid_rows - 1) as f32);
-
             let grid_x = 8.0;
             let grid_y = 20.0;
 

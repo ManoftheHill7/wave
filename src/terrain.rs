@@ -65,7 +65,6 @@ impl Block {
         match item_type {
             ItemType::Dirt => Some(Block::Dirt),
             ItemType::Stone => Some(Block::Stone),
-            _ => None,
         }
     }
 }

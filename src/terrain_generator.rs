@@ -89,17 +89,6 @@ impl TerrainGenerator {
             }
         }
 
-        if false {
-            for lx in 0..CHUNK_SIZE {
-                let wx = coord.x * chunk_size + lx as i32;
-                for ly in 0..CHUNK_SIZE {
-                    let wy = coord.y * chunk_size + ly as i32;
-                    if wy > 40 && chunk.get(lx, ly) == Block::Air {
-                        chunk.set(lx, ly, Block::Water);
-                    }
-                }
-            }
-        }
         return chunk;
     }
 

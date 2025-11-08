@@ -409,6 +409,36 @@ impl Screen for GameScreen {
                 ctx.render_state.shader_locs,
             );
         }
+        // Draw HUD
+        let heart_size = 32.0;
+        let heart_spacing = 4.0;
+        let hearts_x = self.screen_width - 150.0;
+        let hearts_y = 10.0;
+        let max_health = 12;
+        let health_frames = 4;
+        let health = ctx.world_state.player.health.max(0).min(max_health);
+        let mut remaining_health = health;
+        for i in 0..(max_health / health_frames) {
+            let heart_x = hearts_x + (heart_size + heart_spacing) * i as f32;
+
+            let heart_texture = if remaining_health > health_frames {
+                &ctx.textures.ui.hearts[0]
+            } else if remaining_health > 0 {
+                &ctx.textures.ui.hearts[(health_frames - remaining_health) as usize]
+            } else {
+                continue;
+            };
+
+            d.draw_texture_ex(
+                heart_texture,
+                Vector2::new(heart_x, hearts_y),
+                0.0,
+                heart_size / heart_texture.width as f32,
+                Color::WHITE,
+            );
+
+            remaining_health = remaining_health.saturating_sub(4);
+        }
 
         if ctx.debug_enabled {
             d.draw_text(

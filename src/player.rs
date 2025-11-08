@@ -43,6 +43,7 @@ pub const MAX_RAYCAST_HOOK: f32 = 10.0;
 pub const MAX_RAYCAST_SPEAR: f32 = 3.0;
 
 pub const INVENTORY_STARTING_WEIGHT: f32 = 100.0;
+pub const STARTING_HEALTH: i32 = 12; // 4 frames of heart * 3 hearts
 
 #[derive(Debug)]
 struct RaycastResult {
@@ -90,6 +91,8 @@ pub struct Player {
     pub raycast_hit_tile: Option<(f32, f32)>,
     pub raycast_last_free_tile: Option<(f32, f32)>,
 
+    pub health: i32,
+
     pub inventory: Inventory,
     pub place_block_type: Option<ItemType>,
 }
@@ -132,6 +135,8 @@ impl Player {
             raycast_hit_tile: None,
             raycast_last_free_tile: None,
             raycast_end_pos: Vector2::zero(),
+
+            health: STARTING_HEALTH,
 
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
             place_block_type: None,
@@ -206,7 +211,6 @@ impl Player {
         let jump_held = controller.jump_held;
         let climb_pressed = controller.climb_pressed;
         let input_dir = controller.input_dir;
-        let raycast_direction = controller.raycast_direction;
 
         self.time += dt;
 

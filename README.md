@@ -41,6 +41,7 @@ Things required for the games core concept
 - [ ] Stala(gm/ct)ites
 - [ ] Bat enemies
 - [ ] Mole enemies
+- [ ] Tool - Spear
 - [ ] Crafting system
 - [ ] Crafting recipes
 
@@ -50,6 +51,7 @@ Things that I would really like to have
 
 - [ ] Save/load/new game
 - [ ] Dynamic lighting
+- [ ] Tool - Lamp
 - [ ] Parallax backgrounds
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
 - [ ] Tide clears building items
@@ -62,6 +64,7 @@ Things that I would really like to have
 - [ ] Tool - Glider
 - [ ] Multiple cave generation types
 - [ ] Multiple enemy types
+- [ ] Boots
 
 ### Tier 3 Tasks
 

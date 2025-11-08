@@ -50,7 +50,7 @@ impl GameContext {
     fn new(rl: &mut RaylibHandle, thread: &RaylibThread) -> Self {
         let textures = TextureManager::load(rl, thread);
 
-        let mut player_shader = rl.load_shader(
+        let player_shader = rl.load_shader(
             thread,
             Some("shaders/playerShader.vert"),
             Some("shaders/playerShader.frag"),
