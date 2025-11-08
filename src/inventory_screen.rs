@@ -1,4 +1,5 @@
 use crate::inventory::ItemType;
+use crate::tools::ToolType;
 use crate::GameContext;
 use crate::TextureManager;
 use raylib::prelude::*;
@@ -57,6 +58,36 @@ impl InventoryScreen {
                 // Set the selected item
                 ctx.world_state.player.place_block_type = Some(item_stack.item_type);
                 break;
+            }
+        }
+
+        // Check tool selection slots
+        let tool_y = 190.0;
+        let tool_start_x = slot_padding * 2.0;
+
+        // Check dash tool slot (column 0)
+        if ctx.world_state.player.tool_dash.is_some() {
+            let tool_x = tool_start_x + (0.0 * (slot_size + slot_padding));
+            if mouse_x >= tool_x
+                && mouse_x <= tool_x + slot_size
+                && mouse_y >= tool_y
+                && mouse_y <= tool_y + slot_size
+            {
+                ctx.world_state.player.selected_tool = Some(ToolType::Dash);
+                return;
+            }
+        }
+
+        // Check pickaxe tool slot (column 1)
+        if ctx.world_state.player.tool_pickaxe.is_some() {
+            let tool_x = tool_start_x + (1.0 * (slot_size + slot_padding));
+            if mouse_x >= tool_x
+                && mouse_x <= tool_x + slot_size
+                && mouse_y >= tool_y
+                && mouse_y <= tool_y + slot_size
+            {
+                ctx.world_state.player.selected_tool = Some(ToolType::Pickaxe);
+                return;
             }
         }
     }
@@ -226,6 +257,24 @@ impl Screen for InventoryScreen {
             d.draw_texture(slot_texture, armor_x as i32, armor_y as i32, Color::WHITE);
             d.draw_texture(slot_texture, boots_x as i32, boots_y as i32, Color::WHITE);
 
+            // Draw selected tool in left hand slot if set
+            if let Some(selected_tool) = ctx.world_state.player.selected_tool {
+                let tool_texture = match selected_tool {
+                    ToolType::Dash => Some(&ctx.textures.items.dashamulet),
+                    ToolType::Pickaxe => None, // TODO: add pickaxe texture
+                };
+
+                if let Some(texture) = tool_texture {
+                    d.draw_texture_ex(
+                        texture,
+                        Vector2::new(left_hand_x, left_hand_y),
+                        0.0,
+                        4.0,
+                        Color::WHITE,
+                    );
+                }
+            }
+
             // Draw selected item in right hand slot if set
             if let Some(selected_item) = ctx.world_state.player.place_block_type {
                 let item_texture = get_item_texture(&selected_item, &ctx.textures);
@@ -242,22 +291,75 @@ impl Screen for InventoryScreen {
             // Draw tool selection
             let tool_y = 190;
 
-            let mut draw_tool = |col: usize, tool_texture: Option<&Texture2D>| {
-                let tool_x = slot_padding * 2.0 + (col as f32 * (slot_size + slot_padding));
-                d.draw_texture(slot_texture, tool_x as i32, tool_y as i32, Color::WHITE);
-                if let Some(text) = tool_texture {
-                    d.draw_texture_ex(text, Vector2::new(tool_x, tool_y as f32), 0.0, 4.0, Color::WHITE);
-                }
-            };
+            let mut draw_tool_slot =
+                |col: usize, tool_texture: Option<&Texture2D>, tool_type: Option<ToolType>| {
+                    let tool_x = slot_padding * 2.0 + (col as f32 * (slot_size + slot_padding));
 
-            draw_tool(0, ctx.world_state.player.tool_dash.as_ref().map(|_| &ctx.textures.items.dashamulet)); // TODO: get different textures based on tool level
-            draw_tool(1, None); // Pickaxe
-            draw_tool(2, None); // Grappling hook
-            draw_tool(3, None); // Spear
-            draw_tool(4, None); // Lamp
-            draw_tool(5, None); // Fishing rod
-            draw_tool(6, None); // Glider
+                    // Check if this tool is selected
+                    let is_selected = ctx.world_state.player.selected_tool == tool_type && tool_type.is_some();
 
+                    // Draw slot background with highlight if selected
+                    let slot_color = if is_selected {
+                        Color::new(255, 255, 200, 255) // Light yellow tint
+                    } else {
+                        Color::WHITE
+                    };
+                    d.draw_texture(slot_texture, tool_x as i32, tool_y as i32, slot_color);
+
+                    // Draw tool icon if present
+                    if let Some(texture) = tool_texture {
+                        d.draw_texture_ex(
+                            texture,
+                            Vector2::new(tool_x, tool_y as f32),
+                            0.0,
+                            4.0,
+                            Color::WHITE,
+                        );
+                    }
+
+                    // Draw selection border if selected
+                    if is_selected {
+                        d.draw_rectangle_lines(
+                            tool_x as i32,
+                            tool_y as i32,
+                            slot_size as i32,
+                            slot_size as i32,
+                            Color::GOLD,
+                        );
+                    }
+                };
+
+            draw_tool_slot(
+                0,
+                ctx.world_state
+                    .player
+                    .tool_dash
+                    .as_ref()
+                    .map(|_| &ctx.textures.items.dashamulet),
+                ctx.world_state
+                    .player
+                    .tool_dash
+                    .as_ref()
+                    .map(|_| ToolType::Dash),
+            );
+            draw_tool_slot(
+                1,
+                ctx.world_state
+                    .player
+                    .tool_pickaxe
+                    .as_ref()
+                    .map(|_| &ctx.textures.items.dashamulet), // TODO: change to pickaxe texture
+                ctx.world_state
+                    .player
+                    .tool_pickaxe
+                    .as_ref()
+                    .map(|_| ToolType::Pickaxe),
+            );
+            draw_tool_slot(2, None, None); // Grappling hook
+            draw_tool_slot(3, None, None); // Spear
+            draw_tool_slot(4, None, None); // Lamp
+            draw_tool_slot(5, None, None); // Fishing rod
+            draw_tool_slot(6, None, None); // Glider
         }
 
         {

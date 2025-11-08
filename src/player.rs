@@ -25,7 +25,6 @@ pub const DASH_EXTENDED_TIME: f32 = 0.35;
 pub const DASH_CONTROL_MODIFER: f32 = 2.0;
 pub const DASH_VELOCITY: f32 = SPEED * 1.7;
 pub const DASHJUMP_COOLDOWN: f32 = 0.075;
-pub const DASH_AMOUNT: i32 = 1;
 pub const CORNER_CORRECTION_AMOUNT: i32 = 5;
 pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.25;
 
@@ -129,7 +128,7 @@ impl Player {
             last_action_at: -999.0,
             time: 0.0,
 
-            dashes: DASH_AMOUNT,
+            dashes: 0,
             climb_stamina: CLIMB_STAMINA,
 
             gravity_reduction: 1.0,
@@ -147,7 +146,7 @@ impl Player {
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
             place_block_type: None,
 
-            selected_tool: None,
+            selected_tool: Some(ToolType::Dash),
             tool_dash: initial_dash,
             tool_pickaxe: None,
         }
@@ -158,7 +157,7 @@ impl Player {
         self.is_swimming = true;
 
         let speed = 5.0 * ACCEL * dt;
-        let swim_speed = if controller.dash_held {
+        let swim_speed = if controller.climb_pressed {
             self.time += dt;
             self.time += dt;
             SWIM_SPEED * 8.0
@@ -216,7 +215,6 @@ impl Player {
     }
 
     pub fn update(&mut self, dt: f32, terrain: &Terrain, controller: &Controller) {
-        let dash_pressed = controller.dash_pressed;
         let jump_pressed = controller.jump_pressed;
         let jump_held = controller.jump_held;
         let climb_pressed = controller.climb_pressed;
@@ -328,9 +326,10 @@ impl Player {
 
         // Ground detection
         self.just_landed = false;
+        let max_dashes = self.tool_dash.as_ref().map_or(0, |x| x.max_dashes);
         if self.on_ground {
             if !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
-                self.dashes = DASH_AMOUNT;
+                self.dashes = max_dashes;
             }
             self.last_on_ground = self.time;
             self.climb_stamina = CLIMB_STAMINA;
@@ -341,31 +340,11 @@ impl Player {
         } else if self.is_swimming {
             self.is_jumping = false;
             self.climb_stamina = CLIMB_STAMINA;
-            self.dashes = DASH_AMOUNT;
+            self.dashes = max_dashes;
         }
 
-        // Dash input
-        if dash_pressed
-            && self.dashes > 0
-            && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN)
-        {
-            self.last_action_at = self.time;
-            self.dashes -= 1;
-            self.dashed_at = self.time;
-            self.dash_dir = Vector2::new(self.facing_dir as f32, 0.0);
-
-            // Directional dash
-            self.dash_dir.y = input_dir.y;
-            self.dash_dir.x = input_dir.x;
-            if self.on_ground {
-                self.dash_dir.y = self.dash_dir.y.min(0.0);
-            }
-
-            if self.dash_dir.x == 0.0 && self.dash_dir.y == 0.0 {
-                self.dash_dir.x = self.facing_dir as f32;
-            }
-
-            self.dash_dir = self.dash_dir.normalized();
+        if controller.use_tool_pressed {
+            self.use_tool(terrain, controller);
         }
 
         // Apply dash velocity
@@ -631,5 +610,30 @@ impl Player {
         }
     }
 
-    fn use_tool(&mut self, terrain: &Terrain) {}
+    fn use_tool(&mut self, _terrain: &Terrain, controller: &Controller) {
+        match self.selected_tool {
+            Some(ToolType::Dash) => self.manage_dash(controller.raycast_direction),
+            Some(ToolType::Pickaxe) => (),
+            None => ()
+        }
+    }
+
+    fn manage_dash(&mut self, dir: Vector2) {
+        if self.dashes > 0 && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
+            self.last_action_at = self.time;
+            self.dashes -= 1;
+            self.dashed_at = self.time;
+            self.dash_dir = dir;
+
+            if self.on_ground {
+                self.dash_dir.y = self.dash_dir.y.min(0.0);
+            }
+
+            if self.dash_dir.x == 0.0 && self.dash_dir.y == 0.0 {
+                self.dash_dir.x = self.facing_dir as f32;
+            }
+
+            self.dash_dir = self.dash_dir.normalized();
+        }
+    }
 }

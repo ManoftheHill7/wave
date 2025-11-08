@@ -6,22 +6,12 @@ use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
 
 // Maps to uniforms (original_0, replace_0)
-const COLOR_PALETTES: &[([f32; 4], [f32; 4])] = &[
-    // Blue scarf
-    (
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
-        [0.0, 0.5, 1.0, 1.0],
-    ),
-    // Red scarf
-    (
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
-    ),
-    // Pink scarf
-    (
-        [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],
-        [172.0 / 255.0, 50.0 / 255.0, 172.0 / 255.0, 1.0],
-    ),
+const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0];
+const COLOR_PALETTES: &[[f32; 4]] = &[
+    [0.0, 0.5, 1.0, 1.0], // Blue scarf
+    [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // Red scarf
+    [1.0, 0.0, 1.0, 1.0], // Pink scarf
+    [0.6, 0.9, 0.3, 1.0] // Green scarf
 ];
 
 fn smooth_camera_to_target(
@@ -225,13 +215,13 @@ fn render_player(
         raylib::ffi::SetShaderValue(
             shader.as_ref().clone(),
             loc_original_0,
-            palette.0.as_ptr() as *const std::ffi::c_void,
+            DEFAULT_SPRITE_PALLETTE.as_ptr() as *const std::ffi::c_void,
             raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
         );
         raylib::ffi::SetShaderValue(
             shader.as_ref().clone(),
             loc_replace_0,
-            palette.1.as_ptr() as *const std::ffi::c_void,
+            palette.as_ptr() as *const std::ffi::c_void,
             raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
         );
 
