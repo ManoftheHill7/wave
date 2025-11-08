@@ -5,8 +5,9 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use screen_manager::{Screen, ScreenManager, ScreenCommand};
+//! use raylib::prelude::*;
 //!
 //! struct MyContext {
 //!     // Context holds shared game state, but not delta_time
@@ -24,20 +25,30 @@
 //!         ScreenCommand::None
 //!     }
 //!
-//!     fn render(&mut self, _ctx: &Self::Context) {
-//!         // Render menu
+//!     fn render(&mut self, d: &mut RaylibDrawHandle, _ctx: &Self::Context) {
+//!         d.draw_text("Menu", 10, 10, 20, Color::BLACK);
 //!     }
 //! }
 //!
-//! # fn main() {
-//! let mut ctx = MyContext { };
-//! let mut manager = ScreenManager::new(Box::new(MenuScreen), &mut ctx);
-//! manager.update(0.016, &mut ctx);
-//! manager.render(&ctx);
-//! # }
+//! fn main() {
+//!     let (mut rl, thread) = raylib::init()
+//!         .size(800, 600)
+//!         .title("Game")
+//!         .build();
+//!
+//!     let mut ctx = MyContext { };
+//!     let mut manager = ScreenManager::new(Box::new(MenuScreen), &mut ctx);
+//!
+//!     while !rl.window_should_close() && !manager.is_empty() {
+//!         let dt = rl.get_frame_time();
+//!         manager.update(dt, &mut ctx);
+//!         manager.render(&mut rl, &thread, &ctx);
+//!     }
+//! }
 //! ```
 
 use std::fmt::Debug;
+use raylib::prelude::*;
 
 /// Represents possible transitions between screens
 pub enum ScreenCommand<Ctx> {
@@ -99,7 +110,11 @@ pub trait Screen {
     fn update(&mut self, dt: f32, ctx: &mut Self::Context) -> ScreenCommand<Self::Context>;
 
     /// Called every frame to render the screen
-    fn render(&mut self, ctx: &Self::Context);
+    ///
+    /// # Parameters
+    /// - `d`: Mutable reference to RaylibDrawHandle for rendering
+    /// - `ctx`: Reference to the game context
+    fn render(&mut self, d: &mut RaylibDrawHandle, ctx: &Self::Context);
 }
 
 /// Manages a stack of screens and handles transitions between them
@@ -107,6 +122,7 @@ pub trait Screen {
 /// The `ScreenManager` is generic over a context type that will be passed to all screens.
 pub struct ScreenManager<Ctx> {
     stack: Vec<Box<dyn Screen<Context = Ctx>>>,
+    pub clear_color: Color,
 }
 
 impl<Ctx> ScreenManager<Ctx> {
@@ -114,11 +130,18 @@ impl<Ctx> ScreenManager<Ctx> {
     ///
     /// # Example
     /// ```ignore
-    /// let manager = ScreenManager::new(Box::new(MainMenuScreen::new()), &mut ctx);
+    /// let manager = ScreenManager::new(
+    ///     Box::new(MainMenuScreen::new()),
+    ///     &mut ctx
+    /// );
     /// ```
-    pub fn new(initial_screen: Box<dyn Screen<Context = Ctx>>, ctx: &mut Ctx) -> Self {
+    pub fn new(
+        initial_screen: Box<dyn Screen<Context = Ctx>>,
+        ctx: &mut Ctx
+    ) -> Self {
         let mut manager = Self {
             stack: Vec::new(),
+            clear_color: Color::RAYWHITE,
         };
         manager.push_screen(initial_screen, ctx);
         manager
@@ -152,19 +175,36 @@ impl<Ctx> ScreenManager<Ctx> {
 
     /// Render the current screen
     ///
-    /// This calls the `render` method on the active screen
-    pub fn render(&mut self, ctx: &Ctx) {
+    /// This automatically calls `begin_drawing()`, clears the background with `clear_color`,
+    /// and calls the screen's render method
+    ///
+    /// # Parameters
+    /// - `rl`: Mutable reference to RaylibHandle
+    /// - `thread`: Reference to RaylibThread
+    /// - `ctx`: Reference to the game context
+    pub fn render(&mut self, rl: &mut RaylibHandle, thread: &RaylibThread, ctx: &Ctx) {
         if let Some(screen) = self.stack.last_mut() {
-            screen.render(ctx);
+            let mut d = rl.begin_drawing(thread);
+            d.clear_background(self.clear_color);
+            screen.render(&mut d, ctx);
         }
     }
 
     /// Render all screens in the stack (useful for transparent overlays)
     ///
-    /// Renders from bottom to top, allowing you to show dimmed backgrounds
-    pub fn render_all(&mut self, ctx: &Ctx) {
+    /// Renders from bottom to top, allowing you to show dimmed backgrounds.
+    /// This automatically calls `begin_drawing()`, clears the background with `clear_color`,
+    /// and calls each screen's render method
+    ///
+    /// # Parameters
+    /// - `rl`: Mutable reference to RaylibHandle
+    /// - `thread`: Reference to RaylibThread
+    /// - `ctx`: Reference to the game context
+    pub fn render_all(&mut self, rl: &mut RaylibHandle, thread: &RaylibThread, ctx: &Ctx) {
+        let mut d = rl.begin_drawing(thread);
+        d.clear_background(self.clear_color);
         for screen in self.stack.iter_mut() {
-            screen.render(ctx);
+            screen.render(&mut d, ctx);
         }
     }
 
