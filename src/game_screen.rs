@@ -59,6 +59,21 @@ fn smooth_camera_to_target(
     camera.target.y = target_y + (change_y + temp_y) * exp;
 }
 
+fn block_texture<'a>(block: Block, textures: &'a crate::TextureManager) -> &'a Texture2D {
+    match block {
+        Block::Dirt => &textures.tiles.dirt,
+        Block::Stone => &textures.tiles.stone,
+        Block::Grass => &textures.tiles.grass,
+        Block::Sand => &textures.tiles.sand,
+        Block::Lava => &textures.tiles.lava,
+        Block::Water => &textures.tiles.water,
+        Block::Log => &textures.tiles.log,
+        Block::Leaf => &textures.tiles.leaves,
+        Block::Air => &textures.fallback,
+        Block::Tide => &textures.fallback,
+    }
+}
+
 fn render_tile(d: &mut RaylibDrawHandle, x: f32, y: f32, texture: &Texture2D) {
     d.draw_texture_pro(
         texture,
@@ -118,19 +133,7 @@ fn render_terrain(
             let block = terrain.at(x, y);
 
             if block.is_solid() {
-                let texture = match block {
-                    Block::Dirt => &textures.tiles.dirt,
-                    Block::Stone => &textures.tiles.stone,
-                    Block::Grass => &textures.tiles.grass,
-                    Block::Sand => &textures.tiles.sand,
-                    Block::Lava => &textures.tiles.lava,
-                    Block::Water => &textures.tiles.water,
-                    Block::Log => &textures.tiles.log,
-                    Block::Leaf => &textures.tiles.leaves,
-                    Block::Air => continue,
-                    Block::Tide => continue,
-                };
-
+                let texture = block_texture(block, textures);
                 render_tile(d, x as f32, y as f32, texture);
             } else {
                 for cell_y in 0..CELL_RESOLUTION {
@@ -294,17 +297,21 @@ fn render_player(
             Color::RED,
         );
     }
-    if let Some(block) = player.place_block_type {
+    if let Some(item) = player.place_block_type {
         if let Some((free_x, free_y)) = player.raycast_last_free_tile {
-            d.draw_rectangle_lines_ex(
+            let texture = crate::inventory_screen::get_item_texture(&item, textures);
+            d.draw_texture_pro(
+                texture,
+                Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
                 Rectangle::new(
                     free_x.floor() * pixels_per_world_unit(),
                     free_y.floor() * pixels_per_world_unit(),
                     pixels_per_world_unit(),
                     pixels_per_world_unit(),
                 ),
-                4.0,
-                Color::GREEN,
+                Vector2::new(0.0, 0.0),
+                0.0,
+                Color::new(255, 255, 255, 128),
             );
         }
     }

@@ -62,7 +62,7 @@ impl InventoryScreen {
     }
 }
 
-fn get_item_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) -> &'a Texture2D {
+pub fn get_item_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) -> &'a Texture2D {
     match item_type {
         ItemType::Stone => &textures.tiles.stone,
         ItemType::Dirt => &textures.tiles.dirt,
