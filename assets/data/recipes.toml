@@ -243,12 +243,12 @@ amount = 1
 
 # anvil recipes
 
-[recipes.bronze_ladder]
+[recipes.copper_ladder]
 type = "anvil"
-output = "bronze ladder"
+output = "copper ladder"
 amount = 12
-[[recipes.bronze_ladder.inputs]]
-type = "bronze bar"
+[[recipes.copper_ladder.inputs]]
+type = "copper bar"
 amount = 5
 
 [recipes.steel_ladder]
