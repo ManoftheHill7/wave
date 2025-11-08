@@ -8,10 +8,10 @@ use screen_manager::{Screen, ScreenCommand};
 // Maps to uniforms (original_0, replace_0)
 const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0];
 const COLOR_PALETTES: &[[f32; 4]] = &[
-    [0.0, 0.5, 1.0, 1.0], // Blue scarf
+    [0.0, 0.5, 1.0, 1.0],                             // Blue scarf
     [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // Red scarf
-    [1.0, 0.0, 1.0, 1.0], // Pink scarf
-    [0.6, 0.9, 0.3, 1.0] // Green scarf
+    [1.0, 0.0, 1.0, 1.0],                             // Pink scarf
+    [0.6, 0.9, 0.3, 1.0],                             // Green scarf
 ];
 
 fn smooth_camera_to_target(
@@ -305,7 +305,7 @@ fn render_player(
             );
         }
     }
-    if true {
+    if false {
         d.draw_line_ex(
             Vector2::new(player_center_x, player_center_y),
             Vector2::new(raycast_end_x, raycast_end_y),
@@ -428,6 +428,76 @@ impl Screen for GameScreen {
             );
 
             remaining_health = remaining_health.saturating_sub(4);
+        }
+
+        // Draw HUD boxes for current tool and block type in bottom right
+        let hud_box_size = 40.0;
+        let mut hud_x = self.screen_width - hud_box_size - 70.0;
+        let hud_y = self.screen_height - hud_box_size - 20.0;
+
+        // Draw tool slot background
+        d.draw_rectangle(
+            hud_x as i32,
+            hud_y as i32,
+            hud_box_size as i32,
+            hud_box_size as i32,
+            Color::new(50, 50, 50, 200),
+        );
+        d.draw_rectangle_lines(
+            hud_x as i32,
+            hud_y as i32,
+            hud_box_size as i32,
+            hud_box_size as i32,
+            Color::WHITE,
+        );
+
+        // Draw selected tool icon if present
+        if let Some(selected_tool) = ctx.world_state.player.selected_tool {
+            let tool_texture = match selected_tool {
+                crate::tools::ToolType::Dash => Some(&ctx.textures.items.dashamulet),
+                crate::tools::ToolType::Pickaxe => None, // TODO: add pickaxe texture
+            };
+
+            if let Some(texture) = tool_texture {
+                let scale = hud_box_size / texture.width as f32;
+                d.draw_texture_ex(
+                    texture,
+                    Vector2::new(hud_x, hud_y),
+                    0.0,
+                    scale,
+                    Color::WHITE,
+                );
+            }
+        }
+
+        hud_x += 50.0;
+        d.draw_rectangle(
+            hud_x as i32,
+            hud_y as i32,
+            hud_box_size as i32,
+            hud_box_size as i32,
+            Color::new(50, 50, 50, 200),
+        );
+        d.draw_rectangle_lines(
+            hud_x as i32,
+            hud_y as i32,
+            hud_box_size as i32,
+            hud_box_size as i32,
+            Color::WHITE,
+        );
+
+        // Draw selected block icon if present
+        if let Some(block_type) = ctx.world_state.player.place_block_type {
+            let block_texture =
+                crate::inventory_screen::get_item_texture(&block_type, &ctx.textures);
+            let scale = hud_box_size / block_texture.width as f32;
+            d.draw_texture_ex(
+                block_texture,
+                Vector2::new(hud_x, hud_y),
+                0.0,
+                scale,
+                Color::WHITE,
+            );
         }
 
         if ctx.debug_enabled {

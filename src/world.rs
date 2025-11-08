@@ -22,7 +22,7 @@ impl WorldState {
     pub fn new() -> Self {
         WorldState {
             // player: Player::new(85.0, -1.0),
-            player: Player::new(215.0, 39.0),
+            player: Player::new(213.0, 37.0),
             terrain: Terrain::new(12345),
             ghost_mode: false,
             flow_timer: 0.0,
@@ -31,7 +31,7 @@ impl WorldState {
     }
 
     pub fn tide_level(&self) -> i32 {
-        (((self.tide_timer * TIDE_FREQUENCY + std::f32::consts::PI).sin() + 1.0) * MAX_TIDE_DEPTH
+        (((self.tide_timer * TIDE_FREQUENCY - std::f32::consts::PI / 2.0 + 0.4).sin() + 1.0) * MAX_TIDE_DEPTH
             / 2.0) as i32
     }
 
