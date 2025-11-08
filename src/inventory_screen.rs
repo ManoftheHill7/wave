@@ -1,4 +1,6 @@
+use crate::inventory::ItemType;
 use crate::GameContext;
+use crate::TextureManager;
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
 
@@ -14,6 +16,13 @@ impl InventoryScreen {
         InventoryScreen {
             render_target: None,
         }
+    }
+}
+
+fn get_item_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) -> &'a Texture2D {
+    match item_type {
+        ItemType::Stone => &textures.tiles.stone,
+        ItemType::Dirt => &textures.tiles.dirt,
     }
 }
 
@@ -41,6 +50,18 @@ impl Screen for InventoryScreen {
             let mut d = rl.begin_texture_mode(thread, render_target);
             d.clear_background(Color::RAYWHITE);
 
+            // Display weight information above the inventory grid
+            let weight_text = format!(
+                "Weight: {:.1}/{:.1}",
+                ctx.world_state.player.inventory.current_weight(),
+                ctx.world_state.player.inventory.max_weight()
+            );
+
+            let weight_x = 8.0;
+            let weight_y = 8.0;
+
+            d.draw_text(&weight_text, weight_x as i32, weight_y as i32, 10, Color::BLACK);
+
             // Draw inventory slots grid on the left side
             let slot_texture = &ctx.textures.ui.inventory_slot;
             let slot_size = slot_texture.width as f32;
@@ -55,16 +76,60 @@ impl Screen for InventoryScreen {
                 (slot_size * grid_rows as f32) + (slot_padding * (grid_rows - 1) as f32);
 
             let grid_x = 8.0;
-            let grid_y = 8.0;
+            let grid_y = 20.0;
 
             for row in 0..grid_rows {
                 for col in 0..grid_cols {
                     let slot_x = grid_x + (col as f32 * (slot_size + slot_padding));
                     let slot_y = grid_y + (row as f32 * (slot_size + slot_padding));
 
-                    // TODO: check and draw item over box
                     d.draw_texture(slot_texture, slot_x as i32, slot_y as i32, Color::WHITE);
                 }
+            }
+
+            // Collect inventory items for rendering
+            let inventory_items: Vec<_> = ctx.world_state.player.inventory.iter().collect();
+
+            // Render items on top of slots
+            for (slot_index, item_stack) in inventory_items.iter().enumerate() {
+                if slot_index >= (grid_cols * grid_rows) {
+                    break; // Don't overflow the grid
+                }
+
+                let col = slot_index % grid_cols;
+                let row = slot_index / grid_cols;
+                let slot_x = grid_x + (col as f32 * (slot_size + slot_padding));
+                let slot_y = grid_y + (row as f32 * (slot_size + slot_padding));
+
+                // Get texture for this item type
+                let item_texture = get_item_texture(&item_stack.item_type, &ctx.textures);
+
+                // Draw item texture scaled to fit in slot (8x8 texture → 32x32 slot = 4x scale)
+                let texture_scale = slot_size / item_texture.width as f32;
+                d.draw_texture_ex(
+                    item_texture,
+                    Vector2::new(slot_x, slot_y),
+                    0.0,
+                    texture_scale,
+                    Color::WHITE,
+                );
+
+                // Draw item count in bottom-right corner
+                let count_text = item_stack.count.to_string();
+                let text_size = 10;
+
+                // Position text in bottom-right corner with small padding
+                let text_x = slot_x + slot_size - 12.0; // 12px from right for padding
+                let text_y = slot_y + slot_size - 12.0; // 12px from bottom for padding
+
+                d.draw_text(&count_text, text_x as i32+1, text_y as i32 + 1, 10, Color::WHITE);
+                d.draw_text(
+                    &count_text,
+                    text_x as i32,
+                    text_y as i32,
+                    text_size,
+                    Color::BLACK,
+                );
             }
 
             // Draw equip UI on the right side
@@ -76,7 +141,6 @@ impl Screen for InventoryScreen {
             let equip_y = (RENDER_HEIGHT as f32 - texture_height) / 2.0;
 
             d.draw_texture(equip_texture, equip_x as i32, equip_y as i32, Color::WHITE);
-
 
             // Draw equiped tools
             let left_hand_x = 268.0;
@@ -90,12 +154,21 @@ impl Screen for InventoryScreen {
             let boots_x = helm_x;
             let boots_y = 120.0;
 
-            d.draw_texture(slot_texture, left_hand_x as i32, left_hand_y as i32, Color::WHITE);
-            d.draw_texture(slot_texture, right_hand_x as i32, right_hand_y as i32, Color::WHITE);
+            d.draw_texture(
+                slot_texture,
+                left_hand_x as i32,
+                left_hand_y as i32,
+                Color::WHITE,
+            );
+            d.draw_texture(
+                slot_texture,
+                right_hand_x as i32,
+                right_hand_y as i32,
+                Color::WHITE,
+            );
             d.draw_texture(slot_texture, helm_x as i32, helm_y as i32, Color::WHITE);
             d.draw_texture(slot_texture, armor_x as i32, armor_y as i32, Color::WHITE);
             d.draw_texture(slot_texture, boots_x as i32, boots_y as i32, Color::WHITE);
-
 
             // Draw tool selection
             let tool_cols = 9;
@@ -106,8 +179,6 @@ impl Screen for InventoryScreen {
                 d.draw_texture(slot_texture, tool_x as i32, tool_y as i32, Color::WHITE);
             }
         }
-
-
 
         {
             let mut d = rl.begin_drawing(thread);
