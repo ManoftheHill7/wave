@@ -34,7 +34,7 @@ Things required for the games core concept
 - [x] Inventory UI
 - [x] Player health/HUD
 - [x] Tool - Dash
-- [ ] Player Breath hold
+- [x] Player Breath hold
 - [ ] Tileset variants
 - [ ] Tool - Pickaxe
 - [ ] Tool - Grappling Hook
