@@ -176,10 +176,7 @@ amount = 60
 type = "lumosite ore"
 amount = 30
 [[recipes.ozathinum_bar.inputs]]
-type = "mithril ore"
-amount = 2
-[[recipes.ozathinum_bar.inputs]]
-type = "lava"
+type = "mithril_lava_bucket"
 amount = 1
 
 [recipes.torzite_bar]
@@ -196,7 +193,7 @@ amount = 30
 type = "ozathinum bar"
 amount = 4
 [[recipes.torzite_bar.inputs]]
-type = "lava"
+type = "mithril_lava_bucket"
 amount = 1
 
 [recipes.etherealite_bar]
@@ -222,7 +219,7 @@ amount = 20
 type = "silver bar"
 amount = 30
 [[recipes.etherealite_bar.inputs]]
-type = "lava"
+type = "mithril_lava_bucket"
 amount = 1
 
 [recipes.lumostone]
