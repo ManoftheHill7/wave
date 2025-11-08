@@ -240,13 +240,24 @@ impl Screen for InventoryScreen {
             }
 
             // Draw tool selection
-            let tool_cols = 9;
             let tool_y = 190;
-            for col in 0..tool_cols {
+
+            let mut draw_tool = |col: usize, tool_texture: Option<&Texture2D>| {
                 let tool_x = slot_padding * 2.0 + (col as f32 * (slot_size + slot_padding));
-                // TODO: check and draw item over box
                 d.draw_texture(slot_texture, tool_x as i32, tool_y as i32, Color::WHITE);
-            }
+                if let Some(text) = tool_texture {
+                    d.draw_texture_ex(text, Vector2::new(tool_x, tool_y as f32), 0.0, 4.0, Color::WHITE);
+                }
+            };
+
+            draw_tool(0, ctx.world_state.player.tool_dash.as_ref().map(|_| &ctx.textures.items.dashamulet)); // TODO: get different textures based on tool level
+            draw_tool(1, None); // Pickaxe
+            draw_tool(2, None); // Grappling hook
+            draw_tool(3, None); // Spear
+            draw_tool(4, None); // Lamp
+            draw_tool(5, None); // Fishing rod
+            draw_tool(6, None); // Glider
+
         }
 
         {

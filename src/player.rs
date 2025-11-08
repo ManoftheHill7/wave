@@ -1,6 +1,7 @@
 use crate::controller::Controller;
 use crate::inventory::{Inventory, ItemType};
 use crate::terrain::Terrain;
+use crate::tools::*;
 use raylib::prelude::*;
 
 pub const ACCEL: f32 = 30.0;
@@ -95,10 +96,15 @@ pub struct Player {
 
     pub inventory: Inventory,
     pub place_block_type: Option<ItemType>,
+
+    pub selected_tool: Option<ToolType>,
+    pub tool_dash: Option<ToolDash>,
+    pub tool_pickaxe: Option<ToolPickaxe>,
 }
 
 impl Player {
     pub fn new(x: f32, y: f32) -> Self {
+        let initial_dash = Some(load_basic_dash());
         Player {
             position: Vector2::new(x, y),
             velocity: Vector2::zero(),
@@ -140,6 +146,10 @@ impl Player {
 
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
             place_block_type: None,
+
+            selected_tool: None,
+            tool_dash: initial_dash,
+            tool_pickaxe: None,
         }
     }
 
@@ -548,14 +558,18 @@ impl Player {
     }
 
     fn apply_corner_correction(&mut self, _terrain: &Terrain) {
-        if self.velocity.y >= 0.0 {
+        let do_cc = false;
+        if self.velocity.y >= 0.0 && do_cc {
+            for _i in 0..CORNER_CORRECTION_AMOUNT {
+                // Do nothing for now
+            }
             return;
         }
         // TODO: Move a small amount to avoid clipping corners when jumping up
     }
 
     fn check_wall(&self, terrain: &Terrain) -> bool {
-        let buffer = 0.05;
+        let buffer = WALLJUMP_DETECT_DISTANCE;
         terrain
             .collides_with_solid_terrain(
                 self.position.x + buffer * self.facing_dir as f32,
@@ -616,4 +630,6 @@ impl Player {
             current + max_delta * (target - current).signum()
         }
     }
+
+    fn use_tool(&mut self, terrain: &Terrain) {}
 }

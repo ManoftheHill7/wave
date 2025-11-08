@@ -1,0 +1,6 @@
+[dash.basic]
+durability = 100.0
+max_dashes = 1
+dash_time = 0.25
+dash_extended_time = 0.35
+dash_control_modifier = 1.8

@@ -31,10 +31,10 @@ Things required for the games core concept
 - [x] Tidal cycle
 - [x] Screen Management System
 - [ ] Item and equipment system
-- [ ] Inventory UI
-- [ ] Player health/HUD
-- [ ] Player Breath hold
+- [x] Inventory UI
+- [x] Player health/HUD
 - [ ] Tool - Dash
+- [ ] Player Breath hold
 - [ ] Tool - Pickaxe
 - [ ] Tool - Grappling Hook
 - [ ] Ore generation

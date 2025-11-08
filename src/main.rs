@@ -24,6 +24,7 @@ mod inventory_screen;
 mod player;
 mod terrain;
 mod terrain_generator;
+mod tools;
 mod world;
 
 use controller::Controller;
