@@ -29,16 +29,20 @@ Things required for the games core concept
 - [x] Cave generation
 - [x] Dynamic Water
 - [x] Tidal cycle
-- [ ] Inventory system
-- [ ] Player health/HUD
-- [ ] Player Breath hold
-- [ ] Tool - Dash
+- [x] Screen Management System
+- [x] Item and equipment system
+- [x] Inventory UI
+- [x] Player health/HUD
+- [x] Tool - Dash
+- [x] Player Breath hold
+- [x] Tileset variants
 - [ ] Tool - Pickaxe
 - [ ] Tool - Grappling Hook
 - [ ] Ore generation
 - [ ] Stala(gm/ct)ites
 - [ ] Bat enemies
 - [ ] Mole enemies
+- [ ] Tool - Spear
 - [ ] Crafting system
 - [ ] Crafting recipes
 
@@ -48,7 +52,9 @@ Things that I would really like to have
 
 - [ ] Save/load/new game
 - [ ] Dynamic lighting
+- [ ] Tool - Lamp
 - [ ] Parallax backgrounds
+- [ ] Improved hitbox/collision handling
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
 - [ ] Tide clears building items
 - [ ] Multiple cave biomes as you get deeper
@@ -60,6 +66,7 @@ Things that I would really like to have
 - [ ] Tool - Glider
 - [ ] Multiple cave generation types
 - [ ] Multiple enemy types
+- [ ] Boots
 
 ### Tier 3 Tasks
 
@@ -80,3 +87,4 @@ Things I will get to if there is time
 - https://www.jgallant.com/2d-liquid-simulator-with-cellular-automaton-in-unity
 - https://lucasschuermann.com/writing/implementing-sph-in-2d
 - https://nothings.org/gamedev/herringbone/herringbone_tiles.html
+- https://opengameart.org/users/technodono

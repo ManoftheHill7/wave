@@ -27,7 +27,7 @@ impl TerrainGenerator {
             self.generate_sky_chunk(coord)
         } else {
             self.generate_tunnels_chunk(coord)
-        }
+        };
     }
 
     pub fn generate_hill_chunk(&self, coord: ChunkCoord) -> Chunk {
@@ -39,7 +39,8 @@ impl TerrainGenerator {
         // Starts to show flaws if x>14000
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
-            let height_f = noise_height as f64 * self.noise.get([wx as f64 * (1.0 / noise_detail as f64)]);
+            let height_f =
+                noise_height as f64 * self.noise.get([wx as f64 * (1.0 / noise_detail as f64)]);
             let height = height_f as i32 - coord.x + BEACH_HEIGHT;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
@@ -70,7 +71,11 @@ impl TerrainGenerator {
             let wx = coord.x * chunk_size + lx as i32;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
-                let nv = (1.0 + self.noise.get([wx as f64 / noise_detail, wy as f64 / noise_detail])) / 2.0;
+                let nv = (1.0
+                    + self
+                        .noise
+                        .get([wx as f64 / noise_detail, wy as f64 / noise_detail]))
+                    / 2.0;
                 let block_type = if air_percent > nv {
                     if water_spawn_percent > nv {
                         Block::Tide
@@ -84,17 +89,6 @@ impl TerrainGenerator {
             }
         }
 
-        if false {
-            for lx in 0..CHUNK_SIZE {
-                let wx = coord.x * chunk_size + lx as i32;
-                for ly in 0..CHUNK_SIZE {
-                    let wy = coord.y * chunk_size + ly as i32;
-                    if wy > 40 && chunk.get(lx, ly) == Block::Air {
-                        chunk.set(lx, ly, Block::Water);
-                    }
-                }
-            }
-        }
         return chunk;
     }
 
@@ -173,7 +167,15 @@ impl TerrainGenerator {
         chunk
     }
 
-    fn add_tree(&self, chunk: &mut Chunk, x: i32, y: i32, width: i32, height: i32, chunk_coord: ChunkCoord) {
+    fn add_tree(
+        &self,
+        chunk: &mut Chunk,
+        x: i32,
+        y: i32,
+        width: i32,
+        height: i32,
+        chunk_coord: ChunkCoord,
+    ) {
         if height < 2 || width < 1 {
             return;
         }
@@ -199,7 +201,11 @@ impl TerrainGenerator {
             let layer_ratio = 1.0 - (layer as f32 / canopy_height as f32) * 0.5;
             let layer_width = ((width as f32 * layer_ratio).ceil() as i32).max(1);
 
-            let layer_width = if layer_width % 2 == 0 { layer_width + 1 } else { layer_width };
+            let layer_width = if layer_width % 2 == 0 {
+                layer_width + 1
+            } else {
+                layer_width
+            };
             let half_width = layer_width / 2;
 
             for dx in -half_width..=half_width {
@@ -220,16 +226,13 @@ impl TerrainGenerator {
         let chunk_start_y = chunk_coord.y * chunk_size;
         let chunk_end_y = chunk_start_y + chunk_size;
 
-        wx >= chunk_start_x && wx < chunk_end_x && wy >= chunk_start_y && wy <
-            chunk_end_y
+        wx >= chunk_start_x && wx < chunk_end_x && wy >= chunk_start_y && wy < chunk_end_y
     }
 
-    fn world_to_local(&self, wx: i32, wy: i32, chunk_coord: ChunkCoord) ->
-        (usize, usize) {
-            let chunk_size = CHUNK_SIZE as i32;
-            let lx = (wx - chunk_coord.x * chunk_size) as usize;
-            let ly = (wy - chunk_coord.y * chunk_size) as usize;
-            (lx, ly)
+    fn world_to_local(&self, wx: i32, wy: i32, chunk_coord: ChunkCoord) -> (usize, usize) {
+        let chunk_size = CHUNK_SIZE as i32;
+        let lx = (wx - chunk_coord.x * chunk_size) as usize;
+        let ly = (wy - chunk_coord.y * chunk_size) as usize;
+        (lx, ly)
     }
 }
-

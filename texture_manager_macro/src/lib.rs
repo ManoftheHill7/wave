@@ -9,6 +9,7 @@ use walkdir::WalkDir;
 struct FolderNode {
     textures: Vec<(String, String)>,
     texture_arrays: Vec<(String, Vec<String>)>,
+    j11_tilesets: Vec<(String, String)>,
     subfolders: BTreeMap<String, FolderNode>,
 }
 
@@ -17,18 +18,34 @@ impl FolderNode {
         FolderNode {
             textures: Vec::new(),
             texture_arrays: Vec::new(),
+            j11_tilesets: Vec::new(),
             subfolders: BTreeMap::new(),
         }
     }
 }
 
 fn sanitize_ident(name: &str) -> String {
-    name.replace('-', "_")
-        .replace('.', "_")
-        .replace(' ', "_")
+    name.replace('-', "_").replace('.', "_").replace(' ', "_")
+}
+
+fn is_j11_tileset(file_stem: &str) -> bool {
+    file_stem.ends_with(".j11")
+}
+
+fn strip_j11_suffix(file_stem: &str) -> String {
+    if file_stem.ends_with(".j11") {
+        file_stem[..file_stem.len() - 4].to_string()
+    } else {
+        file_stem.to_string()
+    }
 }
 
 fn parse_frame_or_variant(file_stem: &str) -> Option<(String, usize)> {
+    // Don't parse j11 tilesets as frame/variant sequences
+    if is_j11_tileset(file_stem) {
+        return None;
+    }
+
     if let Some(pos) = file_stem.rfind("_f") {
         let base = &file_stem[..pos];
         let num_str = &file_stem[pos + 2..];
@@ -64,18 +81,21 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
             if path.is_file() {
                 if let Some(extension) = path.extension() {
                     let ext = extension.to_string_lossy().to_lowercase();
-                    if ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "bmp" || ext == "gif" {
+                    if ext == "png" || ext == "jpg" || ext == "jpeg" || ext == "bmp" || ext == "gif"
+                    {
                         if let Some(file_stem) = path.file_stem() {
                             let file_stem_str = file_stem.to_string_lossy().to_string();
 
-                            let relative_path = path.strip_prefix(assets_path)
+                            let relative_path = path
+                                .strip_prefix(assets_path)
                                 .unwrap()
                                 .to_string_lossy()
                                 .to_string();
 
                             let full_path = format!("{}/{}", assets_folder_str, relative_path);
 
-                            let parent_relative = path.parent()
+                            let parent_relative = path
+                                .parent()
                                 .unwrap()
                                 .strip_prefix(assets_path)
                                 .unwrap()
@@ -118,13 +138,15 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
             if !sorted_files.is_empty() {
                 let parent_relative = sorted_files[0].2.clone();
                 let field_name = sanitize_ident(&basename);
-                let paths: Vec<String> = sorted_files.into_iter().map(|(_, path, _)| path).collect();
+                let paths: Vec<String> =
+                    sorted_files.into_iter().map(|(_, path, _)| path).collect();
 
                 let mut current_node = &mut root;
                 if !parent_relative.is_empty() {
                     for component in Path::new(&parent_relative).components() {
                         let folder_name = component.as_os_str().to_string_lossy().to_string();
-                        current_node = current_node.subfolders
+                        current_node = current_node
+                            .subfolders
                             .entry(folder_name)
                             .or_insert_with(FolderNode::new);
                     }
@@ -135,19 +157,29 @@ fn build_folder_tree(assets_path: &Path, assets_folder_str: &str) -> FolderNode 
         }
 
         for (file_stem, full_path, parent_relative) in singles {
-            let field_name = sanitize_ident(&file_stem);
+            let is_j11 = is_j11_tileset(&file_stem);
+            let field_name = if is_j11 {
+                sanitize_ident(&strip_j11_suffix(&file_stem))
+            } else {
+                sanitize_ident(&file_stem)
+            };
 
             let mut current_node = &mut root;
             if !parent_relative.is_empty() {
                 for component in Path::new(&parent_relative).components() {
                     let folder_name = component.as_os_str().to_string_lossy().to_string();
-                    current_node = current_node.subfolders
+                    current_node = current_node
+                        .subfolders
                         .entry(folder_name)
                         .or_insert_with(FolderNode::new);
                 }
             }
 
-            current_node.textures.push((field_name, full_path));
+            if is_j11 {
+                current_node.j11_tilesets.push((field_name, full_path));
+            } else {
+                current_node.textures.push((field_name, full_path));
+            }
         }
     }
 
@@ -215,6 +247,28 @@ fn generate_struct_for_folder(
         });
     }
 
+    let mut sorted_j11 = node.j11_tilesets.clone();
+    sorted_j11.sort_by(|a, b| a.0.cmp(&b.0));
+
+    for (field_name, file_path) in &sorted_j11 {
+        let field_ident = syn::Ident::new(field_name, proc_macro2::Span::call_site());
+
+        field_declarations.push(quote! {
+            pub #field_ident: J11TileSet
+        });
+
+        load_statements.push(quote! {
+            #field_ident: J11TileSet::new(
+                rl.load_texture(thread, #file_path)
+                    .unwrap_or_else(|e| {
+                        eprintln!("Warning: Failed to load J11 tileset: {} ({}), using fallback texture", #file_path, e);
+                        rl.load_texture_from_image(thread, &fallback_image)
+                            .expect("Failed to create texture from fallback image")
+                    })
+            )
+        });
+    }
+
     for (subfolder_name, subfolder_node) in &node.subfolders {
         let new_path = if folder_path.is_empty() {
             subfolder_name.clone()
@@ -222,16 +276,16 @@ fn generate_struct_for_folder(
             format!("{}_{}", folder_path, subfolder_name)
         };
 
-        let (subfolder_struct, subfolder_load) = generate_struct_for_folder(
-            &new_path,
-            subfolder_node,
-            nested_structs,
-        );
+        let (subfolder_struct, subfolder_load) =
+            generate_struct_for_folder(&new_path, subfolder_node, nested_structs);
 
-        let field_name = syn::Ident::new(&sanitize_ident(subfolder_name), proc_macro2::Span::call_site());
+        let field_name = syn::Ident::new(
+            &sanitize_ident(subfolder_name),
+            proc_macro2::Span::call_site(),
+        );
         let subfolder_type = syn::Ident::new(
             &format!("{}Manager", sanitize_ident(&new_path)),
-            proc_macro2::Span::call_site()
+            proc_macro2::Span::call_site(),
         );
 
         field_declarations.push(quote! {
@@ -278,6 +332,8 @@ pub fn generate_texture_manager(input: TokenStream) -> TokenStream {
     let (main_struct, main_load) = generate_struct_for_folder("", &root_node, &mut nested_structs);
 
     let expanded = quote! {
+        use texture_helpers::{J11TileSet, Neighbors};
+
         #(#nested_structs)*
 
         #main_struct

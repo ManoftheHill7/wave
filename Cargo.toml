@@ -10,3 +10,9 @@ noise = "0.9.0"
 raylib = "5.5.1"
 rayon = "1.10"
 texture_manager_macro = { path = "texture_manager_macro" }
+texture_helpers = { path = "texture_helpers" }
+screen_manager = { path = "screen_manager" }
+toml = "0.8"
+
+[build-dependencies]
+toml = "0.8"

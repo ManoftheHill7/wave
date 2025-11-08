@@ -1,0 +1,9 @@
+[items.stone]
+name = "Stone"
+weight = 5.0
+type = "block"
+
+[items.dirt]
+name = "Dirt"
+weight = 2.0
+type = "block"

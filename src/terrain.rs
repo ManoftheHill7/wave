@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::terrain_generator::TerrainGenerator;
+use std::collections::HashMap;
 
 pub const CHUNK_SIZE: usize = 128;
 pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
@@ -30,7 +30,7 @@ pub enum Block {
     Lava,
     Log,
     Leaf,
-    Tide
+    Tide,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -54,13 +54,18 @@ impl FlowData {
 
 impl Block {
     pub fn is_solid(self) -> bool {
-        matches!(self,
-            Block::Dirt |
-            Block::Stone |
-            Block::Grass |
-            Block::Sand |
-            Block::Log |
-            Block::Leaf)
+        matches!(
+            self,
+            Block::Dirt | Block::Stone | Block::Grass | Block::Sand | Block::Log | Block::Leaf
+        )
+    }
+
+    pub fn from_item_type(item_type: crate::inventory::ItemType) -> Option<Block> {
+        use crate::inventory::ItemType;
+        match item_type {
+            ItemType::Dirt => Some(Block::Dirt),
+            ItemType::Stone => Some(Block::Stone),
+        }
     }
 }
 
@@ -132,9 +137,11 @@ impl Chunk {
             let ly = local_y as f32;
             for cell_y in 0..CELL_RESOLUTION {
                 for cell_x in 0..CELL_RESOLUTION {
-                    self.liquid_set(lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
+                    self.liquid_set(
+                        lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
                         ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
-                        LiquidData::full());
+                        LiquidData::full(),
+                    );
                 }
             }
         } else {
@@ -154,11 +161,13 @@ impl Chunk {
         self.cells[(cy * CHUNK_SIZE as f32 * CELL_RESOLUTION as f32 + cx) as usize] = ld
     }
 
-    pub unsafe fn flow(&mut self,
-                       mut neighbor_up: Option<&mut Chunk>,
-                       mut neighbor_down: Option<&mut Chunk>,
-                       mut neighbor_left: Option<&mut Chunk>,
-                       mut neighbor_right: Option<&mut Chunk>) {
+    pub unsafe fn flow(
+        &mut self,
+        mut neighbor_up: Option<&mut Chunk>,
+        mut neighbor_down: Option<&mut Chunk>,
+        mut neighbor_left: Option<&mut Chunk>,
+        mut neighbor_right: Option<&mut Chunk>,
+    ) {
         let cells_per_chunk_axis = CHUNK_SIZE * CELL_RESOLUTION;
 
         for i in 0..self.cells.len() {
@@ -197,30 +206,46 @@ impl Chunk {
                 self.cells[cell_index].flow_right = false;
 
                 macro_rules! get_neighbor_volume {
-                    (down) => { get_neighbor_volume!(cell_y as i32 + 1 < cells_per_chunk_axis as i32, neighbor_down,
-                        tile_x,
-                        cell_x,
-                        (cell_y as usize + 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
-                        ((cell_y as i32 + 1) as usize) * cells_per_chunk_axis + cell_x
-                    )};
-                    (up) => { get_neighbor_volume!(cell_y as i32 - 1 >= 0, neighbor_up,
-                        (CHUNK_SIZE - 1) * CHUNK_SIZE + tile_x,
-                        (cells_per_chunk_axis - 1) * cells_per_chunk_axis + cell_x,
-                        (cell_y as usize - 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
-                        ((cell_y as i32 - 1) as usize) * cells_per_chunk_axis + cell_x
-                    )};
-                    (left) => { get_neighbor_volume!(cell_x as i32 - 1 >= 0, neighbor_left,
-                        tile_y * CHUNK_SIZE + (CHUNK_SIZE - 1),
-                        cell_y * cells_per_chunk_axis + (cells_per_chunk_axis - 1),
-                        tile_y * CHUNK_SIZE + ((cell_x as i32 - 1) as usize) / CELL_RESOLUTION,
-                        cell_y * cells_per_chunk_axis + ((cell_x as i32 - 1) as usize)
-                    )};
-                    (right) => { get_neighbor_volume!(cell_x as i32 + 1 < cells_per_chunk_axis as i32, neighbor_right,
-                        tile_y * CHUNK_SIZE,
-                        cell_y * cells_per_chunk_axis,
-                        tile_y * CHUNK_SIZE + ((cell_x as i32 + 1) as usize) / CELL_RESOLUTION,
-                        cell_y * cells_per_chunk_axis + ((cell_x as i32 + 1) as usize)
-                    )};
+                    (down) => {
+                        get_neighbor_volume!(
+                            cell_y as i32 + 1 < cells_per_chunk_axis as i32,
+                            neighbor_down,
+                            tile_x,
+                            cell_x,
+                            (cell_y as usize + 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
+                            ((cell_y as i32 + 1) as usize) * cells_per_chunk_axis + cell_x
+                        )
+                    };
+                    (up) => {
+                        get_neighbor_volume!(
+                            cell_y as i32 - 1 >= 0,
+                            neighbor_up,
+                            (CHUNK_SIZE - 1) * CHUNK_SIZE + tile_x,
+                            (cells_per_chunk_axis - 1) * cells_per_chunk_axis + cell_x,
+                            (cell_y as usize - 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
+                            ((cell_y as i32 - 1) as usize) * cells_per_chunk_axis + cell_x
+                        )
+                    };
+                    (left) => {
+                        get_neighbor_volume!(
+                            cell_x as i32 - 1 >= 0,
+                            neighbor_left,
+                            tile_y * CHUNK_SIZE + (CHUNK_SIZE - 1),
+                            cell_y * cells_per_chunk_axis + (cells_per_chunk_axis - 1),
+                            tile_y * CHUNK_SIZE + ((cell_x as i32 - 1) as usize) / CELL_RESOLUTION,
+                            cell_y * cells_per_chunk_axis + ((cell_x as i32 - 1) as usize)
+                        )
+                    };
+                    (right) => {
+                        get_neighbor_volume!(
+                            cell_x as i32 + 1 < cells_per_chunk_axis as i32,
+                            neighbor_right,
+                            tile_y * CHUNK_SIZE,
+                            cell_y * cells_per_chunk_axis,
+                            tile_y * CHUNK_SIZE + ((cell_x as i32 + 1) as usize) / CELL_RESOLUTION,
+                            cell_y * cells_per_chunk_axis + ((cell_x as i32 + 1) as usize)
+                        )
+                    };
 
                     ($in_chunk:expr, $neighbor:expr, $cross_tile:expr, $cross_cell:expr, $tile_idx:expr, $neighbour_idx:expr) => {{
                         if $in_chunk {
@@ -307,7 +332,8 @@ impl Chunk {
                     up: current_flow.up * FLOW_SMOOTHING + flow_up * (1.0 - FLOW_SMOOTHING),
                     down: current_flow.down * FLOW_SMOOTHING + flow_down * (1.0 - FLOW_SMOOTHING),
                     left: current_flow.left * FLOW_SMOOTHING + flow_left * (1.0 - FLOW_SMOOTHING),
-                    right: current_flow.right * FLOW_SMOOTHING + flow_right * (1.0 - FLOW_SMOOTHING),
+                    right: current_flow.right * FLOW_SMOOTHING
+                        + flow_right * (1.0 - FLOW_SMOOTHING),
                 };
             }
         }
@@ -318,7 +344,11 @@ impl Chunk {
                 let cell_index = cell_y * cells_per_chunk_axis + cell_x;
                 let flow = self.cells[cell_index].flow;
 
-                if flow.up < MIN_FLOW && flow.down < MIN_FLOW && flow.left < MIN_FLOW && flow.right < MIN_FLOW {
+                if flow.up < MIN_FLOW
+                    && flow.down < MIN_FLOW
+                    && flow.left < MIN_FLOW
+                    && flow.right < MIN_FLOW
+                {
                     continue;
                 }
 
@@ -333,30 +363,46 @@ impl Chunk {
                 }
 
                 macro_rules! get_neighbor_ptr {
-                    (down) => { get_neighbor_ptr!(cell_y as i32 + 1 < cells_per_chunk_axis as i32, neighbor_down,
-                        tile_x,
-                        cell_x,
-                        (cell_y as usize + 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
-                        ((cell_y as i32 + 1) as usize) * cells_per_chunk_axis + cell_x
-                    )};
-                    (up) => { get_neighbor_ptr!(cell_y as i32 - 1 >= 0, neighbor_up,
-                        (CHUNK_SIZE - 1) * CHUNK_SIZE + tile_x,
-                        (cells_per_chunk_axis - 1) * cells_per_chunk_axis + cell_x,
-                        (cell_y as usize - 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
-                        ((cell_y as i32 - 1) as usize) * cells_per_chunk_axis + cell_x
-                    )};
-                    (left) => { get_neighbor_ptr!(cell_x as i32 - 1 >= 0, neighbor_left,
-                        tile_y * CHUNK_SIZE + (CHUNK_SIZE - 1),
-                        cell_y * cells_per_chunk_axis + (cells_per_chunk_axis - 1),
-                        tile_y * CHUNK_SIZE + ((cell_x as i32 - 1) as usize) / CELL_RESOLUTION,
-                        cell_y * cells_per_chunk_axis + ((cell_x as i32 - 1) as usize)
-                    )};
-                    (right) => { get_neighbor_ptr!(cell_x as i32 + 1 < cells_per_chunk_axis as i32, neighbor_right,
-                        tile_y * CHUNK_SIZE,
-                        cell_y * cells_per_chunk_axis,
-                        tile_y * CHUNK_SIZE + ((cell_x as i32 + 1) as usize) / CELL_RESOLUTION,
-                        cell_y * cells_per_chunk_axis + ((cell_x as i32 + 1) as usize)
-                    )};
+                    (down) => {
+                        get_neighbor_ptr!(
+                            cell_y as i32 + 1 < cells_per_chunk_axis as i32,
+                            neighbor_down,
+                            tile_x,
+                            cell_x,
+                            (cell_y as usize + 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
+                            ((cell_y as i32 + 1) as usize) * cells_per_chunk_axis + cell_x
+                        )
+                    };
+                    (up) => {
+                        get_neighbor_ptr!(
+                            cell_y as i32 - 1 >= 0,
+                            neighbor_up,
+                            (CHUNK_SIZE - 1) * CHUNK_SIZE + tile_x,
+                            (cells_per_chunk_axis - 1) * cells_per_chunk_axis + cell_x,
+                            (cell_y as usize - 1) / CELL_RESOLUTION * CHUNK_SIZE + tile_x,
+                            ((cell_y as i32 - 1) as usize) * cells_per_chunk_axis + cell_x
+                        )
+                    };
+                    (left) => {
+                        get_neighbor_ptr!(
+                            cell_x as i32 - 1 >= 0,
+                            neighbor_left,
+                            tile_y * CHUNK_SIZE + (CHUNK_SIZE - 1),
+                            cell_y * cells_per_chunk_axis + (cells_per_chunk_axis - 1),
+                            tile_y * CHUNK_SIZE + ((cell_x as i32 - 1) as usize) / CELL_RESOLUTION,
+                            cell_y * cells_per_chunk_axis + ((cell_x as i32 - 1) as usize)
+                        )
+                    };
+                    (right) => {
+                        get_neighbor_ptr!(
+                            cell_x as i32 + 1 < cells_per_chunk_axis as i32,
+                            neighbor_right,
+                            tile_y * CHUNK_SIZE,
+                            cell_y * cells_per_chunk_axis,
+                            tile_y * CHUNK_SIZE + ((cell_x as i32 + 1) as usize) / CELL_RESOLUTION,
+                            cell_y * cells_per_chunk_axis + ((cell_x as i32 + 1) as usize)
+                        )
+                    };
 
                     ($in_chunk:expr, $neighbor:expr, $cross_tile:expr, $cross_cell:expr, $tile_idx:expr, $neighbour_idx:expr) => {{
                         if $in_chunk {
@@ -452,22 +498,37 @@ impl Terrain {
         phase_0.par_iter().for_each(|chunk_coord| {
             let ptr = chunks_ptr;
             unsafe {
-                let neighbor_up_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y - 1 };
-                let neighbor_down_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y + 1 };
-                let neighbor_left_coord = ChunkCoord { x: chunk_coord.x - 1, y: chunk_coord.y };
-                let neighbor_right_coord = ChunkCoord { x: chunk_coord.x + 1, y: chunk_coord.y };
+                let neighbor_up_coord = ChunkCoord {
+                    x: chunk_coord.x,
+                    y: chunk_coord.y - 1,
+                };
+                let neighbor_down_coord = ChunkCoord {
+                    x: chunk_coord.x,
+                    y: chunk_coord.y + 1,
+                };
+                let neighbor_left_coord = ChunkCoord {
+                    x: chunk_coord.x - 1,
+                    y: chunk_coord.y,
+                };
+                let neighbor_right_coord = ChunkCoord {
+                    x: chunk_coord.x + 1,
+                    y: chunk_coord.y,
+                };
 
-                let current_chunk = (*ptr.0).get_mut(chunk_coord)
-                    .map(|c| c as *mut Chunk);
+                let current_chunk = (*ptr.0).get_mut(chunk_coord).map(|c| c as *mut Chunk);
 
                 if let Some(current_ptr) = current_chunk {
-                    let neighbor_up = (*ptr.0).get_mut(&neighbor_up_coord)
+                    let neighbor_up = (*ptr.0)
+                        .get_mut(&neighbor_up_coord)
                         .map(|c| c as *mut Chunk);
-                    let neighbor_down = (*ptr.0).get_mut(&neighbor_down_coord)
+                    let neighbor_down = (*ptr.0)
+                        .get_mut(&neighbor_down_coord)
                         .map(|c| c as *mut Chunk);
-                    let neighbor_left = (*ptr.0).get_mut(&neighbor_left_coord)
+                    let neighbor_left = (*ptr.0)
+                        .get_mut(&neighbor_left_coord)
                         .map(|c| c as *mut Chunk);
-                    let neighbor_right = (*ptr.0).get_mut(&neighbor_right_coord)
+                    let neighbor_right = (*ptr.0)
+                        .get_mut(&neighbor_right_coord)
                         .map(|c| c as *mut Chunk);
 
                     (*current_ptr).flow(
@@ -484,22 +545,37 @@ impl Terrain {
         phase_1.par_iter().for_each(|chunk_coord| {
             let ptr = chunks_ptr;
             unsafe {
-                let neighbor_up_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y - 1 };
-                let neighbor_down_coord = ChunkCoord { x: chunk_coord.x, y: chunk_coord.y + 1 };
-                let neighbor_left_coord = ChunkCoord { x: chunk_coord.x - 1, y: chunk_coord.y };
-                let neighbor_right_coord = ChunkCoord { x: chunk_coord.x + 1, y: chunk_coord.y };
+                let neighbor_up_coord = ChunkCoord {
+                    x: chunk_coord.x,
+                    y: chunk_coord.y - 1,
+                };
+                let neighbor_down_coord = ChunkCoord {
+                    x: chunk_coord.x,
+                    y: chunk_coord.y + 1,
+                };
+                let neighbor_left_coord = ChunkCoord {
+                    x: chunk_coord.x - 1,
+                    y: chunk_coord.y,
+                };
+                let neighbor_right_coord = ChunkCoord {
+                    x: chunk_coord.x + 1,
+                    y: chunk_coord.y,
+                };
 
-                let current_chunk = (*ptr.0).get_mut(chunk_coord)
-                    .map(|c| c as *mut Chunk);
+                let current_chunk = (*ptr.0).get_mut(chunk_coord).map(|c| c as *mut Chunk);
 
                 if let Some(current_ptr) = current_chunk {
-                    let neighbor_up = (*ptr.0).get_mut(&neighbor_up_coord)
+                    let neighbor_up = (*ptr.0)
+                        .get_mut(&neighbor_up_coord)
                         .map(|c| c as *mut Chunk);
-                    let neighbor_down = (*ptr.0).get_mut(&neighbor_down_coord)
+                    let neighbor_down = (*ptr.0)
+                        .get_mut(&neighbor_down_coord)
                         .map(|c| c as *mut Chunk);
-                    let neighbor_left = (*ptr.0).get_mut(&neighbor_left_coord)
+                    let neighbor_left = (*ptr.0)
+                        .get_mut(&neighbor_left_coord)
                         .map(|c| c as *mut Chunk);
-                    let neighbor_right = (*ptr.0).get_mut(&neighbor_right_coord)
+                    let neighbor_right = (*ptr.0)
+                        .get_mut(&neighbor_right_coord)
                         .map(|c| c as *mut Chunk);
 
                     (*current_ptr).flow(
@@ -531,7 +607,10 @@ impl Terrain {
         let local_coord = self.world_to_local(xi, yi);
 
         if let Some(chunk) = self.chunks.get(&chunk_coord) {
-            chunk.liquid_get(local_coord.0 as f32 + x.fract(), local_coord.1 as f32 + y.fract())
+            chunk.liquid_get(
+                local_coord.0 as f32 + x.fract(),
+                local_coord.1 as f32 + y.fract(),
+            )
         } else {
             LiquidData::new(0.0)
         }
@@ -543,13 +622,22 @@ impl Terrain {
 
     pub fn liquid_terrain_at(&self, x: i32, y: i32) -> bool {
         // matches!(self.at(x, y), Block::Water | Block::Lava)
-        self.liquid_at(x as f32, y as f32).volume +
-            self.liquid_at(x as f32 + CELL_OFFSET, y as f32).volume +
-            self.liquid_at(x as f32, y as f32 + CELL_OFFSET).volume +
-            self.liquid_at(x as f32 + CELL_OFFSET, y as f32 + CELL_OFFSET).volume > 0.5
+        self.liquid_at(x as f32, y as f32).volume
+            + self.liquid_at(x as f32 + CELL_OFFSET, y as f32).volume
+            + self.liquid_at(x as f32, y as f32 + CELL_OFFSET).volume
+            + self
+                .liquid_at(x as f32 + CELL_OFFSET, y as f32 + CELL_OFFSET)
+                .volume
+            > 0.5
     }
 
-    pub fn collides_with_solid_terrain(&self, x: f32, y: f32, width: f32, height: f32) -> Option<(f32, f32)> {
+    pub fn collides_with_solid_terrain(
+        &self,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+    ) -> Option<(f32, f32)> {
         let left = x.floor() as i32;
         let right = (x + width).floor() as i32;
         let top = y.floor() as i32;
