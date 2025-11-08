@@ -430,6 +430,111 @@ impl Screen for GameScreen {
             remaining_health = remaining_health.saturating_sub(4);
         }
 
+        // Draw breath bar when swimming or breath not full
+        let max_breath = crate::player::MAX_BREATH_HOLD;
+        if ctx.world_state.player.is_swimming || ctx.world_state.player.breath < max_breath {
+            let breath_bar_x = hearts_x;
+            let breath_bar_y = hearts_y + heart_size + 8.0;
+            let breath_bar_width = 120.0;
+            let breath_bar_height = 8.0;
+
+            // Background (dark)
+            d.draw_rectangle(
+                breath_bar_x as i32,
+                breath_bar_y as i32,
+                breath_bar_width as i32,
+                breath_bar_height as i32,
+                Color::new(50, 50, 50, 180),
+            );
+
+            // Calculate breath percentage
+            let breath_percent = (ctx.world_state.player.breath / max_breath)
+                .max(0.0)
+                .min(1.0);
+            let filled_width = breath_bar_width * breath_percent;
+
+            // Color changes as breath depletes
+            let breath_color = if breath_percent > 0.5 {
+                Color::new(100, 200, 255, 255) // Light blue
+            } else if breath_percent > 0.25 {
+                Color::new(255, 200, 100, 255) // Orange warning
+            } else {
+                Color::new(255, 100, 100, 255) // Red danger
+            };
+
+            // Draw filled portion
+            d.draw_rectangle(
+                breath_bar_x as i32,
+                breath_bar_y as i32,
+                filled_width as i32,
+                breath_bar_height as i32,
+                breath_color,
+            );
+
+            // Border
+            d.draw_rectangle_lines(
+                breath_bar_x as i32,
+                breath_bar_y as i32,
+                breath_bar_width as i32,
+                breath_bar_height as i32,
+                Color::WHITE,
+            );
+        }
+
+        // Draw vignette effect when breath is critical
+        if ctx.world_state.player.is_swimming {
+            let breath_percent = (ctx.world_state.player.breath / max_breath)
+                .max(0.0)
+                .min(1.0);
+
+            if breath_percent < 0.50 {
+                // Base vignette intensity
+                let base_alpha = ((1.0 - breath_percent * 2.0) * 255.0) as u8;
+                let color = Color::new(0, 0, 100, 0);
+                let color_alpha = Color::new(0, 0, 100, base_alpha);
+                let vin_size = 500;
+                // Top vignette
+                d.draw_rectangle_gradient_v(
+                    0,
+                    0,
+                    self.screen_width as i32,
+                    vin_size,
+                    color_alpha,
+                    color,
+                );
+
+                // Bottom vignette
+                d.draw_rectangle_gradient_v(
+                    0,
+                    self.screen_height as i32 - vin_size,
+                    self.screen_width as i32,
+                    vin_size,
+                    color,
+                    color_alpha
+                );
+
+                // Left vignette
+                d.draw_rectangle_gradient_h(
+                    0,
+                    0,
+                    vin_size,
+                    self.screen_height as i32,
+                    color_alpha,
+                    color,
+                );
+
+                // Right vignette
+                d.draw_rectangle_gradient_h(
+                    self.screen_width as i32 - vin_size,
+                    0,
+                    vin_size,
+                    self.screen_height as i32,
+                    color,
+                    color_alpha
+                );
+            }
+        }
+
         // Draw HUD boxes for current tool and block type in bottom right
         let hud_box_size = 40.0;
         let mut hud_x = self.screen_width - hud_box_size - 70.0;

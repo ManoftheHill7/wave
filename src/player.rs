@@ -41,7 +41,7 @@ pub const MAX_RAYCAST_SPEAR: f32 = 3.0;
 
 pub const INVENTORY_STARTING_WEIGHT: f32 = 100.0;
 pub const STARTING_HEALTH: i32 = 12; // 4 frames of heart * 3 hearts
-pub const MAX_BREATH_HOLD: f32 = 5.0;
+pub const MAX_BREATH_HOLD: f32 = 10.0;
 
 #[derive(Debug)]
 struct RaycastResult {
