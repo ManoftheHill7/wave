@@ -1,12 +1,14 @@
 use raylib::prelude::*;
-use texture_manager_macro::generate_texture_manager;
+use screen_manager::ScreenManager;
+use std::cell::RefCell;
 use std::sync::OnceLock;
+use texture_manager_macro::generate_texture_manager;
 
 generate_texture_manager!("assets");
 
 static PIXELS_PER_WORLD_UNIT: OnceLock<f32> = OnceLock::new();
 
-fn pixels_per_world_unit() -> f32 {
+pub fn pixels_per_world_unit() -> f32 {
     *PIXELS_PER_WORLD_UNIT.get_or_init(|| {
         std::env::var("PPW")
             .ok()
@@ -15,164 +17,93 @@ fn pixels_per_world_unit() -> f32 {
     })
 }
 
-mod render;
-mod world;
+mod controller;
+mod game_screen;
+mod player;
 mod terrain;
 mod terrain_generator;
-mod player;
-mod controller;
+mod world;
 
-use world::WorldState;
 use controller::Controller;
+use game_screen::GameScreen;
+use world::WorldState;
 
-fn update_controller_raycast_for_mouse(
-    rl: &RaylibHandle,
-    camera: &Camera2D,
-    controller: &mut Controller,
-    player: &player::Player,
-) {
-    let mouse_screen = rl.get_mouse_position();
-    let mouse_world = rl.get_screen_to_world2D(mouse_screen, camera);
-
-    let dx = mouse_world.x - (player.position.x + player.width / 2.0) * pixels_per_world_unit();
-    let dy = mouse_world.y - (player.position.y + player.height / 2.0) * pixels_per_world_unit();
-    let distance = (dx * dx + dy * dy).sqrt();
-
-    if distance > 0.0001 {
-        controller.set_raycast_direction(Vector2::new(dx / distance, dy / distance));
-    }
+pub struct GameContext {
+    pub textures: TextureManager,
+    pub render_state: GameRenderState,
+    pub controller: Controller,
+    pub world_state: WorldState,
+    pub debug_enabled: bool,
+    pub updating: bool,
 }
 
-fn smooth_camera_to_target(
-    camera: &mut Camera2D,
-    camera_velocity: &mut Vector2,
-    target_x: f32,
-    target_y: f32,
-    dt: f32,
-    smooth_time: f32,
-) {
-    let max_speed = 10000.0;
+pub struct GameRenderState {
+    pub player_shader: RefCell<Shader>,
+    pub shader_locs: ShaderLocs,
+}
 
-    let omega = 2.0 / smooth_time;
-    let x = omega * dt;
-    let exp = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x);
+pub type ShaderLocs = (i32, i32, i32, i32);
 
-    let change_x = camera.target.x - target_x;
-    let temp_x = (camera_velocity.x + omega * change_x) * dt;
-    camera_velocity.x = (camera_velocity.x - omega * temp_x) * exp;
+impl GameContext {
+    fn new(rl: &mut RaylibHandle, thread: &RaylibThread) -> Self {
+        let textures = TextureManager::load(rl, thread);
 
-    if camera_velocity.x.abs() > max_speed {
-        camera_velocity.x = camera_velocity.x.signum() * max_speed;
+        let mut player_shader = rl.load_shader(
+            thread,
+            Some("shaders/playerShader.vert"),
+            Some("shaders/playerShader.frag"),
+        );
+
+        let loc_original_0 = player_shader.get_shader_location("original_0");
+        let loc_replace_0 = player_shader.get_shader_location("replace_0");
+        let loc_exhustion = player_shader.get_shader_location("exhustion");
+        let loc_whiteout = player_shader.get_shader_location("whiteout");
+
+        let mut world_state = WorldState::new();
+        world_state.update(0.0, &Controller::new());
+
+        GameContext {
+            textures,
+            render_state: GameRenderState {
+                player_shader: RefCell::new(player_shader),
+                shader_locs: (loc_original_0, loc_replace_0, loc_exhustion, loc_whiteout),
+            },
+            controller: Controller::new(),
+            world_state,
+            debug_enabled: true,
+            updating: true,
+        }
     }
 
-    camera.target.x = target_x + (change_x + temp_x) * exp;
-
-    let change_y = camera.target.y - target_y;
-    let temp_y = (camera_velocity.y + omega * change_y) * dt;
-    camera_velocity.y = (camera_velocity.y - omega * temp_y) * exp;
-
-    if camera_velocity.y.abs() > max_speed {
-        camera_velocity.y = camera_velocity.y.signum() * max_speed;
+    fn handle_global_input(&mut self, rl: &RaylibHandle) {
+        if rl.is_key_pressed(KeyboardKey::KEY_SLASH) {
+            self.debug_enabled = !self.debug_enabled;
+        }
+        if rl.is_key_pressed(KeyboardKey::KEY_APOSTROPHE) {
+            self.world_state.ghost_mode = !self.world_state.ghost_mode;
+        }
+        if rl.is_key_pressed(KeyboardKey::KEY_ENTER) {
+            self.updating = !self.updating;
+        }
     }
-
-    camera.target.y = target_y + (change_y + temp_y) * exp;
 }
 
 fn main() {
-    let (mut rl, thread) = raylib::init()
-        .size(1600, 900)
-        .title("JGame")
-        .build();
+    let (mut rl, thread) = raylib::init().size(1600, 900).title("JGame").build();
 
     rl.set_target_fps(60);
 
-    let textures = TextureManager::load(&mut rl, &thread);
+    let mut ctx = GameContext::new(&mut rl, &thread);
+    let mut manager = ScreenManager::new(Box::new(GameScreen::new(&ctx)), &mut ctx);
+    manager.clear_color = Color::RAYWHITE;
 
-    let mut player_shader = rl.load_shader(
-        &thread,
-        Some("shaders/playerShader.vert"),
-        Some("shaders/playerShader.frag")
-    );
-
-    let loc_original_0 = player_shader.get_shader_location("original_0");
-    let loc_replace_0 = player_shader.get_shader_location("replace_0");
-    let loc_exhustion = player_shader.get_shader_location("exhustion");
-    let loc_whiteout = player_shader.get_shader_location("whiteout");
-
-    let mut world_state = WorldState::new();
-    let mut controller = Controller::new();
-
-    let mut camera_velocity = Vector2::zero();
-    let mut camera = Camera2D {
-        target: Vector2::new(
-            world_state.player.position.x * pixels_per_world_unit(),
-            world_state.player.position.y * pixels_per_world_unit(),
-        ),
-        offset: Vector2::new(rl.get_screen_width() as f32 / 2.0, rl.get_screen_height() as f32 / 2.0),
-        rotation: 0.0,
-        zoom: 1.0,
-    };
-
-
-    let mut debug_enabled = true;
-    let mut updating = true;
-    world_state.update(0.0, &controller);
-
-    while !rl.window_should_close() {
+    while !rl.window_should_close() && !manager.is_empty() {
         let dt = rl.get_frame_time();
 
-        if rl.is_key_pressed(KeyboardKey::KEY_SLASH) {
-            debug_enabled = !debug_enabled;
-        }
-        if rl.is_key_pressed(KeyboardKey::KEY_APOSTROPHE) {
-            world_state.ghost_mode = !world_state.ghost_mode;
-        }
-        if rl.is_key_pressed(KeyboardKey::KEY_ENTER) {
-            updating = !updating;
-        }
+        ctx.handle_global_input(&rl);
+        ctx.controller.update(&rl);
 
-        controller.update(&rl);
-        update_controller_raycast_for_mouse(&rl, &camera, &mut controller, &world_state.player);
-
-        if updating {
-            world_state.update(dt, &controller);
-        }
-
-        smooth_camera_to_target(
-            &mut camera,
-            &mut camera_velocity,
-            world_state.player.position.x * pixels_per_world_unit(),
-            world_state.player.position.y * pixels_per_world_unit(),
-            dt,
-            0.12
-        );
-
-        let mut d = rl.begin_drawing(&thread);
-
-        d.clear_background(Color::RAYWHITE);
-
-        {
-            let mut d2 = d.begin_mode2D(camera);
-            render::render(
-                &mut d2,
-                &world_state,
-                &textures,
-                &mut player_shader,
-                (loc_original_0, loc_replace_0, loc_exhustion, loc_whiteout)
-            );
-        }
-
-        if debug_enabled {
-            d.draw_text(&format!("Pos: ({:.2}, {:.2})", world_state.player.position.x, world_state.player.position.y), 10, 10, 20, Color::DARKGRAY);
-            d.draw_text("Controls: WASD/Arrows=Move, Space=Jump, C=Climb, Shift/X=Dash, Toggle Controls=/, Toggle Ghost=', Play/Pause=Enter", 500, 10, 16, Color::BLACK);
-            d.draw_text(&format!("FPS: {}", d.get_fps()), 1500, 10, 20, Color::GRAY);
-
-            d.draw_text(&format!("Vel: ({:.2}, {:.2})", world_state.player.velocity.x, world_state.player.velocity.y), 10, 35, 20, Color::DARKGRAY);
-            d.draw_text(&format!("On Ground: {}   Is Climbing {}   Is Sliding {}   Is Dashing {}   Is Swimming {}",
-                    world_state.player.on_ground, world_state.player.is_climbing,
-                    world_state.player.is_sliding, world_state.player.is_dashing,
-                    world_state.player.is_swimming), 10, 60, 20, Color::DARKGRAY);
-            d.draw_text(&format!("Tide: {}", world_state.tide_level()), 10, 85, 20, Color::DARKGRAY);
-        }
+        manager.update(dt, &mut ctx);
+        manager.render(&mut rl, &thread, &ctx);
     }
 }

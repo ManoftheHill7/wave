@@ -1,6 +1,6 @@
-use raylib::prelude::*;
-use crate::terrain::Terrain;
 use crate::controller::Controller;
+use crate::terrain::Terrain;
+use raylib::prelude::*;
 
 pub const ACCEL: f32 = 30.0;
 pub const SPEED: f32 = 12.0;
@@ -40,7 +40,6 @@ pub const SWIM_EXIT_TIME: f32 = 0.10;
 pub const MAX_RAYCAST_PICKAXE: f32 = 2.0;
 pub const MAX_RAYCAST_HOOK: f32 = 10.0;
 pub const MAX_RAYCAST_SPEAR: f32 = 3.0;
-
 
 #[derive(Debug)]
 struct RaycastResult {
@@ -149,10 +148,13 @@ impl Player {
 
         self.position += self.velocity * dt;
 
-
         self.raycast_max_length = MAX_RAYCAST_HOOK;
         let raycast_start = self.position + Vector2::new(self.width / 2.0, self.height / 2.0);
-        let rayresult = self.raycast(raycast_start, raycast_start + controller.raycast_direction * self.raycast_max_length, terrain);
+        let rayresult = self.raycast(
+            raycast_start,
+            raycast_start + controller.raycast_direction * self.raycast_max_length,
+            terrain,
+        );
         self.raycast_end_pos = rayresult.final_position;
         self.raycast_hit_tile = if rayresult.hit {
             Some((rayresult.final_position.x, rayresult.final_position.y))
@@ -214,8 +216,6 @@ impl Player {
             self.is_swimming = true;
         }
 
-
-
         let on_wall = self.check_wall(terrain);
 
         // Wall slide
@@ -232,21 +232,26 @@ impl Player {
             self.climb_stamina -= dt;
             self.is_climbing = true;
             self.velocity.y = 0.0;
-            self.velocity.y = Self::move_toward(self.velocity.y, input_dir.y * CLIMB_SPEED, CLIMB_SPEED);
+            self.velocity.y =
+                Self::move_toward(self.velocity.y, input_dir.y * CLIMB_SPEED, CLIMB_SPEED);
         }
 
         // Jump handling
         if jump_pressed || self.within_grace(self.try_jumped_at, JUMP_BUFFER_TIME) {
             if self.is_swimming {
                 self.jump(0.7);
-            } else if self.on_ground || (self.within_grace(self.last_on_ground, JUMP_COYOTE_TIME) && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN)) {
+            } else if self.on_ground
+                || (self.within_grace(self.last_on_ground, JUMP_COYOTE_TIME)
+                    && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN))
+            {
                 // TODO: wavedash
                 self.jump(1.0);
             } else if on_wall && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
                 // Wall jump
                 self.last_action_at = self.time;
                 self.velocity.y = JUMP_VELOCITY;
-                self.velocity.x = JUMP_VELOCITY * self.facing_dir as f32 * WALLJUMP_X_RELATIVE_STRENGTH;
+                self.velocity.x =
+                    JUMP_VELOCITY * self.facing_dir as f32 * WALLJUMP_X_RELATIVE_STRENGTH;
                 self.facing_dir *= -1;
                 self.try_jumped_at = 0.0;
                 self.wall_jumped_at = self.time;
@@ -289,7 +294,10 @@ impl Player {
         }
 
         // Dash input
-        if dash_pressed && self.dashes > 0 && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
+        if dash_pressed
+            && self.dashes > 0
+            && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN)
+        {
             self.last_action_at = self.time;
             self.dashes -= 1;
             self.dashed_at = self.time;
@@ -313,16 +321,18 @@ impl Player {
         if self.within_grace(self.dashed_at, DASH_TIME) {
             self.velocity = Vector2::new(
                 self.dash_dir.x * DASH_VELOCITY,
-                self.dash_dir.y * DASH_VELOCITY
+                self.dash_dir.y * DASH_VELOCITY,
             );
         } else if self.is_swimming {
             let speed = ACCEL * dt;
             if input_dir.x != 0.0 {
                 self.facing_dir = input_dir.x.signum() as i32;
-                self.velocity.x = Self::move_toward(self.velocity.x, input_dir.x * SWIM_SPEED, speed);
+                self.velocity.x =
+                    Self::move_toward(self.velocity.x, input_dir.x * SWIM_SPEED, speed);
             }
             if input_dir.y != 0.0 {
-                self.velocity.y = Self::move_toward(self.velocity.y, input_dir.y * SWIM_SPEED, speed);
+                self.velocity.y =
+                    Self::move_toward(self.velocity.y, input_dir.y * SWIM_SPEED, speed);
             }
         } else {
             // Horizontal movement
@@ -337,7 +347,8 @@ impl Player {
             if !self.within_grace(self.wall_jumped_at, WALLJUMP_LOCK_TIME) {
                 // Regular movement
                 if input_dir.x != 0.0 {
-                    self.velocity.x = Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
+                    self.velocity.x =
+                        Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
                     self.facing_dir = input_dir.x.signum() as i32;
                 } else {
                     self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
@@ -350,7 +361,11 @@ impl Player {
 
         self.raycast_max_length = MAX_RAYCAST_HOOK;
         let raycast_start = self.position + Vector2::new(self.width / 2.0, self.height / 2.0);
-        let rayresult = self.raycast(raycast_start, raycast_start + raycast_direction * self.raycast_max_length, terrain);
+        let rayresult = self.raycast(
+            raycast_start,
+            raycast_start + raycast_direction * self.raycast_max_length,
+            terrain,
+        );
         self.raycast_end_pos = rayresult.final_position;
         self.raycast_hit_tile = if rayresult.hit {
             Some((rayresult.final_position.x, rayresult.final_position.y))
@@ -359,12 +374,7 @@ impl Player {
         };
     }
 
-    fn raycast(
-        &self,
-        start: Vector2,
-        end: Vector2,
-        terrain: &Terrain
-    ) -> RaycastResult {
+    fn raycast(&self, start: Vector2, end: Vector2, terrain: &Terrain) -> RaycastResult {
         // DDA (Digital Differential Analyzer) ray-grid traversal algorithm
         // https://lodev.org/cgtutor/raycasting.html
         let pos_x = start.x;
@@ -407,7 +417,7 @@ impl Player {
                 return RaycastResult {
                     final_position: Vector2::new(vx + start.x, vy + start.y),
                     hit: true,
-                }
+                };
             }
 
             //jump to next map square, either in x-direction, or in y-direction
@@ -434,10 +444,9 @@ impl Player {
             }
         }
 
-
         RaycastResult {
             final_position: end,
-            hit: false
+            hit: false,
         }
     }
 
@@ -450,26 +459,33 @@ impl Player {
         let mut dx = self.position.x;
         while dx != target_x {
             dx = Self::move_toward(dx, target_x, step_size);
-            if let Some((tx, _)) = terrain.collides_with_solid_terrain(dx, self.position.y + buffer,
-                self.width, self.height - double_buffer) {
+            if let Some((tx, _)) = terrain.collides_with_solid_terrain(
+                dx,
+                self.position.y + buffer,
+                self.width,
+                self.height - double_buffer,
+            ) {
                 if self.velocity.x > 0.0 {
                     dx = tx - self.width;
                 } else if self.velocity.x < 0.0 {
                     dx = tx + 1.0;
                 }
                 self.velocity.x = 0.0;
-                break
+                break;
             }
         }
         self.position.x = dx;
-
 
         let target_y = self.position.y + self.velocity.y * dt;
         let mut dy = self.position.y;
         while dy != target_y {
             dy = Self::move_toward(dy, target_y, step_size);
-            if let Some((_, ty)) = terrain.collides_with_solid_terrain(self.position.x + buffer, dy,
-                self.width - double_buffer, self.height) {
+            if let Some((_, ty)) = terrain.collides_with_solid_terrain(
+                self.position.x + buffer,
+                dy,
+                self.width - double_buffer,
+                self.height,
+            ) {
                 if self.velocity.y > 0.0 {
                     self.on_ground = true;
                     dy = ty - self.height;
@@ -477,14 +493,18 @@ impl Player {
                     dy = ty + 1.0;
                 }
                 self.velocity.y = 0.0;
-                break
+                break;
             }
         }
         self.position.y = dy;
 
         if self.on_ground {
-            if let None = terrain.collides_with_solid_terrain(self.position.x + buffer, self.position.y + step_size,
-                self.width - double_buffer, self.height) {
+            if let None = terrain.collides_with_solid_terrain(
+                self.position.x + buffer,
+                self.position.y + step_size,
+                self.width - double_buffer,
+                self.height,
+            ) {
                 self.on_ground = false
             }
         }
@@ -501,7 +521,14 @@ impl Player {
 
     fn check_wall(&self, terrain: &Terrain) -> bool {
         let buffer = 0.05;
-        terrain.collides_with_solid_terrain(self.position.x + buffer * self.facing_dir as f32, self.position.y + buffer, self.width, self.height - 2.0 * buffer).is_some()
+        terrain
+            .collides_with_solid_terrain(
+                self.position.x + buffer * self.facing_dir as f32,
+                self.position.y + buffer,
+                self.width,
+                self.height - 2.0 * buffer,
+            )
+            .is_some()
     }
 
     fn check_in_water(&self, terrain: &Terrain) -> bool {
@@ -513,7 +540,12 @@ impl Player {
     fn exit_dash_handler(&mut self, terrain: &Terrain) {
         let mut wiggle_y = 0.0;
         let mut wiggle_x = 0.0;
-        while let Some(_) = terrain.collides_with_solid_terrain(self.position.x + wiggle_x, self.position.y + wiggle_y, self.width, self.height) {
+        while let Some(_) = terrain.collides_with_solid_terrain(
+            self.position.x + wiggle_x,
+            self.position.y + wiggle_y,
+            self.width,
+            self.height,
+        ) {
             wiggle_y = (wiggle_y.abs() + 0.1) * wiggle_y.signum() * -1.0;
             if wiggle_y.abs() > 2.0 {
                 wiggle_y = 0.0;

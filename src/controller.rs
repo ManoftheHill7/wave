@@ -24,10 +24,14 @@ impl Controller {
     }
 
     pub fn update(&mut self, rl: &RaylibHandle) {
-        self.dash_pressed = rl.is_key_pressed(KeyboardKey::KEY_LEFT_SHIFT) || rl.is_key_pressed(KeyboardKey::KEY_X);
-        self.dash_held = rl.is_key_down(KeyboardKey::KEY_LEFT_SHIFT) || rl.is_key_down(KeyboardKey::KEY_X);
-        self.jump_pressed = rl.is_key_pressed(KeyboardKey::KEY_SPACE) || rl.is_key_pressed(KeyboardKey::KEY_Z);
-        self.jump_held = rl.is_key_down(KeyboardKey::KEY_SPACE) || rl.is_key_down(KeyboardKey::KEY_Z);
+        self.dash_pressed =
+            rl.is_key_pressed(KeyboardKey::KEY_LEFT_SHIFT) || rl.is_key_pressed(KeyboardKey::KEY_X);
+        self.dash_held =
+            rl.is_key_down(KeyboardKey::KEY_LEFT_SHIFT) || rl.is_key_down(KeyboardKey::KEY_X);
+        self.jump_pressed =
+            rl.is_key_pressed(KeyboardKey::KEY_SPACE) || rl.is_key_pressed(KeyboardKey::KEY_Z);
+        self.jump_held =
+            rl.is_key_down(KeyboardKey::KEY_SPACE) || rl.is_key_down(KeyboardKey::KEY_Z);
         self.climb_pressed = rl.is_key_down(KeyboardKey::KEY_C);
 
         self.input_dir = Vector2::new(0.0, 0.0);
@@ -42,6 +46,22 @@ impl Controller {
         }
         if rl.is_key_down(KeyboardKey::KEY_D) || rl.is_key_down(KeyboardKey::KEY_RIGHT) {
             self.input_dir.x = 1.0;
+        }
+
+        // Calculate raycast direction from screen center to mouse
+        let mouse_pos = rl.get_mouse_position();
+        let screen_center_x = rl.get_screen_width() as f32 / 2.0;
+        let screen_center_y = rl.get_screen_height() as f32 / 2.0;
+
+        let dx = mouse_pos.x - screen_center_x;
+        let dy = mouse_pos.y - screen_center_y;
+        let distance = (dx * dx + dy * dy).sqrt();
+
+        if distance > 0.0001 {
+            self.raycast_direction = Vector2::new(dx / distance, dy / distance);
+        } else {
+            // Default direction if mouse is exactly at center
+            self.raycast_direction = Vector2::new(1.0, 0.0);
         }
     }
 

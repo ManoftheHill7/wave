@@ -1,6 +1,6 @@
-use crate::terrain::{Terrain, ChunkCoord, CHUNK_SIZE};
-use crate::player::Player;
 use crate::controller::Controller;
+use crate::player::Player;
+use crate::terrain::{ChunkCoord, Terrain, CHUNK_SIZE};
 
 #[cfg(debug_assertions)]
 const LIQUID_UPDATE_TIMER: f32 = 0.04;
@@ -26,12 +26,13 @@ impl WorldState {
             terrain: Terrain::new(12345),
             ghost_mode: false,
             flow_timer: 0.0,
-            tide_timer: 0.0
+            tide_timer: 0.0,
         }
     }
 
     pub fn tide_level(&self) -> i32 {
-        (((self.tide_timer * TIDE_FREQUENCY + std::f32::consts::PI).sin() + 1.0) * MAX_TIDE_DEPTH / 2.0) as i32
+        (((self.tide_timer * TIDE_FREQUENCY + std::f32::consts::PI).sin() + 1.0) * MAX_TIDE_DEPTH
+            / 2.0) as i32
     }
 
     fn initialize_chunk_tides(&mut self, coord: ChunkCoord) {
@@ -46,7 +47,7 @@ impl WorldState {
                     if !chunk.get(lx, ly).is_solid() {
                         let wy = coord.y * chunk_size + ly as i32;
                         if wy < tide_level {
-                            continue
+                            continue;
                         }
                         chunk.set(lx, ly, Block::Water);
                     }
@@ -77,7 +78,7 @@ impl WorldState {
                                         chunk.liquid_set(
                                             lx as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
                                             ly as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
-                                            LiquidData::empty()
+                                            LiquidData::empty(),
                                         );
                                     }
                                 }
@@ -123,7 +124,8 @@ impl WorldState {
             }
         }
 
-        self.terrain.unload_distant_chunks(px, py, loaded_chunk_radius + 1);
+        self.terrain
+            .unload_distant_chunks(px, py, loaded_chunk_radius + 1);
 
         self.update_tides();
     }
