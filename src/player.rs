@@ -11,19 +11,19 @@ pub const CLIMB_STAMINA: f32 = 4.0;
 pub const JUMP_VELOCITY: f32 = -15.0;
 pub const TERMINAL_VELOCITY: f32 = 50.0;
 pub const GRAVITY: f32 = 40.625;
-pub const JUMP_GRAVITY_REDUCTION: f32 = 0.65;
-pub const JUMP_RELEASE_REDUCTION: f32 = 0.5;
+pub const JUMP_GRAVITY_REDUCTION: f32 = 0.85;
+pub const JUMP_RELEASE_REDUCTION: f32 = 0.1;
 pub const JUMP_COYOTE_TIME: f32 = 0.10;
 pub const JUMP_BUFFER_TIME: f32 = 0.1;
-pub const WALLJUMP_EFFECT_STRENGTH: f32 = 0.1;
-pub const WALLJUMP_EFFECT_TIME: f32 = 0.15;
+pub const WALLJUMP_EFFECT_STRENGTH: f32 = 0.15;
+pub const WALLJUMP_EFFECT_TIME: f32 = 0.3;
 pub const WALLJUMP_LOCK_TIME: f32 = 0.1;
-pub const WALLJUMP_X_RELATIVE_STRENGTH: f32 = 0.8;
-pub const WALLSLIDE_FRICTION: f32 = 0.9;
+pub const WALLJUMP_X_RELATIVE_STRENGTH: f32 = 1.0;
+pub const WALLSLIDE_FRICTION: f32 = 0.85;
 pub const DASH_VELOCITY: f32 = SPEED * 1.7;
 pub const DASHJUMP_COOLDOWN: f32 = 0.075;
 pub const CORNER_CORRECTION_AMOUNT: i32 = 5;
-pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.25;
+pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.05;
 
 pub const BASE_HEIGHT: f32 = 2.0;
 pub const DASH_HEIGHT: f32 = 0.9;
@@ -335,7 +335,7 @@ impl Player {
                 self.velocity.y *= JUMP_RELEASE_REDUCTION;
                 self.is_jumping = false;
             }
-            self.gravity_reduction = 1.0;
+            self.gravity_reduction = 1.50;
         }
 
         // Ground detection
@@ -642,6 +642,10 @@ impl Player {
             self.dashes -= 1;
             self.dashed_at = self.time;
             self.dash_dir = dir;
+
+            if self.climb_stamina < CLIMB_STAMINA / 2.0 {
+            self.climb_stamina = CLIMB_STAMINA / 2.0;
+            }
 
             if self.on_ground {
                 self.dash_dir.y = self.dash_dir.y.min(0.0);
