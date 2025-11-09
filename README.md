@@ -36,6 +36,7 @@ Things required for the games core concept
 - [x] Tool - Dash
 - [x] Player Breath hold
 - [x] Tileset variants
+- [ ] Load map from file
 - [ ] Tool - Pickaxe
 - [ ] Tool - Grappling Hook
 - [ ] Ore generation
@@ -62,8 +63,8 @@ Things that I would really like to have
 - [ ] Forageable foods
 - [ ] Tool - Fishing rod
 - [ ] Fishing. Maybe like Stardew Valley?
-- [ ] Dungeons. Sets of connected handmade rooms to find important items
 - [ ] Tool - Glider
+- [ ] Herringbone wang tiling map
 - [ ] Multiple cave generation types
 - [ ] Multiple enemy types
 - [ ] Boots
