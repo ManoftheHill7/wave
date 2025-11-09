@@ -172,7 +172,7 @@ fn render_terrain(
                     left: terrain.spike_at(x - 1, y),
                     up_left: terrain.spike_at(x - 1, y - 1),
                 };
-                let src_rect = textures.tiles.stone_tile.get_tile_rect(x, y, &neighbors);
+                let src_rect = textures.tiles.spikes.get_tile_rect(x, y, &neighbors);
                 let final_src_rect = if block == Block::Stalactite {
                     Rectangle::new(src_rect.x, src_rect.y + src_rect.height, src_rect.width, -src_rect.height)
                 } else {
