@@ -101,7 +101,7 @@ fn render_water(d: &mut RaylibDrawHandle, terrain: &Terrain, x: f32, y: f32) {
         let intensity = volume_clamped.powf(0.5);
         let r = (100.0 * (1.0 - intensity)) as u8;
         let g = (150.0 * (1.0 - intensity) + 100.0 * intensity) as u8;
-        let b = (255.0 * (0.3 + 0.7 * intensity)) as u8;
+        let b = (255.0 * (0.5 + 0.5 * intensity)) as u8;
         let a = (255.0 * intensity.max(0.3)) as u8;
 
         let cell_size: i32 = (pixels_per_world_unit() / CELL_RESOLUTION as f32) as i32;
