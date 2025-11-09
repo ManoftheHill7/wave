@@ -36,11 +36,10 @@ Things required for the games core concept
 - [x] Tool - Dash
 - [x] Player Breath hold
 - [x] Tileset variants
-- [ ] Load map from file
+- [x] Load map from file
+- [x] Stala(gm/ct)ites
 - [ ] Tool - Pickaxe
-- [ ] Tool - Grappling Hook
 - [ ] Ore generation
-- [ ] Stala(gm/ct)ites
 - [ ] Bat enemies
 - [ ] Mole enemies
 - [ ] Tool - Spear
@@ -51,6 +50,7 @@ Things required for the games core concept
 
 Things that I would really like to have
 
+- [ ] Tool - Grappling Hook
 - [ ] Save/load/new game
 - [ ] Dynamic lighting
 - [ ] Tool - Lamp

@@ -1,6 +1,6 @@
 use crate::controller::Controller;
 use crate::inventory::{Inventory, ItemType};
-use crate::terrain::Terrain;
+use crate::terrain::{Block, Terrain};
 use crate::tools::*;
 use raylib::prelude::*;
 
@@ -43,6 +43,8 @@ pub const INVENTORY_STARTING_WEIGHT: f32 = 100.0;
 pub const STARTING_HEALTH: i32 = 12; // 4 frames of heart * 3 hearts
 pub const MAX_BREATH_HOLD: f32 = 10.0;
 
+pub const SPIKE_IMMUNITY_COOLDOWN: f32 = 0.3;
+
 #[derive(Debug)]
 struct RaycastResult {
     final_position: Vector2,
@@ -70,6 +72,7 @@ pub struct Player {
     pub last_in_water: f32,
     pub try_jumped_at: f32,
     pub wall_jumped_at: f32,
+    pub spike_touched_at: f32,
     pub dashed_at: f32,
     pub last_action_at: f32,
     pub time: f32,
@@ -123,6 +126,7 @@ impl Player {
             last_in_water: -999.0,
             try_jumped_at: -999.0,
             wall_jumped_at: -999.0,
+            spike_touched_at: -999.0,
             dashed_at: -999.0,
             last_action_at: -999.0,
             time: 0.0,
@@ -330,7 +334,7 @@ impl Player {
         }
 
         // Jump release (variable jump height)
-        if !jump_held || self.velocity.y > 0.0 {
+        if (!jump_held || self.velocity.y > 0.0) && !self.within_grace(self.spike_touched_at, SPIKE_IMMUNITY_COOLDOWN) {
             if self.velocity.y < 0.0 && self.is_jumping {
                 self.velocity.y *= JUMP_RELEASE_REDUCTION;
                 self.is_jumping = false;
@@ -400,6 +404,9 @@ impl Player {
         }
 
         self.apply_movement_and_collision(dt, terrain);
+        if self.spike_check(terrain) {
+            self.spike_touched_at = self.time;
+        }
         self.last_velocity = self.velocity;
 
         self.calculated_selected_blocks(terrain, controller);
@@ -485,6 +492,25 @@ impl Player {
             last_free_position: end,
             hit: false,
         }
+    }
+
+    fn spike_check(&mut self, terrain: &Terrain) -> bool {
+        if let Some(spike_type) = terrain.collides_with_spike_terrain(
+            self.position.x,
+            self.position.y,
+            self.width,
+            self.height) {
+            if !self.within_grace(self.spike_touched_at, SPIKE_IMMUNITY_COOLDOWN) {
+                self.health -= 1;
+                if spike_type == Block::Stalagmite {
+                    self.jump(0.7);
+                } else {
+                    self.jump(-0.3);
+                }
+                return true
+            }
+        }
+        return false
     }
 
     fn apply_movement_and_collision(&mut self, dt: f32, terrain: &Terrain) {
@@ -609,7 +635,7 @@ impl Player {
         }
     }
 
-    fn within_grace(&self, time: f32, period: f32) -> bool {
+    pub fn within_grace(&self, time: f32, period: f32) -> bool {
         time + period > self.time
     }
 

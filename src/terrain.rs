@@ -637,6 +637,29 @@ impl Terrain {
             > 0.5
     }
 
+    pub fn collides_with_spike_terrain(
+        &self,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+    ) -> Option<Block> {
+        let left = x.floor() as i32;
+        let right = (x + width).floor() as i32;
+        let top = y.floor() as i32;
+        let bottom = (y + height).floor() as i32;
+
+        for check_y in top..=bottom {
+            for check_x in left..=right {
+                if self.spike_at(check_x, check_y) {
+                    return Some(self.at(check_x, check_y));
+                }
+            }
+        }
+
+        None
+    }
+
     pub fn collides_with_solid_terrain(
         &self,
         x: f32,

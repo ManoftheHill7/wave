@@ -1,5 +1,5 @@
 use crate::inventory_screen::InventoryScreen;
-use crate::player::Player;
+use crate::player::{Player, SPIKE_IMMUNITY_COOLDOWN};
 use crate::terrain::{Block, Terrain, CELL_RESOLUTION, NO_LIQUID_THRESHOLD};
 use crate::{pixels_per_world_unit, GameContext, Neighbors, ShaderLocs};
 use raylib::prelude::*;
@@ -261,7 +261,9 @@ fn render_player(
             || (exhaustion_level > 0.8 && exhaustion_level < 0.81)
             || (exhaustion_level > 0.85 && exhaustion_level < 0.86)
             || (exhaustion_level > 0.9 && exhaustion_level < 0.91)
-            || (exhaustion_level > 0.95 && exhaustion_level < 0.96));
+            || (exhaustion_level > 0.95 && exhaustion_level < 0.96))
+        || (player.within_grace(player.spike_touched_at, SPIKE_IMMUNITY_COOLDOWN)
+            && ((player.time - player.spike_touched_at) * 100.0).rem_euclid(100.0) < 10.0);
 
     let (loc_original_0, loc_replace_0, loc_exhustion, loc_whiteout) = shader_locs;
 
