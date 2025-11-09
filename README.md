@@ -85,8 +85,8 @@ Things I will get to if there is time
 
 ## Links
 
-* https://lodev.org/cgtutor/raycasting.html
-* https://www.jgallant.com/2d-liquid-simulator-with-cellular-automaton-in-unity
-* https://lucasschuermann.com/writing/implementing-sph-in-2d
-* https://nothings.org/gamedev/herringbone/herringbone_tiles.html
-* https://opengameart.org/users/technodono
+- https://lodev.org/cgtutor/raycasting.html
+- https://www.jgallant.com/2d-liquid-simulator-with-cellular-automaton-in-unity
+- https://lucasschuermann.com/writing/implementing-sph-in-2d
+- https://nothings.org/gamedev/herringbone/herringbone_tiles.html
+- https://opengameart.org/users/technodono
