@@ -61,7 +61,7 @@ impl MapGenerator {
 
     fn get_block_at(&self, x: i32, y: i32) -> Block {
         if x < 0 || x >= self.width || y < 0 || y >= self.height {
-            return Block::Air;
+            return Block::Stone;
         }
 
         let idx = ((y * self.width + x) * 3) as usize;
@@ -72,7 +72,7 @@ impl MapGenerator {
         if r == 0 && g == 0 && b == 0 {
             Block::Stone
         } else if r == 127 && g == 127 && b == 127 {
-            if self.get_block_at(x, y-1).is_solid() {
+            if self.get_block_at(x, y - 1).is_solid() {
                 Block::Stalactite
             } else {
                 Block::Stalagmite
