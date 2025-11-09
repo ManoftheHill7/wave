@@ -4,12 +4,12 @@ use crate::terrain::Terrain;
 use crate::tools::*;
 use raylib::prelude::*;
 
-pub const ACCEL: f32 = 30.0;
+pub const ACCEL: f32 = 50.0;
 pub const SPEED: f32 = 12.0;
 pub const CLIMB_SPEED: f32 = 3.125;
-pub const CLIMB_STAMINA: f32 = 2.0;
+pub const CLIMB_STAMINA: f32 = 4.0;
 pub const JUMP_VELOCITY: f32 = -15.0;
-pub const TERMINAL_VELOCITY: f32 = 30.0;
+pub const TERMINAL_VELOCITY: f32 = 50.0;
 pub const GRAVITY: f32 = 40.625;
 pub const JUMP_GRAVITY_REDUCTION: f32 = 0.65;
 pub const JUMP_RELEASE_REDUCTION: f32 = 0.5;

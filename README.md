@@ -55,6 +55,7 @@ Things that I would really like to have
 - [ ] Dynamic lighting
 - [ ] Tool - Lamp
 - [ ] Parallax backgrounds
+- [ ] Hop over 1 block while walking
 - [ ] Improved hitbox/collision handling
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
 - [ ] Tide clears building items
@@ -63,8 +64,8 @@ Things that I would really like to have
 - [ ] Forageable foods
 - [ ] Tool - Fishing rod
 - [ ] Fishing. Maybe like Stardew Valley?
+- [ ] Dungeons. Sets of connected handmade rooms to find important items
 - [ ] Tool - Glider
-- [ ] Herringbone wang tiling map
 - [ ] Multiple cave generation types
 - [ ] Multiple enemy types
 - [ ] Boots

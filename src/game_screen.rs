@@ -149,12 +149,12 @@ fn render_terrain(
                         up_left: terrain.solid_terrain_at(x - 1, y - 1),
                     };
 
-                    let src_rect = textures.tiles.stone_bricks.get_tile_rect(x, y, &neighbors);
+                    let src_rect = textures.tiles.stone_tile.get_tile_rect(x, y, &neighbors);
                     render_tile(
                         d,
                         x as f32,
                         y as f32,
-                        textures.tiles.stone_bricks.texture(),
+                        textures.tiles.stone_tile.texture(),
                         Some(src_rect),
                     );
                 } else {
