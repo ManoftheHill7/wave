@@ -48,7 +48,7 @@ pub struct GameRenderState {
 pub type ShaderLocs = (i32, i32, i32, i32);
 
 impl GameContext {
-    fn new(rl: &mut RaylibHandle, thread: &RaylibThread) -> Self {
+    fn new(rl: &mut RaylibHandle, thread: &RaylibThread, map_path: Option<String>) -> Self {
         let textures = TextureManager::load(rl, thread);
 
         let player_shader = rl.load_shader(
@@ -63,6 +63,22 @@ impl GameContext {
         let loc_whiteout = player_shader.get_shader_location("whiteout");
 
         let mut world_state = WorldState::new();
+
+        if let Some(path) = map_path {
+            match terrain_generator::MapGenerator::from_image(&path) {
+                Ok(map_gen) => {
+                    let center_x = map_gen.map_width() as f32 / 2.0;
+                    let center_y = map_gen.map_height() as f32 / 2.0;
+                    world_state.player = player::Player::new(center_x, center_y);
+                    world_state.terrain.generator = terrain_generator::Generator::Map(map_gen);
+                }
+                Err(e) => {
+                    eprintln!("Failed to load map: {}", e);
+                    eprintln!("Falling back to procedural generation");
+                }
+            }
+        }
+
         world_state.update(0.0, &Controller::new());
 
         GameContext {
@@ -92,11 +108,14 @@ impl GameContext {
 }
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let map_path = args.get(1).cloned();
+
     let (mut rl, thread) = raylib::init().size(1600, 900).title("JGame").build();
 
     rl.set_target_fps(60);
 
-    let mut ctx = GameContext::new(&mut rl, &thread);
+    let mut ctx = GameContext::new(&mut rl, &thread, map_path);
     let mut manager = ScreenManager::new(Box::new(GameScreen::new(&ctx)), &mut ctx);
 
     use crate::inventory::ItemType;

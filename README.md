@@ -21,30 +21,31 @@ Note, many of these tasks can and should be broken up into smaller tasks
 
 Things required for the games core concept
 
-* \[x] Infinite worldsize
-* \[x] Basic player physics (Jump, climb, walk, swim)
-* \[x] Basic character animations (Jump, climb, walk, swim, idle)
-* \[x] Basic Tileset
-* \[x] Raycast for player tools
-* \[x] Cave generation
-* \[x] Dynamic Water
-* \[x] Tidal cycle
-* \[x] Screen Management System
-* \[x] Item and equipment system
-* \[x] Inventory UI
-* \[x] Player health/HUD
-* \[x] Tool - Dash
-* \[x] Player Breath hold
-* \[x] Tileset variants
-* \[ ] Tool - Pickaxe
-* \[ ] Tool - Grappling Hook
-* \[ ] Ore generation
-* \[ ] Stala(gm/ct)ites
-* \[ ] Bat enemies
-* \[ ] Mole enemies
-* \[ ] Tool - Spear
-* \[ ] Crafting system
-* \[ ] Crafting recipes
+- [x] Infinite worldsize
+- [x] Basic player physics (Jump, climb, walk, swim)
+- [x] Basic character animations (Jump, climb, walk, swim, idle)
+- [x] Basic Tileset
+- [x] Raycast for player tools
+- [x] Cave generation
+- [x] Dynamic Water
+- [x] Tidal cycle
+- [x] Screen Management System
+- [x] Item and equipment system
+- [x] Inventory UI
+- [x] Player health/HUD
+- [x] Tool - Dash
+- [x] Player Breath hold
+- [x] Tileset variants
+- [ ] Load map from file
+- [ ] Tool - Pickaxe
+- [ ] Tool - Grappling Hook
+- [ ] Ore generation
+- [ ] Stala(gm/ct)ites
+- [ ] Bat enemies
+- [ ] Mole enemies
+- [ ] Tool - Spear
+- [ ] Crafting system
+- [ ] Crafting recipes
 
 ### Tier 2 Tasks
 

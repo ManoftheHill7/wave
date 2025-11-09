@@ -34,14 +34,14 @@ impl J11TileSet {
         let v0100 = [(4, 0),(5, 0),(6, 0),(7, 0),(8, 0),(9, 0),(10, 0)];
         let v0101 = [(3, 3), (4, 3), (5, 3), (4, 4), (3, 4), (3, 5)]; // top left
         let v0110 = [(8, 3), (9, 3), (10, 3), (9, 4), (10, 4), (10, 5)]; // top right
-        let v0111 = [(6,3), (7,3)]; // top air
+        let v0111 = [(5, 4), (6, 4), (7, 4), (8, 4)]; // top air
         let v1000 = [(4, 2),(5, 2),(6, 2),(7, 2),(8, 2),(9, 2),(10, 2)];
         let v1001 = [(3, 10), (4, 10), (5, 10), (4, 9), (3, 9), (3, 8)]; // bottom left
         let v1010 = [(8, 10), (9, 10), (10, 10), (9, 9), (10, 9), (10, 8)]; // bottom right
-        let v1011 = [(6,10), (7,10)]; // down air
+        let v1011 = [(5, 9), (6, 9), (7, 9), (8, 9)]; // down air
         let v1100 = [(4, 1),(5, 1),(6, 1),(7, 1),(8, 1),(9, 1),(10, 1)];
-        let v1101 = [(3,6), (3,7)]; // left air
-        let v1110 = [(10,6), (10,7)]; // right air
+        let v1101 = [(4, 5), (4, 6), (4, 7), (4, 8)]; // left air
+        let v1110 = [(9, 5), (9, 6), (9, 7), (9, 8)]; // right air
         let v1111 = [(5,5),(5,6),(5,7),(5,8),(6,5),(6,6),(6,7),(6,8),(7,5),(7,6),(7,7),(7,8),(8,5),(8,6),(8,7),(8,8),(6,6),(6,7),(7,6),(7,7),(6,6),(6,7),(7,6),(7,7)]; // middle
 
         let loc = match (neighbors.up, neighbors.down, neighbors.left, neighbors.right, neighbors.up_left, neighbors.up_right, neighbors.down_left, neighbors.down_right) {
@@ -54,6 +54,12 @@ impl J11TileSet {
             (true, true, true, true, true, true, false, true) => (1, 2),
             (true, true, true, true, true, false, true, true) => (0, 3),
             (true, true, true, true, false, true, true, true) => (1, 3),
+
+            // Two corner air
+            (true, true, true, true, true, false, true, false) => [(10, 6), (10, 7)][hash % 2],
+            (true, true, true, true, false, true, false, true) => [(3,6), (3,7)][hash % 2],
+            (true, true, true, true, true, true, false, false) => [(6,10), (7,10)][hash % 2],
+            (true, true, true, true, false, false, true, true) => [(6,3), (7,3)][hash % 2],
 
             // Three corner air
             (true, true, true, true, false, false, false, true) => (3, 1),

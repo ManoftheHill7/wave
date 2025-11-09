@@ -1,4 +1,4 @@
-use crate::terrain_generator::TerrainGenerator;
+use crate::terrain_generator::Generator;
 use std::collections::HashMap;
 
 pub const CHUNK_SIZE: usize = 128;
@@ -31,6 +31,8 @@ pub enum Block {
     Log,
     Leaf,
     Tide,
+    Stalagmite,
+    Stalactite
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -464,7 +466,7 @@ impl Chunk {
 pub struct Terrain {
     pub chunks: HashMap<ChunkCoord, Chunk>,
     chunk_size: i32,
-    generator: TerrainGenerator,
+    pub generator: Generator,
 }
 
 impl Terrain {
@@ -472,7 +474,7 @@ impl Terrain {
         Terrain {
             chunks: HashMap::new(),
             chunk_size: CHUNK_SIZE as i32,
-            generator: TerrainGenerator::new(seed),
+            generator: Generator::Procedural(crate::terrain_generator::TerrainGenerator::new(seed)),
         }
     }
 
@@ -618,6 +620,10 @@ impl Terrain {
 
     pub fn solid_terrain_at(&self, x: i32, y: i32) -> bool {
         self.at(x, y).is_solid()
+    }
+
+    pub fn spike_at(&self, x: i32, y: i32) -> bool {
+        self.at(x, y) == Block::Stalagmite || self.at(x, y) == Block::Stalactite
     }
 
     pub fn liquid_terrain_at(&self, x: i32, y: i32) -> bool {

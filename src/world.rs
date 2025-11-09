@@ -114,7 +114,7 @@ impl WorldState {
         let px = self.player.position.x as i32;
         let py = self.player.position.y as i32;
 
-        let loaded_chunk_radius = 1;
+        let loaded_chunk_radius = 2;
 
         let chunk_size = CHUNK_SIZE as i32;
         for dx in -loaded_chunk_radius..=loaded_chunk_radius {
