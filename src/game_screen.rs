@@ -59,8 +59,11 @@ fn block_texture<'a>(block: Block, textures: &'a crate::TextureManager) -> &'a T
         Block::Water => &textures.tiles.water,
         Block::Log => &textures.tiles.log,
         Block::Leaf => &textures.tiles.leaves,
+
         Block::Air => &textures.fallback,
         Block::Tide => &textures.fallback,
+        Block::Stalagmite => &textures.fallback,
+        Block::Stalactite => &textures.fallback,
     }
 }
 
@@ -158,6 +161,19 @@ fn render_terrain(
                     let texture = block_texture(block, textures);
                     render_tile(d, x as f32, y as f32, texture, None);
                 }
+            } else if block == Block::Stalagmite || block == Block::Stalactite {
+                let neighbors = Neighbors {
+                    up: terrain.spike_at(x, y - 1),
+                    up_right: terrain.spike_at(x + 1, y - 1),
+                    right: terrain.spike_at(x + 1, y),
+                    down_right: terrain.spike_at(x + 1, y + 1),
+                    down: terrain.spike_at(x, y + 1),
+                    down_left: terrain.spike_at(x - 1, y + 1),
+                    left: terrain.spike_at(x - 1, y),
+                    up_left: terrain.spike_at(x - 1, y - 1),
+                };
+                let src_rect = textures.tiles.stone_bricks.get_tile_rect(x, y, &neighbors);
+                render_tile(d, x as f32, y as f32, &textures.tiles.spikes.texture(), Some(src_rect));
             } else {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {

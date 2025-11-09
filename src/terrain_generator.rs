@@ -5,6 +5,104 @@ const SEA_LEVEL: i32 = 0;
 const SEA_FLOOR: i32 = 30;
 const BEACH_HEIGHT: i32 = -10;
 
+pub enum Generator {
+    Procedural(TerrainGenerator),
+    Map(MapGenerator),
+}
+
+impl Generator {
+    pub fn generate_chunk(&self, coord: ChunkCoord) -> Chunk {
+        match self {
+            Generator::Procedural(gen) => gen.generate_chunk(coord),
+            Generator::Map(gen) => gen.generate_chunk(coord),
+        }
+    }
+}
+
+pub struct MapGenerator {
+    pixels: Vec<u8>,
+    width: i32,
+    height: i32,
+}
+
+impl MapGenerator {
+    pub fn from_image(path: &str) -> Result<Self, String> {
+        use raylib::prelude::*;
+        let mut image =
+            Image::load_image(path).map_err(|e| format!("Failed to load image: {}", e))?;
+
+        let width = image.width;
+        let height = image.height;
+
+        let mut pixels = Vec::new();
+        for y in 0..height {
+            for x in 0..width {
+                let color = image.get_color(x, y);
+                pixels.push(color.r);
+                pixels.push(color.g);
+                pixels.push(color.b);
+            }
+        }
+
+        Ok(MapGenerator {
+            pixels,
+            width,
+            height,
+        })
+    }
+
+    pub fn map_width(&self) -> i32 {
+        self.width
+    }
+
+    pub fn map_height(&self) -> i32 {
+        self.height
+    }
+
+    fn get_block_at(&self, x: i32, y: i32) -> Block {
+        if x < 0 || x >= self.width || y < 0 || y >= self.height {
+            return Block::Air;
+        }
+
+        let idx = ((y * self.width + x) * 3) as usize;
+        let r = self.pixels[idx];
+        let g = self.pixels[idx + 1];
+        let b = self.pixels[idx + 2];
+
+        if r == 0 && g == 0 && b == 0 {
+            Block::Stone
+        } else if r == 127 && g == 127 && b == 127 {
+            if self.get_block_at(x, y-1).is_solid() {
+                Block::Stalactite
+            } else {
+                Block::Stalagmite
+            }
+        } else if r == 255 && g == 255 && b == 255 {
+            Block::Air
+        } else if r == 0 && g == 149 && b == 199 {
+            Block::Tide
+        } else {
+            panic!("Unknown color in map: (R: {}, G: {}, B {})", r, g, b);
+        }
+    }
+
+    pub fn generate_chunk(&self, coord: ChunkCoord) -> Chunk {
+        let mut chunk = Chunk::new(coord);
+        let chunk_size = CHUNK_SIZE as i32;
+
+        for lx in 0..CHUNK_SIZE {
+            for ly in 0..CHUNK_SIZE {
+                let wx = coord.x * chunk_size + lx as i32;
+                let wy = coord.y * chunk_size + ly as i32;
+                let block = self.get_block_at(wx, wy);
+                chunk.set(lx, ly, block);
+            }
+        }
+
+        chunk
+    }
+}
+
 pub struct TerrainGenerator {
     seed: u64,
     noise: Perlin,
