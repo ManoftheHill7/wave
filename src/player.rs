@@ -494,19 +494,17 @@ impl Player {
 
         let target_x = self.position.x + self.velocity.x * dt;
         let mut dx = self.position.x;
+        let mut ox;
         while dx != target_x {
+            ox = dx;
             dx = Self::move_toward(dx, target_x, step_size);
-            if let Some((tx, _)) = terrain.collides_with_solid_terrain(
+            if let Some((_, _)) = terrain.collides_with_solid_terrain(
                 dx,
                 self.position.y + buffer,
                 self.width,
                 self.height - double_buffer,
             ) {
-                if self.velocity.x > 0.0 {
-                    dx = tx - self.width;
-                } else if self.velocity.x < 0.0 {
-                    dx = tx + 1.0;
-                }
+                dx = ox;
                 self.velocity.x = 0.0;
                 break;
             }
