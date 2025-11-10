@@ -65,6 +65,7 @@ pub struct Player {
     pub is_climbing: bool,
     pub is_sliding: bool,
     pub is_swimming: bool,
+    pub is_mining: bool,
     pub just_landed: bool,
     pub just_finished_dashing: bool,
 
@@ -106,6 +107,7 @@ pub struct Player {
 impl Player {
     pub fn new(x: f32, y: f32) -> Self {
         let initial_dash = Some(load_dash("basic"));
+        let initial_pick = Some(load_pick("basic"));
         Player {
             position: Vector2::new(x, y),
             velocity: Vector2::zero(),
@@ -119,6 +121,7 @@ impl Player {
             is_climbing: false,
             is_sliding: false,
             is_swimming: false,
+            is_mining: false,
             just_landed: false,
             just_finished_dashing: false,
 
@@ -152,7 +155,7 @@ impl Player {
 
             selected_tool: Some(ToolType::Dash),
             tool_dash: initial_dash,
-            tool_pickaxe: None,
+            tool_pickaxe: initial_pick,
         }
     }
 
@@ -650,9 +653,13 @@ impl Player {
     fn use_tool(&mut self, _terrain: &Terrain, controller: &Controller) {
         match self.selected_tool {
             Some(ToolType::Dash) => self.manage_dash(controller.raycast_direction),
-            Some(ToolType::Pickaxe) => (),
+            Some(ToolType::Pickaxe) => self.manage_pickaxe(),
             None => (),
         }
+    }
+
+    fn manage_pickaxe(&mut self) {
+        self.is_mining = true
     }
 
     fn manage_dash(&mut self, dir: Vector2) {

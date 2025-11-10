@@ -263,8 +263,8 @@ impl Screen for InventoryScreen {
             // Draw selected tool in left hand slot if set
             if let Some(selected_tool) = ctx.world_state.player.selected_tool {
                 let tool_texture = match selected_tool {
-                    ToolType::Dash => Some(&ctx.textures.items.dashamulet),
-                    ToolType::Pickaxe => None, // TODO: add pickaxe texture
+                    ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
+                    ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
                 };
 
                 if let Some(texture) = tool_texture {
@@ -272,7 +272,7 @@ impl Screen for InventoryScreen {
                         texture,
                         Vector2::new(left_hand_x, left_hand_y),
                         0.0,
-                        4.0,
+                        2.0,
                         Color::WHITE,
                     );
                 }
@@ -316,7 +316,7 @@ impl Screen for InventoryScreen {
                             texture,
                             Vector2::new(tool_x, tool_y as f32),
                             0.0,
-                            4.0,
+                            2.0,
                             Color::WHITE,
                         );
                     }
@@ -339,7 +339,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_dash
                     .as_ref()
-                    .map(|_| &ctx.textures.items.dashamulet),
+                    .map(|_| &ctx.textures.tools.emerald_amulet),
                 ctx.world_state
                     .player
                     .tool_dash
@@ -352,7 +352,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_pickaxe
                     .as_ref()
-                    .map(|_| &ctx.textures.items.dashamulet), // TODO: change to pickaxe texture
+                    .map(|_| &ctx.textures.tools.steel_pickaxe), // TODO: change to pickaxe texture
                 ctx.world_state
                     .player
                     .tool_pickaxe

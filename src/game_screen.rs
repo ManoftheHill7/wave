@@ -212,6 +212,7 @@ fn render_player(
     const FALLING_FRAME_LENGTH: f32 = 0.2;
     const IDLE_FRAME_LENGTH: f32 = 0.25;
     const SWIMMING_FRAME_LENGTH: f32 = 0.18;
+    const MINING_FRAME_LENGTH: f32 = 0.1;
 
     let mut rotation = 0.0;
 
@@ -219,6 +220,8 @@ fn render_player(
     let texture = if player.is_dashing {
         rotation = player.velocity.y.atan2(player.velocity.x).to_degrees();
         animate!(&pt.dash, WALK_FRAME_LENGTH)
+    } else if player.is_mining {
+        animate!(pt.mining, MINING_FRAME_LENGTH)
     } else if player.is_climbing {
         if player.velocity.y != 0.0 {
             animate!(pt.climb, WALK_FRAME_LENGTH)
