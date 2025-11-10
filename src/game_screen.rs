@@ -345,7 +345,7 @@ fn render_player(
     }
     if let Some(item) = player.place_block_type {
         if let Some((free_x, free_y)) = player.raycast_last_free_tile {
-            let texture = crate::inventory_screen::get_item_texture(&item, textures);
+            let texture = crate::inventory_screen::get_item_place_texture(&item, textures);
             d.draw_texture_pro(
                 texture,
                 Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
@@ -615,7 +615,7 @@ impl Screen for GameScreen {
         // Draw selected tool icon if present
         if let Some(selected_tool) = ctx.world_state.player.selected_tool {
             let tool_texture = match selected_tool {
-                crate::tools::ToolType::Dash => Some(&ctx.textures.items.dashamulet),
+                crate::tools::ToolType::Dash => Some(&ctx.textures.tools.dashamulet),
                 crate::tools::ToolType::Pickaxe => None, // TODO: add pickaxe texture
             };
 
@@ -706,7 +706,7 @@ impl Screen for GameScreen {
         // Draw selected block icon if present
         if let Some(block_type) = ctx.world_state.player.place_block_type {
             let block_texture =
-                crate::inventory_screen::get_item_texture(&block_type, &ctx.textures);
+                crate::inventory_screen::get_item_place_texture(&block_type, &ctx.textures);
             let scale = hud_box_size / block_texture.width as f32;
             d.draw_texture_ex(
                 block_texture,

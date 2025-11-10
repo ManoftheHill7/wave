@@ -28,12 +28,12 @@ impl InventoryScreen {
         let mouse_y = mouse_pos.y * RENDER_HEIGHT as f32;
 
         // Check if click is in inventory grid
-        let slot_size = 32.0;
-        let slot_padding = 8.0;
+        let slot_size = 24.0;
+        let slot_padding = 4.0;
         let grid_cols = 6;
         let grid_rows = 4;
-        let grid_x = 8.0;
-        let grid_y = 20.0;
+        let grid_x = 32.0;
+        let grid_y = 40.0;
 
         // Collect inventory items
         let inventory_items: Vec<_> = ctx.world_state.player.inventory.iter().collect();
@@ -98,6 +98,13 @@ impl InventoryScreen {
 
 pub fn get_item_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) -> &'a Texture2D {
     match item_type {
+        ItemType::Stone => &textures.items.stone,
+        ItemType::Dirt => &textures.items.dirt,
+    }
+}
+
+pub fn get_item_place_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) -> &'a Texture2D {
+    match item_type {
         ItemType::Stone => &textures.tiles.stone,
         ItemType::Dirt => &textures.tiles.dirt,
     }
@@ -154,13 +161,13 @@ impl Screen for InventoryScreen {
             // Draw inventory slots grid on the left side
             let slot_texture = &ctx.textures.ui.inventory_slot;
             let slot_size = slot_texture.width as f32;
-            let slot_padding = 8.0;
+            let slot_padding = 4.0;
 
             let grid_cols = 6;
             let grid_rows = 4;
 
-            let grid_x = 8.0;
-            let grid_y = 20.0;
+            let grid_x = 32.0;
+            let grid_y = 40.0;
 
             for row in 0..grid_rows {
                 for col in 0..grid_cols {
@@ -188,13 +195,12 @@ impl Screen for InventoryScreen {
                 // Get texture for this item type
                 let item_texture = get_item_texture(&item_stack.item_type, &ctx.textures);
 
-                // Draw item texture scaled to fit in slot (8x8 texture → 32x32 slot = 4x scale)
-                let texture_scale = slot_size / item_texture.width as f32;
+                // Draw item texture scaled to fit in slot (24x24 texture → 24x24 slot)
                 d.draw_texture_ex(
                     item_texture,
                     Vector2::new(slot_x, slot_y),
                     0.0,
-                    texture_scale,
+                    1.0,
                     Color::WHITE,
                 );
 
@@ -210,15 +216,15 @@ impl Screen for InventoryScreen {
                     &count_text,
                     text_x as i32 + 1,
                     text_y as i32 + 1,
-                    10,
-                    Color::WHITE,
+                    text_size,
+                    Color::RAYWHITE,
                 );
                 d.draw_text(
                     &count_text,
                     text_x as i32,
                     text_y as i32,
                     text_size,
-                    Color::BLACK,
+                    Color::RED,
                 );
             }
 
@@ -263,7 +269,7 @@ impl Screen for InventoryScreen {
             // Draw selected tool in left hand slot if set
             if let Some(selected_tool) = ctx.world_state.player.selected_tool {
                 let tool_texture = match selected_tool {
-                    ToolType::Dash => Some(&ctx.textures.items.dashamulet),
+                    ToolType::Dash => Some(&ctx.textures.tools.white_pearl_amulet),
                     ToolType::Pickaxe => None, // TODO: add pickaxe texture
                 };
 
@@ -272,7 +278,7 @@ impl Screen for InventoryScreen {
                         texture,
                         Vector2::new(left_hand_x, left_hand_y),
                         0.0,
-                        4.0,
+                        1.0,
                         Color::WHITE,
                     );
                 }
@@ -281,18 +287,18 @@ impl Screen for InventoryScreen {
             // Draw selected item in right hand slot if set
             if let Some(selected_item) = ctx.world_state.player.place_block_type {
                 let item_texture = get_item_texture(&selected_item, &ctx.textures);
-                let texture_scale = slot_size / item_texture.width as f32;
                 d.draw_texture_ex(
                     item_texture,
                     Vector2::new(right_hand_x, right_hand_y),
                     0.0,
-                    texture_scale,
+                    1.0,
                     Color::WHITE,
                 );
             }
 
             // Draw tool selection
             let tool_y = 190;
+            let slot_outline = &ctx.textures.ui.inventory_outline;
 
             let mut draw_tool_slot =
                 |col: usize, tool_texture: Option<&Texture2D>, tool_type: Option<ToolType>| {
@@ -316,20 +322,14 @@ impl Screen for InventoryScreen {
                             texture,
                             Vector2::new(tool_x, tool_y as f32),
                             0.0,
-                            4.0,
+                            1.0,
                             Color::WHITE,
                         );
                     }
 
                     // Draw selection border if selected
                     if is_selected {
-                        d.draw_rectangle_lines(
-                            tool_x as i32,
-                            tool_y as i32,
-                            slot_size as i32,
-                            slot_size as i32,
-                            Color::GOLD,
-                        );
+                        d.draw_texture(slot_outline, tool_x as i32, tool_y as i32, Color::WHITE);
                     }
                 };
 
@@ -339,7 +339,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_dash
                     .as_ref()
-                    .map(|_| &ctx.textures.items.dashamulet),
+                    .map(|_| &ctx.textures.tools.white_pearl_amulet),
                 ctx.world_state
                     .player
                     .tool_dash
@@ -352,7 +352,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_pickaxe
                     .as_ref()
-                    .map(|_| &ctx.textures.items.dashamulet), // TODO: change to pickaxe texture
+                    .map(|_| &ctx.textures.tools.dashamulet), // TODO: change to pickaxe texture
                 ctx.world_state
                     .player
                     .tool_pickaxe
