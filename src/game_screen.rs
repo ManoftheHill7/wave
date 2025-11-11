@@ -450,6 +450,50 @@ impl Screen for GameScreen {
             let py = ctx.world_state.player.position.y as i32;
 
             render_terrain(&mut d2, &ctx.world_state.terrain, px, py, &ctx.textures);
+
+            // Draw chunk boundaries when debug is enabled
+            if ctx.debug_enabled {
+                use crate::terrain::CHUNK_SIZE;
+                let range = 900 / pixels_per_world_unit() as i32;
+                let chunk_size = CHUNK_SIZE as i32;
+
+                // Calculate the range of chunks to draw boundaries for
+                let min_chunk_x = (px - range) / chunk_size - 1;
+                let max_chunk_x = (px + range) / chunk_size + 1;
+                let min_chunk_y = (py - range) / chunk_size - 1;
+                let max_chunk_y = (py + range) / chunk_size + 1;
+
+                // Draw vertical chunk boundaries
+                for chunk_x in min_chunk_x..=max_chunk_x {
+                    let x_pos = chunk_x * chunk_size;
+                    let screen_x = x_pos as f32 * pixels_per_world_unit();
+                    let screen_y_start = (py - range) as f32 * pixels_per_world_unit();
+                    let screen_y_end = (py + range) as f32 * pixels_per_world_unit();
+
+                    d2.draw_line_ex(
+                        Vector2::new(screen_x, screen_y_start),
+                        Vector2::new(screen_x, screen_y_end),
+                        2.0,
+                        Color::new(255, 120, 120, 255),
+                    );
+                }
+
+                // Draw horizontal chunk boundaries
+                for chunk_y in min_chunk_y..=max_chunk_y {
+                    let y_pos = chunk_y * chunk_size;
+                    let screen_y = y_pos as f32 * pixels_per_world_unit();
+                    let screen_x_start = (px - range) as f32 * pixels_per_world_unit();
+                    let screen_x_end = (px + range) as f32 * pixels_per_world_unit();
+
+                    d2.draw_line_ex(
+                        Vector2::new(screen_x_start, screen_y),
+                        Vector2::new(screen_x_end, screen_y),
+                        2.0,
+                        Color::new(255, 120, 120, 255),
+                    );
+                }
+            }
+
             render_player(
                 &mut d2,
                 &ctx.world_state.player,
