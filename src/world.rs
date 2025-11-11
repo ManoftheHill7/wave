@@ -97,11 +97,7 @@ impl WorldState {
         if self.ghost_mode {
             self.player.update_ghost(dt, &self.terrain, controller);
         } else {
-            self.player.update(dt, &self.terrain, controller);
-        }
-
-        if controller.place_pressed {
-            self.player.try_place_block(&mut self.terrain);
+            self.player.update(dt, &mut self.terrain, controller);
         }
 
         self.tide_timer += dt;
@@ -114,13 +110,14 @@ impl WorldState {
         let px = self.player.position.x as i32;
         let py = self.player.position.y as i32;
 
-        let loaded_chunk_radius = 2;
+        let load_chunk_radius = 2;
+        let unload_chunk_radius = load_chunk_radius + 1;
 
         let chunk_size = CHUNK_SIZE as i32;
-        for dx in -loaded_chunk_radius..=loaded_chunk_radius {
-            for dy in -loaded_chunk_radius..=loaded_chunk_radius {
-                let cx = (px + dx * chunk_size) / chunk_size;
-                let cy = (py + dy * chunk_size) / chunk_size;
+        for dx in -load_chunk_radius..=load_chunk_radius {
+            for dy in -load_chunk_radius..=load_chunk_radius {
+                let cx = (px + dx * chunk_size).div_euclid(chunk_size);
+                let cy = (py + dy * chunk_size).div_euclid(chunk_size);
                 let chunk_coord = ChunkCoord { x: cx, y: cy };
 
                 if !self.terrain.chunks.contains_key(&chunk_coord) {
@@ -131,7 +128,7 @@ impl WorldState {
         }
 
         self.terrain
-            .unload_distant_chunks(px, py, loaded_chunk_radius + 1);
+            .unload_distant_chunks(px, py, unload_chunk_radius);
 
         self.update_tides();
     }

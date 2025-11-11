@@ -1,4 +1,5 @@
 use crate::inventory::ItemType;
+use crate::terrain::Block;
 use crate::tools::ToolType;
 use crate::GameContext;
 use crate::TextureManager;
@@ -19,7 +20,7 @@ impl InventoryScreen {
         }
     }
 
-    fn handle_mouse_click(&mut self, ctx: &mut GameContext) {
+    fn handle_mouse_click(&mut self, ctx: &mut GameContext, is_left_click: bool) {
         // Get normalized mouse position (0.0-1.0) from controller
         let mouse_pos = ctx.controller.mouse_position;
 
@@ -54,10 +55,23 @@ impl InventoryScreen {
 
                     // Check if this slot has an item
                     if let Some(item_stack) = inventory_items.get(slot_index) {
-                        ctx.world_state.player.place_block_type = Some(item_stack.item_type);
+                        let bt = Block::from_item_type(item_stack.item_type);
+                        if let Some(bt) = bt {
+                            let new_tool = Some(ToolType::PlaceBlock(bt));
+                            Self::set_hand_with_swap(
+                                &mut ctx.world_state.player.left_hand,
+                                &mut ctx.world_state.player.right_hand,
+                                new_tool,
+                                is_left_click,
+                            );
+                        }
                     } else {
                         // Empty slot clicked, clear selection
-                        ctx.world_state.player.place_block_type = None;
+                        if is_left_click {
+                            ctx.world_state.player.left_hand = None;
+                        } else {
+                            ctx.world_state.player.right_hand = None;
+                        }
                     }
                     return;
                 }
@@ -76,7 +90,12 @@ impl InventoryScreen {
                 && mouse_y >= tool_y
                 && mouse_y <= tool_y + slot_size
             {
-                ctx.world_state.player.selected_tool = Some(ToolType::Dash);
+                Self::set_hand_with_swap(
+                    &mut ctx.world_state.player.left_hand,
+                    &mut ctx.world_state.player.right_hand,
+                    Some(ToolType::Dash),
+                    is_left_click,
+                );
                 return;
             }
         }
@@ -89,8 +108,40 @@ impl InventoryScreen {
                 && mouse_y >= tool_y
                 && mouse_y <= tool_y + slot_size
             {
-                ctx.world_state.player.selected_tool = Some(ToolType::Pickaxe);
+                Self::set_hand_with_swap(
+                    &mut ctx.world_state.player.left_hand,
+                    &mut ctx.world_state.player.right_hand,
+                    Some(ToolType::Pickaxe),
+                    is_left_click,
+                );
                 return;
+            }
+        }
+    }
+
+    /// Helper function to set a hand with swap logic
+    /// If the new_tool is already in the other hand, swap the hands
+    fn set_hand_with_swap(
+        left_hand: &mut Option<ToolType>,
+        right_hand: &mut Option<ToolType>,
+        new_tool: Option<ToolType>,
+        is_left_click: bool,
+    ) {
+        if is_left_click {
+            // Setting left hand
+            if new_tool == *right_hand {
+                // Tool is already in right hand, swap them
+                std::mem::swap(left_hand, right_hand);
+            } else {
+                *left_hand = new_tool;
+            }
+        } else {
+            // Setting right hand
+            if new_tool == *left_hand {
+                // Tool is already in left hand, swap them
+                std::mem::swap(left_hand, right_hand);
+            } else {
+                *right_hand = new_tool;
             }
         }
     }
@@ -100,13 +151,10 @@ pub fn get_item_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) 
     match item_type {
         ItemType::Stone => &textures.items.stone,
         ItemType::Dirt => &textures.items.dirt,
-    }
-}
-
-pub fn get_item_place_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) -> &'a Texture2D {
-    match item_type {
-        ItemType::Stone => &textures.tiles.stone,
-        ItemType::Dirt => &textures.tiles.dirt,
+        ItemType::Grass => unimplemented!(),
+        ItemType::Sand => &textures.items.sand,
+        ItemType::Log => unimplemented!(),
+        ItemType::Leaf => unimplemented!()
     }
 }
 
@@ -119,8 +167,11 @@ impl Screen for InventoryScreen {
         }
 
         // Handle mouse clicks for item selection
-        if ctx.controller.use_tool_pressed {
-            self.handle_mouse_click(ctx);
+        if ctx.controller.left_hand_pressed {
+            self.handle_mouse_click(ctx, true);
+        }
+        if ctx.controller.right_hand_pressed {
+            self.handle_mouse_click(ctx, false);
         }
 
         ScreenCommand::None
@@ -267,10 +318,13 @@ impl Screen for InventoryScreen {
             d.draw_texture(slot_texture, boots_x as i32, boots_y as i32, Color::WHITE);
 
             // Draw selected tool in left hand slot if set
-            if let Some(selected_tool) = ctx.world_state.player.selected_tool {
+            if let Some(selected_tool) = ctx.world_state.player.left_hand {
                 let tool_texture = match selected_tool {
-                    ToolType::Dash => Some(&ctx.textures.tools.white_pearl_amulet),
-                    ToolType::Pickaxe => None, // TODO: add pickaxe texture
+                    ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
+                    ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
+                    ToolType::PlaceBlock(blk) => {
+                        Some(get_item_texture(&blk.to_item_type(), &ctx.textures))
+                    }
                 };
 
                 if let Some(texture) = tool_texture {
@@ -284,16 +338,25 @@ impl Screen for InventoryScreen {
                 }
             }
 
-            // Draw selected item in right hand slot if set
-            if let Some(selected_item) = ctx.world_state.player.place_block_type {
-                let item_texture = get_item_texture(&selected_item, &ctx.textures);
-                d.draw_texture_ex(
-                    item_texture,
-                    Vector2::new(right_hand_x, right_hand_y),
-                    0.0,
-                    1.0,
-                    Color::WHITE,
-                );
+            // Draw selected tool in right hand slot if set
+            if let Some(selected_tool) = ctx.world_state.player.right_hand {
+                let tool_texture = match selected_tool {
+                    ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
+                    ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
+                    ToolType::PlaceBlock(blk) => {
+                        Some(get_item_texture(&blk.to_item_type(), &ctx.textures))
+                    }
+                };
+
+                if let Some(texture) = tool_texture {
+                    d.draw_texture_ex(
+                        texture,
+                        Vector2::new(right_hand_x, right_hand_y),
+                        0.0,
+                        1.0,
+                        Color::WHITE,
+                    );
+                }
             }
 
             // Draw tool selection
@@ -306,7 +369,8 @@ impl Screen for InventoryScreen {
 
                     // Check if this tool is selected
                     let is_selected =
-                        ctx.world_state.player.selected_tool == tool_type && tool_type.is_some();
+                        (ctx.world_state.player.right_hand == tool_type && tool_type.is_some()) ||
+                        (ctx.world_state.player.left_hand == tool_type && tool_type.is_some());
 
                     // Draw slot background with highlight if selected
                     let slot_color = if is_selected {
@@ -339,7 +403,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_dash
                     .as_ref()
-                    .map(|_| &ctx.textures.tools.white_pearl_amulet),
+                    .map(|_| &ctx.textures.tools.emerald_amulet),
                 ctx.world_state
                     .player
                     .tool_dash
@@ -352,7 +416,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_pickaxe
                     .as_ref()
-                    .map(|_| &ctx.textures.tools.dashamulet), // TODO: change to pickaxe texture
+                    .map(|_| &ctx.textures.tools.steel_pickaxe), // TODO: change to pickaxe texture
                 ctx.world_state
                     .player
                     .tool_pickaxe

@@ -174,11 +174,22 @@ fn render_terrain(
                 };
                 let src_rect = textures.tiles.spikes.get_tile_rect(x, y, &neighbors);
                 let final_src_rect = if block == Block::Stalactite {
-                    Rectangle::new(src_rect.x, src_rect.y + src_rect.height, src_rect.width, -src_rect.height)
+                    Rectangle::new(
+                        src_rect.x,
+                        src_rect.y + src_rect.height,
+                        src_rect.width,
+                        -src_rect.height,
+                    )
                 } else {
                     src_rect
                 };
-                render_tile(d, x as f32, y as f32, &textures.tiles.spikes.texture(), Some(final_src_rect));
+                render_tile(
+                    d,
+                    x as f32,
+                    y as f32,
+                    &textures.tiles.spikes.texture(),
+                    Some(final_src_rect),
+                );
             } else {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
@@ -201,6 +212,7 @@ fn render_player(
     textures: &crate::TextureManager,
     shader: &mut Shader,
     shader_locs: ShaderLocs,
+    debug_render: bool,
 ) {
     macro_rules! animate {
         ($frames:expr, $frame_length:expr) => {
@@ -208,10 +220,17 @@ fn render_player(
         };
     }
 
+    macro_rules! animate_from {
+        ($frames:expr, $frame_length:expr, $offset:expr) => {
+            &$frames[((player.time - $offset) / $frame_length) as usize % $frames.len()]
+        };
+    }
+
     const WALK_FRAME_LENGTH: f32 = 0.1;
     const FALLING_FRAME_LENGTH: f32 = 0.2;
     const IDLE_FRAME_LENGTH: f32 = 0.25;
     const SWIMMING_FRAME_LENGTH: f32 = 0.18;
+    const MINING_FRAME_LENGTH: f32 = 0.1;
 
     let mut rotation = 0.0;
 
@@ -219,6 +238,8 @@ fn render_player(
     let texture = if player.is_dashing {
         rotation = player.velocity.y.atan2(player.velocity.x).to_degrees();
         animate!(&pt.dash, WALK_FRAME_LENGTH)
+    } else if player.is_mining {
+        animate_from!(pt.mining, MINING_FRAME_LENGTH, player.started_mining_at)
     } else if player.is_climbing {
         if player.velocity.y != 0.0 {
             animate!(pt.climb, WALK_FRAME_LENGTH)
@@ -328,46 +349,109 @@ fn render_player(
 
     let player_center_x = (player.position.x + player.width / 2.0) * pixels_per_world_unit();
     let player_center_y = (player.position.y + player.height / 2.0) * pixels_per_world_unit();
-    let raycast_end_x = player.raycast_end_pos.x * pixels_per_world_unit();
-    let raycast_end_y = player.raycast_end_pos.y * pixels_per_world_unit();
 
-    if let Some((hit_x, hit_y)) = player.raycast_hit_tile {
+    // Determine highlight color based on whether both tiles are the same
+    let both_same_tile = player.raycast_left_tile.is_some()
+        && player.raycast_right_tile.is_some()
+        && player.raycast_left_tile == player.raycast_right_tile;
+
+    // Draw left hand tile highlight (red or yellow if both same)
+    if let Some((tile_x, tile_y)) = player.raycast_left_tile {
+        let color = if both_same_tile {
+            Color::YELLOW
+        } else {
+            Color::RED
+        };
+
         d.draw_rectangle_lines_ex(
             Rectangle::new(
-                hit_x.floor() * pixels_per_world_unit(),
-                hit_y.floor() * pixels_per_world_unit(),
+                tile_x.floor() * pixels_per_world_unit(),
+                tile_y.floor() * pixels_per_world_unit(),
                 pixels_per_world_unit(),
                 pixels_per_world_unit(),
             ),
             4.0,
-            Color::RED,
+            color,
         );
-    }
-    if let Some(item) = player.place_block_type {
-        if let Some((free_x, free_y)) = player.raycast_last_free_tile {
-            let texture = crate::inventory_screen::get_item_place_texture(&item, textures);
+
+        // Draw preview for place block tools
+        if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.left_hand {
+            let texture = block_texture(block, textures);
+            let alpha = if both_same_tile { 128 } else { 128 };
             d.draw_texture_pro(
                 texture,
                 Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
                 Rectangle::new(
-                    free_x.floor() * pixels_per_world_unit(),
-                    free_y.floor() * pixels_per_world_unit(),
+                    tile_x.floor() * pixels_per_world_unit(),
+                    tile_y.floor() * pixels_per_world_unit(),
                     pixels_per_world_unit(),
                     pixels_per_world_unit(),
                 ),
                 Vector2::new(0.0, 0.0),
                 0.0,
-                Color::new(255, 255, 255, 128),
+                Color::new(255, 255, 255, alpha),
             );
         }
     }
-    if false {
-        d.draw_line_ex(
-            Vector2::new(player_center_x, player_center_y),
-            Vector2::new(raycast_end_x, raycast_end_y),
-            2.0,
-            Color::GREEN,
-        );
+
+    // Draw right hand tile highlight (green or skip if both same)
+    if let Some((tile_x, tile_y)) = player.raycast_right_tile {
+        if !both_same_tile {
+            d.draw_rectangle_lines_ex(
+                Rectangle::new(
+                    tile_x.floor() * pixels_per_world_unit(),
+                    tile_y.floor() * pixels_per_world_unit(),
+                    pixels_per_world_unit(),
+                    pixels_per_world_unit(),
+                ),
+                4.0,
+                Color::GREEN,
+            );
+
+            // Draw preview for place block tools
+            if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.right_hand {
+                let texture = block_texture(block, textures);
+                d.draw_texture_pro(
+                    texture,
+                    Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
+                    Rectangle::new(
+                        tile_x.floor() * pixels_per_world_unit(),
+                        tile_y.floor() * pixels_per_world_unit(),
+                        pixels_per_world_unit(),
+                        pixels_per_world_unit(),
+                    ),
+                    Vector2::new(0.0, 0.0),
+                    0.0,
+                    Color::new(255, 255, 255, 128),
+                );
+            }
+        }
+    }
+
+    if debug_render {
+        // Draw left hand raycast line
+        if player.left_hand.is_some() {
+            let raycast_left_end_x = player.raycast_left_end.x * pixels_per_world_unit();
+            let raycast_left_end_y = player.raycast_left_end.y * pixels_per_world_unit();
+            d.draw_line_ex(
+                Vector2::new(player_center_x, player_center_y),
+                Vector2::new(raycast_left_end_x, raycast_left_end_y),
+                2.0,
+                Color::RED,
+            );
+        }
+
+        // Draw right hand raycast line
+        if player.right_hand.is_some() {
+            let raycast_right_end_x = player.raycast_right_end.x * pixels_per_world_unit();
+            let raycast_right_end_y = player.raycast_right_end.y * pixels_per_world_unit();
+            d.draw_line_ex(
+                Vector2::new(player_center_x, player_center_y),
+                Vector2::new(raycast_right_end_x, raycast_right_end_y),
+                2.0,
+                Color::GREEN,
+            );
+        }
 
         d.draw_rectangle_lines(
             (player.position.x * pixels_per_world_unit()) as i32,
@@ -447,12 +531,57 @@ impl Screen for GameScreen {
             let py = ctx.world_state.player.position.y as i32;
 
             render_terrain(&mut d2, &ctx.world_state.terrain, px, py, &ctx.textures);
+
+            // Draw chunk boundaries when debug is enabled
+            if ctx.debug_enabled {
+                use crate::terrain::CHUNK_SIZE;
+                let range = 128;
+                let chunk_size = CHUNK_SIZE as i32;
+
+                // Calculate the range of chunks to draw boundaries for
+                let min_chunk_x = (px - range) / chunk_size - 1;
+                let max_chunk_x = (px + range) / chunk_size + 1;
+                let min_chunk_y = (py - range) / chunk_size - 1;
+                let max_chunk_y = (py + range) / chunk_size + 1;
+
+                // Draw vertical chunk boundaries
+                for chunk_x in min_chunk_x..=max_chunk_x {
+                    let x_pos = chunk_x * chunk_size;
+                    let screen_x = x_pos as f32 * pixels_per_world_unit();
+                    let screen_y_start = (py - range) as f32 * pixels_per_world_unit();
+                    let screen_y_end = (py + range) as f32 * pixels_per_world_unit();
+
+                    d2.draw_line_ex(
+                        Vector2::new(screen_x, screen_y_start),
+                        Vector2::new(screen_x, screen_y_end),
+                        2.0,
+                        Color::new(255, 120, 120, 255),
+                    );
+                }
+
+                // Draw horizontal chunk boundaries
+                for chunk_y in min_chunk_y..=max_chunk_y {
+                    let y_pos = chunk_y * chunk_size;
+                    let screen_y = y_pos as f32 * pixels_per_world_unit();
+                    let screen_x_start = (px - range) as f32 * pixels_per_world_unit();
+                    let screen_x_end = (px + range) as f32 * pixels_per_world_unit();
+
+                    d2.draw_line_ex(
+                        Vector2::new(screen_x_start, screen_y),
+                        Vector2::new(screen_x_end, screen_y),
+                        2.0,
+                        Color::new(255, 120, 120, 255),
+                    );
+                }
+            }
+
             render_player(
                 &mut d2,
                 &ctx.world_state.player,
                 &ctx.textures,
                 &mut shader,
                 ctx.render_state.shader_locs,
+                ctx.debug_enabled,
             );
         }
         // Draw HUD
@@ -596,126 +725,116 @@ impl Screen for GameScreen {
         let mut hud_x = self.screen_width - hud_box_size - 70.0;
         let hud_y = self.screen_height - hud_box_size - 20.0;
 
-        // Draw tool slot background
-        d.draw_rectangle(
-            hud_x as i32,
-            hud_y as i32,
-            hud_box_size as i32,
-            hud_box_size as i32,
-            Color::new(50, 50, 50, 200),
-        );
-        d.draw_rectangle_lines(
-            hud_x as i32,
-            hud_y as i32,
-            hud_box_size as i32,
-            hud_box_size as i32,
-            Color::WHITE,
-        );
-
-        // Draw selected tool icon if present
-        if let Some(selected_tool) = ctx.world_state.player.selected_tool {
-            let tool_texture = match selected_tool {
-                crate::tools::ToolType::Dash => Some(&ctx.textures.tools.dashamulet),
-                crate::tools::ToolType::Pickaxe => None, // TODO: add pickaxe texture
-            };
-
-            if let Some(texture) = tool_texture {
-                let scale = hud_box_size / texture.width as f32;
-                d.draw_texture_ex(
-                    texture,
-                    Vector2::new(hud_x, hud_y),
-                    0.0,
-                    scale,
-                    Color::WHITE,
-                );
-            }
-
-            // Draw durability bar for selected tool
-            let (current_durability, max_durability) = match selected_tool {
-                crate::tools::ToolType::Dash => {
-                    if let Some(dash) = &ctx.world_state.player.tool_dash {
-                        (dash.durability, dash.max_durability)
-                    } else {
-                        (0.0, 100.0)
-                    }
-                }
-                crate::tools::ToolType::Pickaxe => (100.0, 100.0),
-            };
-
-            let durability_bar_y = hud_y + hud_box_size + 2.0;
-            let durability_bar_width = hud_box_size;
-            let durability_bar_height = 4.0;
-
-            // Background (dark)
+        // Helper closure to draw a hand slot
+        let mut draw_hand_slot = |hand: Option<crate::tools::ToolType>, x: f32, label: &str| {
+            // Draw tool slot background
             d.draw_rectangle(
-                hud_x as i32,
-                durability_bar_y as i32,
-                durability_bar_width as i32,
-                durability_bar_height as i32,
+                x as i32,
+                hud_y as i32,
+                hud_box_size as i32,
+                hud_box_size as i32,
                 Color::new(50, 50, 50, 200),
             );
-
-            // Calculate durability percentage
-            let durability_percent = (current_durability / max_durability).max(0.0).min(1.0);
-            let filled_width = durability_bar_width * durability_percent;
-
-            // Color changes based on durability
-            let durability_color = if durability_percent > 0.5 {
-                Color::new(100, 255, 100, 255) // Green - good condition
-            } else if durability_percent > 0.25 {
-                Color::new(255, 255, 100, 255) // Yellow - wearing out
-            } else {
-                Color::new(255, 100, 100, 255) // Red - almost broken
-            };
-
-            // Draw filled portion
-            d.draw_rectangle(
-                hud_x as i32,
-                durability_bar_y as i32,
-                filled_width as i32,
-                durability_bar_height as i32,
-                durability_color,
-            );
-
-            // Border
             d.draw_rectangle_lines(
-                hud_x as i32,
-                durability_bar_y as i32,
-                durability_bar_width as i32,
-                durability_bar_height as i32,
-                Color::new(200, 200, 200, 255),
-            );
-        }
-
-        hud_x += 50.0;
-        d.draw_rectangle(
-            hud_x as i32,
-            hud_y as i32,
-            hud_box_size as i32,
-            hud_box_size as i32,
-            Color::new(50, 50, 50, 200),
-        );
-        d.draw_rectangle_lines(
-            hud_x as i32,
-            hud_y as i32,
-            hud_box_size as i32,
-            hud_box_size as i32,
-            Color::WHITE,
-        );
-
-        // Draw selected block icon if present
-        if let Some(block_type) = ctx.world_state.player.place_block_type {
-            let block_texture =
-                crate::inventory_screen::get_item_place_texture(&block_type, &ctx.textures);
-            let scale = hud_box_size / block_texture.width as f32;
-            d.draw_texture_ex(
-                block_texture,
-                Vector2::new(hud_x, hud_y),
-                0.0,
-                scale,
+                x as i32,
+                hud_y as i32,
+                hud_box_size as i32,
+                hud_box_size as i32,
                 Color::WHITE,
             );
-        }
+
+            // Draw selected tool icon if present
+            if let Some(selected_tool) = hand {
+                let tool_texture = match selected_tool {
+                    crate::tools::ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
+                    crate::tools::ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
+                    crate::tools::ToolType::PlaceBlock(blk) => {
+                        Some(crate::inventory_screen::get_item_texture(
+                            &blk.to_item_type(),
+                            &ctx.textures,
+                        ))
+                    }
+                };
+
+                if let Some(texture) = tool_texture {
+                    let scale = hud_box_size / texture.width as f32;
+                    d.draw_texture_ex(texture, Vector2::new(x, hud_y), 0.0, scale, Color::WHITE);
+                }
+
+                // Draw durability bar for selected tool
+                let (current_durability, max_durability) = match selected_tool {
+                    crate::tools::ToolType::Dash => {
+                        if let Some(dash) = &ctx.world_state.player.tool_dash {
+                            (dash.durability, dash.max_durability)
+                        } else {
+                            (0.0, 100.0)
+                        }
+                    }
+                    crate::tools::ToolType::Pickaxe => {
+                        if let Some(pick) = &ctx.world_state.player.tool_pickaxe {
+                            (pick.durability, pick.max_durability)
+                        } else {
+                            (0.0, 100.0)
+                        }
+                    }
+                    crate::tools::ToolType::PlaceBlock(blk) => {
+                        let count = ctx.world_state.player.inventory.count(blk.to_item_type());
+                        (count as f32, count.max(1) as f32)
+                    }
+                };
+
+                let durability_bar_y = hud_y + hud_box_size + 2.0;
+                let durability_bar_width = hud_box_size;
+                let durability_bar_height = 4.0;
+
+                // Background (dark)
+                d.draw_rectangle(
+                    x as i32,
+                    durability_bar_y as i32,
+                    durability_bar_width as i32,
+                    durability_bar_height as i32,
+                    Color::new(50, 50, 50, 200),
+                );
+
+                // Calculate durability percentage
+                let durability_percent = (current_durability / max_durability).max(0.0).min(1.0);
+                let filled_width = durability_bar_width * durability_percent;
+
+                // Color changes based on durability
+                let durability_color = if durability_percent > 0.5 {
+                    Color::new(100, 255, 100, 255) // Green - good condition
+                } else if durability_percent > 0.25 {
+                    Color::new(255, 255, 100, 255) // Yellow - wearing out
+                } else {
+                    Color::new(255, 100, 100, 255) // Red - almost broken
+                };
+
+                // Draw filled portion
+                d.draw_rectangle(
+                    x as i32,
+                    durability_bar_y as i32,
+                    filled_width as i32,
+                    durability_bar_height as i32,
+                    durability_color,
+                );
+
+                // Border
+                d.draw_rectangle_lines(
+                    x as i32,
+                    durability_bar_y as i32,
+                    durability_bar_width as i32,
+                    durability_bar_height as i32,
+                    Color::new(200, 200, 200, 255),
+                );
+            }
+        };
+
+        // Draw left hand slot (left click tool)
+        draw_hand_slot(ctx.world_state.player.left_hand, hud_x, "L");
+
+        // Draw right hand slot (right click tool)
+        hud_x += 50.0;
+        draw_hand_slot(ctx.world_state.player.right_hand, hud_x, "R");
 
         if ctx.debug_enabled {
             d.draw_text(
