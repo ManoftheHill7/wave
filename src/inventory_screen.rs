@@ -332,7 +332,7 @@ impl Screen for InventoryScreen {
                         texture,
                         Vector2::new(left_hand_x, left_hand_y),
                         0.0,
-                        2.0,
+                        1.0,
                         Color::WHITE,
                     );
                 }
@@ -353,7 +353,7 @@ impl Screen for InventoryScreen {
                         texture,
                         Vector2::new(right_hand_x, right_hand_y),
                         0.0,
-                        2.0,
+                        1.0,
                         Color::WHITE,
                     );
                 }
@@ -369,7 +369,8 @@ impl Screen for InventoryScreen {
 
                     // Check if this tool is selected
                     let is_selected =
-                        ctx.world_state.player.right_hand == tool_type && tool_type.is_some();
+                        (ctx.world_state.player.right_hand == tool_type && tool_type.is_some()) ||
+                        (ctx.world_state.player.left_hand == tool_type && tool_type.is_some());
 
                     // Draw slot background with highlight if selected
                     let slot_color = if is_selected {
@@ -385,7 +386,7 @@ impl Screen for InventoryScreen {
                             texture,
                             Vector2::new(tool_x, tool_y as f32),
                             0.0,
-                            2.0,
+                            1.0,
                             Color::WHITE,
                         );
                     }
