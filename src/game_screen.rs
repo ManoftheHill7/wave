@@ -59,6 +59,7 @@ fn block_texture<'a>(block: Block, textures: &'a crate::TextureManager) -> &'a T
         Block::Water => &textures.tiles.water,
         Block::Log => &textures.tiles.log,
         Block::Leaf => &textures.tiles.leaves,
+        Block::Coal => &textures.tiles.coal_ore,
 
         Block::Air => &textures.fallback,
         Block::Tide => &textures.fallback,

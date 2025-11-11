@@ -28,3 +28,8 @@ type = "block"
 name = "Leaf"
 weight = 0.5
 type = "block"
+
+[items.coal]
+name = "Coal"
+weight = 3.0
+type = "block"

@@ -99,8 +99,20 @@ impl MapGenerator {
             }
         }
 
+        add_ore_vein(&mut chunk, 30, 15, Block::Coal);
+
         chunk
     }
+}
+
+pub fn add_ore_vein(chunk: &mut Chunk, x: i32, y: i32, ore: Block) {
+    // Algorithm
+    // Generate vein size: random number between 2 - 6
+    // Find nearest tile on border of Block::Air not Block::Air
+    // Set x, y to this tile
+    // For each vein size.
+    //   Replace the nearest Stone block in a random direction with the ore type
+    //   Set new x, y to this tile
 }
 
 pub struct TerrainGenerator {

@@ -34,3 +34,16 @@ name = "Leaf"
 durability = 0.5
 drops = "leaf"
 amount = 1
+
+[blocks.coal]
+name = "Coal"
+durability = 3.5
+drops = "coal"
+amount = 1
+
+[ore.coal]
+spawns_from = 10
+spawn_peak = 100
+spawns_to = 400
+max_vein_size = 6
+min_vein_size = 2

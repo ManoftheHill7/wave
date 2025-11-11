@@ -153,6 +153,7 @@ pub fn get_item_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) 
         ItemType::Dirt => &textures.items.dirt,
         ItemType::Grass => unimplemented!(),
         ItemType::Sand => &textures.items.sand,
+        ItemType::Coal => &textures.items.coal,
         ItemType::Log => unimplemented!(),
         ItemType::Leaf => unimplemented!()
     }

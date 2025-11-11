@@ -33,6 +33,7 @@ pub enum Block {
     Tide,
     Stalagmite,
     Stalactite,
+    Coal,
 }
 
 #[derive(Debug, Clone, Copy)]
