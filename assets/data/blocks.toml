@@ -1,45 +1,84 @@
 # This file is for blocks in the world (tiles)
+# type can be: "solid", "liquid", "spike", or "air"
+
+[blocks.air]
+name = "Air"
+type = "air"
+durability = 0.0
+
 [blocks.stone]
 name = "Stone"
+type = "solid"
 durability = 5.0
 drops = "stone"
 amount = 1
 
 [blocks.dirt]
 name = "Dirt"
+type = "solid"
 durability = 2.0
 drops = "dirt"
 amount = 1
 
 [blocks.grass]
 name = "Grass"
+type = "solid"
 durability = 2.0
 drops = "dirt"
 amount = 1
 
 [blocks.sand]
 name = "Sand"
+type = "solid"
 durability = 1.5
 drops = "sand"
 amount = 1
 
 [blocks.log]
 name = "Log"
+type = "solid"
 durability = 3.0
 drops = "log"
 amount = 1
 
 [blocks.leaf]
 name = "Leaf"
+type = "solid"
 durability = 0.5
 drops = "leaf"
 amount = 1
 
 [blocks.coal]
 name = "Coal"
+type = "solid"
 durability = 3.5
 drops = "coal"
 amount = 1
+
+[blocks.water]
+name = "Water"
+type = "liquid"
+durability = 0.0
+
+[blocks.lava]
+name = "Lava"
+type = "liquid"
+durability = 0.0
+
+[blocks.tide]
+name = "Tide"
+type = "air"
+durability = 0.0
+
+[blocks.stalagmite]
+name = "Stalagmite"
+type = "spike"
+durability = 0.0
+
+[blocks.stalactite]
+name = "Stalactite"
+type = "spike"
+durability = 0.0
 
 [ore.coal]
 spawns_from = 10

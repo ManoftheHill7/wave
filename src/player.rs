@@ -297,12 +297,13 @@ impl Player {
         };
 
         if let Some((tile_x, tile_y)) = tile {
-            let item_type = block.to_item_type();
-            let taken = self.inventory.take(item_type, 1);
-            if taken > 0 {
-                terrain.set(tile_x.floor() as i32, tile_y.floor() as i32, block);
-                if self.inventory.count(item_type) == 0 {
-                    // TODO: remove from hand
+            if let Some(item_type) = block.to_item_type() {
+                let taken = self.inventory.take(item_type, 1);
+                if taken > 0 {
+                    terrain.set(tile_x.floor() as i32, tile_y.floor() as i32, block);
+                    if self.inventory.count(item_type) == 0 {
+                        // TODO: remove from hand
+                    }
                 }
             }
         }

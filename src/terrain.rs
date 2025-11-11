@@ -18,23 +18,8 @@ const MIN_FLOW: f32 = NO_LIQUID_THRESHOLD;
 const FLOW_SMOOTHING: f32 = 0.5; // 0 = instant, 1 = no change
 const HORIZONTAL_FLOW_SCALE: f32 = 0.5;
 
-// Block types enum
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Block {
-    Air,
-    Dirt,
-    Stone,
-    Grass,
-    Sand,
-    Water,
-    Lava,
-    Log,
-    Leaf,
-    Tide,
-    Stalagmite,
-    Stalactite,
-    Coal,
-}
+// Block types enum - generated from blocks.toml
+include!(concat!(env!("OUT_DIR"), "/generated_blocks.rs"));
 
 #[derive(Debug, Clone, Copy)]
 pub struct FlowData {
@@ -52,77 +37,6 @@ impl FlowData {
             left: 0.0,
             right: 0.0,
         }
-    }
-}
-
-impl Block {
-    pub fn is_solid(self) -> bool {
-        !matches!(self, Block::Air | Block::Tide | Block::Stalagmite | Block::Stalactite)
-    }
-
-    pub fn durability(self) -> f32 {
-        use std::sync::OnceLock;
-        static BLOCKS_DATA: OnceLock<toml::Table> = OnceLock::new();
-
-        let blocks_data = BLOCKS_DATA.get_or_init(|| {
-            let toml_str = include_str!("../assets/data/blocks.toml");
-            toml::from_str(toml_str).expect("Failed to parse blocks.toml")
-        });
-
-        let blocks = blocks_data
-            .get("blocks")
-            .and_then(|v| v.as_table())
-            .expect("Missing [blocks] table in blocks.toml");
-
-        let key = match self.key() {
-            Some(k) => k,
-            None => return 1.0, // Default durability for blocks not in config
-        };
-
-        blocks
-            .get(key)
-            .and_then(|v| v.as_table())
-            .and_then(|t| t.get("durability"))
-            .and_then(|v| {
-                if let Some(f) = v.as_float() {
-                    Some(f as f32)
-                } else if let Some(i) = v.as_integer() {
-                    Some(i as f32)
-                } else {
-                    None
-                }
-            })
-            .unwrap_or(1.0)
-    }
-
-    /// Returns (item_type, amount) that this block drops when mined
-    pub fn get_drops(self) -> Option<(crate::inventory::ItemType, u32)> {
-        use std::sync::OnceLock;
-        static BLOCKS_DATA: OnceLock<toml::Table> = OnceLock::new();
-
-        let blocks_data = BLOCKS_DATA.get_or_init(|| {
-            let toml_str = include_str!("../assets/data/blocks.toml");
-            toml::from_str(toml_str).expect("Failed to parse blocks.toml")
-        });
-
-        let blocks = blocks_data
-            .get("blocks")
-            .and_then(|v| v.as_table())
-            .expect("Missing [blocks] table in blocks.toml");
-
-        let key = self.key()?; // Return None if block has no key
-
-        let block_data = blocks.get(key).and_then(|v| v.as_table())?;
-
-        let drops_str = block_data.get("drops")?.as_str()?;
-        let amount = block_data
-            .get("amount")
-            .and_then(|v| v.as_integer())
-            .unwrap_or(1) as u32;
-
-        let item_type = crate::inventory::ItemType::from_str(drops_str)?;
-
-        Some((item_type, amount))
     }
 }
 
@@ -681,7 +595,7 @@ impl Terrain {
     }
 
     pub fn spike_at(&self, x: i32, y: i32) -> bool {
-        self.at(x, y) == Block::Stalagmite || self.at(x, y) == Block::Stalactite
+        self.at(x, y).is_spike()
     }
 
     pub fn liquid_terrain_at(&self, x: i32, y: i32) -> bool {

@@ -749,12 +749,9 @@ impl Screen for GameScreen {
                 let tool_texture = match selected_tool {
                     crate::tools::ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
                     crate::tools::ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
-                    crate::tools::ToolType::PlaceBlock(blk) => {
-                        Some(crate::inventory_screen::get_item_texture(
-                            &blk.to_item_type(),
-                            &ctx.textures,
-                        ))
-                    }
+                    crate::tools::ToolType::PlaceBlock(blk) => blk.to_item_type().map(|item| {
+                        crate::inventory_screen::get_item_texture(&item, &ctx.textures)
+                    }),
                 };
 
                 if let Some(texture) = tool_texture {
@@ -779,7 +776,10 @@ impl Screen for GameScreen {
                         }
                     }
                     crate::tools::ToolType::PlaceBlock(blk) => {
-                        let count = ctx.world_state.player.inventory.count(blk.to_item_type());
+                        let count = blk
+                            .to_item_type()
+                            .map(|item| ctx.world_state.player.inventory.count(item))
+                            .unwrap_or(0);
                         (count as f32, count.max(1) as f32)
                     }
                 };

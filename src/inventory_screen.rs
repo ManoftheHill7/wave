@@ -155,7 +155,7 @@ pub fn get_item_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) 
         ItemType::Sand => &textures.items.sand,
         ItemType::Coal => &textures.items.coal,
         ItemType::Log => unimplemented!(),
-        ItemType::Leaf => unimplemented!()
+        ItemType::Leaf => unimplemented!(),
     }
 }
 
@@ -323,9 +323,9 @@ impl Screen for InventoryScreen {
                 let tool_texture = match selected_tool {
                     ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
                     ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
-                    ToolType::PlaceBlock(blk) => {
-                        Some(get_item_texture(&blk.to_item_type(), &ctx.textures))
-                    }
+                    ToolType::PlaceBlock(blk) => blk
+                        .to_item_type()
+                        .map(|item| get_item_texture(&item, &ctx.textures)),
                 };
 
                 if let Some(texture) = tool_texture {
@@ -344,9 +344,9 @@ impl Screen for InventoryScreen {
                 let tool_texture = match selected_tool {
                     ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
                     ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
-                    ToolType::PlaceBlock(blk) => {
-                        Some(get_item_texture(&blk.to_item_type(), &ctx.textures))
-                    }
+                    ToolType::PlaceBlock(blk) => blk
+                        .to_item_type()
+                        .map(|item| get_item_texture(&item, &ctx.textures)),
                 };
 
                 if let Some(texture) = tool_texture {
@@ -369,9 +369,9 @@ impl Screen for InventoryScreen {
                     let tool_x = slot_padding * 2.0 + (col as f32 * (slot_size + slot_padding));
 
                     // Check if this tool is selected
-                    let is_selected =
-                        (ctx.world_state.player.right_hand == tool_type && tool_type.is_some()) ||
-                        (ctx.world_state.player.left_hand == tool_type && tool_type.is_some());
+                    let is_selected = (ctx.world_state.player.right_hand == tool_type
+                        && tool_type.is_some())
+                        || (ctx.world_state.player.left_hand == tool_type && tool_type.is_some());
 
                     // Draw slot background with highlight if selected
                     let slot_color = if is_selected {
