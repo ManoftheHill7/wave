@@ -4,6 +4,7 @@ use std::path::Path;
 
 fn main() {
     println!("cargo:rerun-if-changed=assets/data/items.toml");
+    println!("cargo:rerun-if-changed=assets/data/blocks.toml");
 
     let out_dir = env::var("OUT_DIR").unwrap();
     let dest_path = Path::new(&out_dir).join("generated_items.rs");

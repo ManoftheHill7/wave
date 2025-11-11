@@ -10,3 +10,27 @@ name = "Dirt"
 durability = 2.0
 drops = "dirt"
 amount = 1
+
+[items.grass]
+name = "Grass"
+durability = 2.0
+drops = "dirt"
+amount = 1
+
+[items.sand]
+name = "Sand"
+durability = 1.5
+drops = "sand"
+amount = 1
+
+[items.log]
+name = "Log"
+durability = 3.0
+drops = "log"
+amount = 1
+
+[items.leaf]
+name = "Leaf"
+durability = 0.5
+drops = "leaf"
+amount = 1

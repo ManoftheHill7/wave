@@ -1,5 +1,5 @@
 use crate::controller::Controller;
-use crate::inventory::{Inventory};
+use crate::inventory::Inventory;
 use crate::terrain::{Block, Terrain};
 use crate::tools::*;
 use raylib::prelude::*;
@@ -337,7 +337,9 @@ impl Player {
         }
 
         // Jump release (variable jump height)
-        if (!jump_held || self.velocity.y > 0.0) && !self.within_grace(self.spike_touched_at, SPIKE_IMMUNITY_COOLDOWN) {
+        if (!jump_held || self.velocity.y > 0.0)
+            && !self.within_grace(self.spike_touched_at, SPIKE_IMMUNITY_COOLDOWN)
+        {
             if self.velocity.y < 0.0 && self.is_jumping {
                 self.velocity.y *= JUMP_RELEASE_REDUCTION;
                 self.is_jumping = false;
@@ -369,7 +371,6 @@ impl Player {
         if !used_tool {
             self.is_mining = false;
         }
-
 
         // Apply dash velocity
         if self.within_grace(self.dashed_at, dash_time) {
@@ -506,7 +507,8 @@ impl Player {
             self.position.x,
             self.position.y,
             self.width,
-            self.height) {
+            self.height,
+        ) {
             if !self.within_grace(self.spike_touched_at, SPIKE_IMMUNITY_COOLDOWN) {
                 self.health -= 1;
                 if spike_type == Block::Stalagmite {
@@ -514,10 +516,10 @@ impl Player {
                 } else {
                     self.jump(-0.3);
                 }
-                return true
+                return true;
             }
         }
-        return false
+        return false;
     }
 
     fn apply_movement_and_collision(&mut self, dt: f32, terrain: &Terrain) {
@@ -654,11 +656,24 @@ impl Player {
         }
     }
 
-    fn use_tool(&mut self, terrain: &mut Terrain, controller: &Controller, left_hand: bool) -> bool {
+    fn use_tool(
+        &mut self,
+        terrain: &mut Terrain,
+        controller: &Controller,
+        left_hand: bool,
+    ) -> bool {
         let (hand, held, pressed) = if left_hand {
-            (self.left_hand, controller.left_hand_held, controller.left_hand_pressed)
+            (
+                self.left_hand,
+                controller.left_hand_held,
+                controller.left_hand_pressed,
+            )
         } else {
-            (self.right_hand, controller.right_hand_held, controller.right_hand_pressed)
+            (
+                self.right_hand,
+                controller.right_hand_held,
+                controller.right_hand_pressed,
+            )
         };
         match (hand, held, pressed) {
             (Some(ToolType::Dash), _, true) => self.manage_dash(controller.raycast_direction),
@@ -666,24 +681,24 @@ impl Player {
             (Some(ToolType::PlaceBlock(blk)), _, true) => self.try_place_block(terrain, blk),
             _ => return false,
         };
-        return true
+        return true;
     }
 
     fn manage_pickaxe(&mut self, terrain: &mut Terrain) {
         if let Some(bt) = self.raycast_hit_tile {
             let block = terrain.at(bt.0 as i32, bt.1 as i32);
-            // TODO: get duribility from block
-            let block_duribility = 3.0;
+            let block_durability = block.durability();
             if !self.is_mining {
                 self.is_mining = true;
                 self.started_mining_at = self.time;
             } else {
                 self.facing_dir = (self.raycast_end_pos.x - self.position.x).signum() as i32
-
             }
 
-            if !self.within_grace(self.started_mining_at, block_duribility) {
-                self.tool_dash.as_mut().unwrap().durability -= block_duribility;
+            if !self.within_grace(self.started_mining_at, block_durability) {
+                if let Some(pickaxe) = self.tool_pickaxe.as_mut() {
+                    pickaxe.durability -= block_durability;
+                }
                 self.is_mining = false;
                 terrain.set(bt.0 as i32, bt.1 as i32, Block::Air);
             }
@@ -703,7 +718,7 @@ impl Player {
             self.dash_dir = dir;
 
             if self.climb_stamina < CLIMB_STAMINA / 2.0 {
-            self.climb_stamina = CLIMB_STAMINA / 2.0;
+                self.climb_stamina = CLIMB_STAMINA / 2.0;
             }
 
             if self.on_ground {

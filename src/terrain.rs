@@ -32,7 +32,7 @@ pub enum Block {
     Leaf,
     Tide,
     Stalagmite,
-    Stalactite
+    Stalactite,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -75,8 +75,48 @@ impl Block {
         match self {
             Block::Dirt => ItemType::Dirt,
             Block::Stone => ItemType::Stone,
-            _ => unimplemented!()
+            _ => unimplemented!(),
         }
+    }
+
+    pub fn durability(self) -> f32 {
+        use std::sync::OnceLock;
+        static BLOCKS_DATA: OnceLock<toml::Table> = OnceLock::new();
+
+        let blocks_data = BLOCKS_DATA.get_or_init(|| {
+            let toml_str = include_str!("../assets/data/blocks.toml");
+            toml::from_str(toml_str).expect("Failed to parse blocks.toml")
+        });
+
+        let items = blocks_data
+            .get("items")
+            .and_then(|v| v.as_table())
+            .expect("Missing [items] table in blocks.toml");
+
+        let key = match self {
+            Block::Stone => "stone",
+            Block::Dirt => "dirt",
+            Block::Grass => "grass",
+            Block::Sand => "sand",
+            Block::Log => "log",
+            Block::Leaf => "leaf",
+            _ => return 1.0, // Default durability for blocks not in config
+        };
+
+        items
+            .get(key)
+            .and_then(|v| v.as_table())
+            .and_then(|t| t.get("durability"))
+            .and_then(|v| {
+                if let Some(f) = v.as_float() {
+                    Some(f as f32)
+                } else if let Some(i) = v.as_integer() {
+                    Some(i as f32)
+                } else {
+                    None
+                }
+            })
+            .unwrap_or(1.0)
     }
 }
 
