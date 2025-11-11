@@ -454,7 +454,7 @@ impl Screen for GameScreen {
             // Draw chunk boundaries when debug is enabled
             if ctx.debug_enabled {
                 use crate::terrain::CHUNK_SIZE;
-                let range = 900 / pixels_per_world_unit() as i32;
+                let range = 128;
                 let chunk_size = CHUNK_SIZE as i32;
 
                 // Calculate the range of chunks to draw boundaries for
