@@ -38,7 +38,7 @@ Things required for the games core concept
 - [x] Tileset variants
 - [x] Load map from file
 - [x] Stala(gm/ct)ites
-- [ ] Tool - Pickaxe
+- [x] Tool - Pickaxe
 - [ ] Ore generation
 - [ ] Bat enemies
 - [ ] Mole enemies
