@@ -212,6 +212,7 @@ fn render_player(
     textures: &crate::TextureManager,
     shader: &mut Shader,
     shader_locs: ShaderLocs,
+    debug_render: bool,
 ) {
     macro_rules! animate {
         ($frames:expr, $frame_length:expr) => {
@@ -363,7 +364,7 @@ fn render_player(
             Color::RED,
         );
     }
-    if false {
+    if debug_render {
         d.draw_line_ex(
             Vector2::new(player_center_x, player_center_y),
             Vector2::new(raycast_end_x, raycast_end_y),
@@ -455,6 +456,7 @@ impl Screen for GameScreen {
                 &ctx.textures,
                 &mut shader,
                 ctx.render_state.shader_locs,
+                ctx.debug_enabled,
             );
         }
         // Draw HUD
@@ -615,9 +617,6 @@ impl Screen for GameScreen {
                 hud_box_size as i32,
                 Color::WHITE,
             );
-
-            // Draw label (L or R)
-            d.draw_text(label, x as i32 + 2, (hud_y - 12.0) as i32, 10, Color::WHITE);
 
             // Draw selected tool icon if present
             if let Some(selected_tool) = hand {

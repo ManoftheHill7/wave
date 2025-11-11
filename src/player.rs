@@ -686,27 +686,29 @@ impl Player {
 
     fn manage_pickaxe(&mut self, terrain: &mut Terrain) {
         if let Some(bt) = self.raycast_hit_tile {
-            let block = terrain.at(bt.0 as i32, bt.1 as i32);
-            let block_durability = block.durability();
-            if !self.is_mining {
-                self.is_mining = true;
-                self.started_mining_at = self.time;
-            } else {
-                self.facing_dir = (self.raycast_end_pos.x - self.position.x).signum() as i32
-            }
-
-            if !self.within_grace(self.started_mining_at, block_durability) {
-                if let Some(pickaxe) = self.tool_pickaxe.as_mut() {
-                    pickaxe.durability -= block_durability;
-                }
-                self.is_mining = false;
-
-                // Add drops to inventory before removing the block
-                if let Some((item_type, amount)) = block.get_drops() {
-                    self.inventory.add(item_type, amount);
+            if !(self.is_swimming || self.is_climbing || self.is_dashing) {
+                let block = terrain.at(bt.0 as i32, bt.1 as i32);
+                let block_durability = block.durability();
+                if !self.is_mining {
+                    self.is_mining = true;
+                    self.started_mining_at = self.time;
+                } else {
+                    self.facing_dir = (self.raycast_end_pos.x - self.position.x).signum() as i32
                 }
 
-                terrain.set(bt.0 as i32, bt.1 as i32, Block::Air);
+                if !self.within_grace(self.started_mining_at, block_durability) {
+                    if let Some(pickaxe) = self.tool_pickaxe.as_mut() {
+                        pickaxe.durability -= block_durability;
+                    }
+                    self.is_mining = false;
+
+                    // Add drops to inventory before removing the block
+                    if let Some((item_type, amount)) = block.get_drops() {
+                        self.inventory.add(item_type, amount);
+                    }
+
+                    terrain.set(bt.0 as i32, bt.1 as i32, Block::Air);
+                }
             }
         }
     }
