@@ -1,5 +1,5 @@
 use crate::controller::Controller;
-use crate::inventory::{Inventory, ItemType};
+use crate::inventory::{Inventory};
 use crate::terrain::{Block, Terrain};
 use crate::tools::*;
 use raylib::prelude::*;
@@ -74,6 +74,7 @@ pub struct Player {
     pub try_jumped_at: f32,
     pub wall_jumped_at: f32,
     pub spike_touched_at: f32,
+    pub started_mining_at: f32,
     pub dashed_at: f32,
     pub last_action_at: f32,
     pub time: f32,
@@ -97,9 +98,9 @@ pub struct Player {
     pub breath: f32,
 
     pub inventory: Inventory,
-    pub place_block_type: Option<ItemType>,
 
-    pub selected_tool: Option<ToolType>,
+    pub left_hand: Option<ToolType>,
+    pub right_hand: Option<ToolType>,
     pub tool_dash: Option<ToolDash>,
     pub tool_pickaxe: Option<ToolPickaxe>,
 }
@@ -130,6 +131,7 @@ impl Player {
             try_jumped_at: -999.0,
             wall_jumped_at: -999.0,
             spike_touched_at: -999.0,
+            started_mining_at: -999.0,
             dashed_at: -999.0,
             last_action_at: -999.0,
             time: 0.0,
@@ -151,9 +153,10 @@ impl Player {
             breath: MAX_BREATH_HOLD,
 
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
-            place_block_type: None,
 
-            selected_tool: Some(ToolType::Dash),
+            left_hand: Some(ToolType::Pickaxe),
+            right_hand: Some(ToolType::Dash),
+
             tool_dash: initial_dash,
             tool_pickaxe: initial_pick,
         }
@@ -205,23 +208,20 @@ impl Player {
         };
     }
 
-    pub fn try_place_block(&mut self, terrain: &mut Terrain) {
-        if let Some(item_type) = self.place_block_type {
-            if let Some((free_x, free_y)) = self.raycast_last_free_tile {
-                if let Some(block) = crate::terrain::Block::from_item_type(item_type) {
-                    let taken = self.inventory.take(item_type, 1);
-                    if taken > 0 {
-                        terrain.set(free_x.floor() as i32, free_y.floor() as i32, block);
-                        if self.inventory.count(item_type) == 0 {
-                            self.place_block_type = None;
-                        }
-                    }
+    pub fn try_place_block(&mut self, terrain: &mut Terrain, block: Block) {
+        if let Some((free_x, free_y)) = self.raycast_last_free_tile {
+            let item_type = block.to_item_type();
+            let taken = self.inventory.take(item_type, 1);
+            if taken > 0 {
+                terrain.set(free_x.floor() as i32, free_y.floor() as i32, block);
+                if self.inventory.count(item_type) == 0 {
+                    // TODO: remove from hand
                 }
             }
         }
     }
 
-    pub fn update(&mut self, dt: f32, terrain: &Terrain, controller: &Controller) {
+    pub fn update(&mut self, dt: f32, terrain: &mut Terrain, controller: &Controller) {
         let jump_pressed = controller.jump_pressed;
         let jump_held = controller.jump_held;
         let climb_pressed = controller.climb_pressed;
@@ -363,9 +363,13 @@ impl Player {
             self.dashes = max_dashes;
         }
 
-        if controller.use_tool_pressed {
-            self.use_tool(terrain, controller);
+        let mut used_tool = false;
+        used_tool = self.use_tool(terrain, controller, true);
+        used_tool = self.use_tool(terrain, controller, false) || used_tool;
+        if !used_tool {
+            self.is_mining = false;
         }
+
 
         // Apply dash velocity
         if self.within_grace(self.dashed_at, dash_time) {
@@ -650,16 +654,40 @@ impl Player {
         }
     }
 
-    fn use_tool(&mut self, _terrain: &Terrain, controller: &Controller) {
-        match self.selected_tool {
-            Some(ToolType::Dash) => self.manage_dash(controller.raycast_direction),
-            Some(ToolType::Pickaxe) => self.manage_pickaxe(),
-            None => (),
-        }
+    fn use_tool(&mut self, terrain: &mut Terrain, controller: &Controller, left_hand: bool) -> bool {
+        let (hand, held, pressed) = if left_hand {
+            (self.left_hand, controller.left_hand_held, controller.left_hand_pressed)
+        } else {
+            (self.right_hand, controller.right_hand_held, controller.right_hand_pressed)
+        };
+        match (hand, held, pressed) {
+            (Some(ToolType::Dash), _, true) => self.manage_dash(controller.raycast_direction),
+            (Some(ToolType::Pickaxe), true, _) => self.manage_pickaxe(terrain),
+            (Some(ToolType::PlaceBlock(blk)), _, true) => self.try_place_block(terrain, blk),
+            _ => return false,
+        };
+        return true
     }
 
-    fn manage_pickaxe(&mut self) {
-        self.is_mining = true
+    fn manage_pickaxe(&mut self, terrain: &mut Terrain) {
+        if let Some(bt) = self.raycast_hit_tile {
+            let block = terrain.at(bt.0 as i32, bt.1 as i32);
+            // TODO: get duribility from block
+            let block_duribility = 3.0;
+            if !self.is_mining {
+                self.is_mining = true;
+                self.started_mining_at = self.time;
+            } else {
+                self.facing_dir = (self.raycast_end_pos.x - self.position.x).signum() as i32
+
+            }
+
+            if !self.within_grace(self.started_mining_at, block_duribility) {
+                self.tool_dash.as_mut().unwrap().durability -= block_duribility;
+                self.is_mining = false;
+                terrain.set(bt.0 as i32, bt.1 as i32, Block::Air);
+            }
+        }
     }
 
     fn manage_dash(&mut self, dir: Vector2) {

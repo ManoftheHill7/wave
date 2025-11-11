@@ -1,3 +1,4 @@
+# This file is for things that go in the inventory
 [items.stone]
 name = "Stone"
 weight = 5.0

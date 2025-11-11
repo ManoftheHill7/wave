@@ -174,11 +174,22 @@ fn render_terrain(
                 };
                 let src_rect = textures.tiles.spikes.get_tile_rect(x, y, &neighbors);
                 let final_src_rect = if block == Block::Stalactite {
-                    Rectangle::new(src_rect.x, src_rect.y + src_rect.height, src_rect.width, -src_rect.height)
+                    Rectangle::new(
+                        src_rect.x,
+                        src_rect.y + src_rect.height,
+                        src_rect.width,
+                        -src_rect.height,
+                    )
                 } else {
                     src_rect
                 };
-                render_tile(d, x as f32, y as f32, &textures.tiles.spikes.texture(), Some(final_src_rect));
+                render_tile(
+                    d,
+                    x as f32,
+                    y as f32,
+                    &textures.tiles.spikes.texture(),
+                    Some(final_src_rect),
+                );
             } else {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
@@ -345,24 +356,6 @@ fn render_player(
             4.0,
             Color::RED,
         );
-    }
-    if let Some(item) = player.place_block_type {
-        if let Some((free_x, free_y)) = player.raycast_last_free_tile {
-            let texture = crate::inventory_screen::get_item_texture(&item, textures);
-            d.draw_texture_pro(
-                texture,
-                Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
-                Rectangle::new(
-                    free_x.floor() * pixels_per_world_unit(),
-                    free_y.floor() * pixels_per_world_unit(),
-                    pixels_per_world_unit(),
-                    pixels_per_world_unit(),
-                ),
-                Vector2::new(0.0, 0.0),
-                0.0,
-                Color::new(255, 255, 255, 128),
-            );
-        }
     }
     if false {
         d.draw_line_ex(
@@ -599,126 +592,119 @@ impl Screen for GameScreen {
         let mut hud_x = self.screen_width - hud_box_size - 70.0;
         let hud_y = self.screen_height - hud_box_size - 20.0;
 
-        // Draw tool slot background
-        d.draw_rectangle(
-            hud_x as i32,
-            hud_y as i32,
-            hud_box_size as i32,
-            hud_box_size as i32,
-            Color::new(50, 50, 50, 200),
-        );
-        d.draw_rectangle_lines(
-            hud_x as i32,
-            hud_y as i32,
-            hud_box_size as i32,
-            hud_box_size as i32,
-            Color::WHITE,
-        );
-
-        // Draw selected tool icon if present
-        if let Some(selected_tool) = ctx.world_state.player.selected_tool {
-            let tool_texture = match selected_tool {
-                crate::tools::ToolType::Dash => Some(&ctx.textures.items.dashamulet),
-                crate::tools::ToolType::Pickaxe => None, // TODO: add pickaxe texture
-            };
-
-            if let Some(texture) = tool_texture {
-                let scale = hud_box_size / texture.width as f32;
-                d.draw_texture_ex(
-                    texture,
-                    Vector2::new(hud_x, hud_y),
-                    0.0,
-                    scale,
-                    Color::WHITE,
-                );
-            }
-
-            // Draw durability bar for selected tool
-            let (current_durability, max_durability) = match selected_tool {
-                crate::tools::ToolType::Dash => {
-                    if let Some(dash) = &ctx.world_state.player.tool_dash {
-                        (dash.durability, dash.max_durability)
-                    } else {
-                        (0.0, 100.0)
-                    }
-                }
-                crate::tools::ToolType::Pickaxe => (100.0, 100.0),
-            };
-
-            let durability_bar_y = hud_y + hud_box_size + 2.0;
-            let durability_bar_width = hud_box_size;
-            let durability_bar_height = 4.0;
-
-            // Background (dark)
+        // Helper closure to draw a hand slot
+        let mut draw_hand_slot = |hand: Option<crate::tools::ToolType>, x: f32, label: &str| {
+            // Draw tool slot background
             d.draw_rectangle(
-                hud_x as i32,
-                durability_bar_y as i32,
-                durability_bar_width as i32,
-                durability_bar_height as i32,
+                x as i32,
+                hud_y as i32,
+                hud_box_size as i32,
+                hud_box_size as i32,
                 Color::new(50, 50, 50, 200),
             );
-
-            // Calculate durability percentage
-            let durability_percent = (current_durability / max_durability).max(0.0).min(1.0);
-            let filled_width = durability_bar_width * durability_percent;
-
-            // Color changes based on durability
-            let durability_color = if durability_percent > 0.5 {
-                Color::new(100, 255, 100, 255) // Green - good condition
-            } else if durability_percent > 0.25 {
-                Color::new(255, 255, 100, 255) // Yellow - wearing out
-            } else {
-                Color::new(255, 100, 100, 255) // Red - almost broken
-            };
-
-            // Draw filled portion
-            d.draw_rectangle(
-                hud_x as i32,
-                durability_bar_y as i32,
-                filled_width as i32,
-                durability_bar_height as i32,
-                durability_color,
-            );
-
-            // Border
             d.draw_rectangle_lines(
-                hud_x as i32,
-                durability_bar_y as i32,
-                durability_bar_width as i32,
-                durability_bar_height as i32,
-                Color::new(200, 200, 200, 255),
-            );
-        }
-
-        hud_x += 50.0;
-        d.draw_rectangle(
-            hud_x as i32,
-            hud_y as i32,
-            hud_box_size as i32,
-            hud_box_size as i32,
-            Color::new(50, 50, 50, 200),
-        );
-        d.draw_rectangle_lines(
-            hud_x as i32,
-            hud_y as i32,
-            hud_box_size as i32,
-            hud_box_size as i32,
-            Color::WHITE,
-        );
-
-        // Draw selected block icon if present
-        if let Some(block_type) = ctx.world_state.player.place_block_type {
-            let block_texture =
-                crate::inventory_screen::get_item_texture(&block_type, &ctx.textures);
-            let scale = hud_box_size / block_texture.width as f32;
-            d.draw_texture_ex(
-                block_texture,
-                Vector2::new(hud_x, hud_y),
-                0.0,
-                scale,
+                x as i32,
+                hud_y as i32,
+                hud_box_size as i32,
+                hud_box_size as i32,
                 Color::WHITE,
             );
-        }
+
+            // Draw label (L or R)
+            d.draw_text(label, x as i32 + 2, (hud_y - 12.0) as i32, 10, Color::WHITE);
+
+            // Draw selected tool icon if present
+            if let Some(selected_tool) = hand {
+                let tool_texture = match selected_tool {
+                    crate::tools::ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
+                    crate::tools::ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
+                    crate::tools::ToolType::PlaceBlock(blk) => {
+                        Some(crate::inventory_screen::get_item_texture(
+                            &blk.to_item_type(),
+                            &ctx.textures,
+                        ))
+                    }
+                };
+
+                if let Some(texture) = tool_texture {
+                    let scale = hud_box_size / texture.width as f32;
+                    d.draw_texture_ex(texture, Vector2::new(x, hud_y), 0.0, scale, Color::WHITE);
+                }
+
+                // Draw durability bar for selected tool
+                let (current_durability, max_durability) = match selected_tool {
+                    crate::tools::ToolType::Dash => {
+                        if let Some(dash) = &ctx.world_state.player.tool_dash {
+                            (dash.durability, dash.max_durability)
+                        } else {
+                            (0.0, 100.0)
+                        }
+                    }
+                    crate::tools::ToolType::Pickaxe => {
+                        if let Some(pick) = &ctx.world_state.player.tool_pickaxe {
+                            (pick.durability, pick.max_durability)
+                        } else {
+                            (0.0, 100.0)
+                        }
+                    }
+                    crate::tools::ToolType::PlaceBlock(blk) => {
+                        let count = ctx.world_state.player.inventory.count(blk.to_item_type());
+                        (count as f32, count.max(1) as f32)
+                    }
+                };
+
+                let durability_bar_y = hud_y + hud_box_size + 2.0;
+                let durability_bar_width = hud_box_size;
+                let durability_bar_height = 4.0;
+
+                // Background (dark)
+                d.draw_rectangle(
+                    x as i32,
+                    durability_bar_y as i32,
+                    durability_bar_width as i32,
+                    durability_bar_height as i32,
+                    Color::new(50, 50, 50, 200),
+                );
+
+                // Calculate durability percentage
+                let durability_percent = (current_durability / max_durability).max(0.0).min(1.0);
+                let filled_width = durability_bar_width * durability_percent;
+
+                // Color changes based on durability
+                let durability_color = if durability_percent > 0.5 {
+                    Color::new(100, 255, 100, 255) // Green - good condition
+                } else if durability_percent > 0.25 {
+                    Color::new(255, 255, 100, 255) // Yellow - wearing out
+                } else {
+                    Color::new(255, 100, 100, 255) // Red - almost broken
+                };
+
+                // Draw filled portion
+                d.draw_rectangle(
+                    x as i32,
+                    durability_bar_y as i32,
+                    filled_width as i32,
+                    durability_bar_height as i32,
+                    durability_color,
+                );
+
+                // Border
+                d.draw_rectangle_lines(
+                    x as i32,
+                    durability_bar_y as i32,
+                    durability_bar_width as i32,
+                    durability_bar_height as i32,
+                    Color::new(200, 200, 200, 255),
+                );
+            }
+        };
+
+        // Draw left hand slot (left click tool)
+        draw_hand_slot(ctx.world_state.player.left_hand, hud_x, "L");
+
+        // Draw right hand slot (right click tool)
+        hud_x += 50.0;
+        draw_hand_slot(ctx.world_state.player.right_hand, hud_x, "R");
 
         if ctx.debug_enabled {
             d.draw_text(

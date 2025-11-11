@@ -1,4 +1,4 @@
-use crate::terrain_generator::Generator;
+use crate::{inventory::ItemType, terrain_generator::Generator};
 use std::collections::HashMap;
 
 pub const CHUNK_SIZE: usize = 128;
@@ -67,6 +67,15 @@ impl Block {
         match item_type {
             ItemType::Dirt => Some(Block::Dirt),
             ItemType::Stone => Some(Block::Stone),
+        }
+    }
+
+    pub fn to_item_type(self) -> ItemType {
+        use crate::inventory::ItemType;
+        match self {
+            Block::Dirt => ItemType::Dirt,
+            Block::Stone => ItemType::Stone,
+            _ => unimplemented!()
         }
     }
 }

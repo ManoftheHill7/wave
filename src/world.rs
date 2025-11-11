@@ -97,11 +97,7 @@ impl WorldState {
         if self.ghost_mode {
             self.player.update_ghost(dt, &self.terrain, controller);
         } else {
-            self.player.update(dt, &self.terrain, controller);
-        }
-
-        if controller.place_pressed {
-            self.player.try_place_block(&mut self.terrain);
+            self.player.update(dt, &mut self.terrain, controller);
         }
 
         self.tide_timer += dt;

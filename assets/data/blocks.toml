@@ -1,0 +1,12 @@
+# This file is for blocks in the world (tiles)
+[items.stone]
+name = "Stone"
+durability = 5.0
+drops = "stone"
+amount = 1
+
+[items.dirt]
+name = "Dirt"
+durability = 2.0
+drops = "dirt"
+amount = 1

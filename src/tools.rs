@@ -1,10 +1,13 @@
 use toml::Value;
 use toml::map::Map;
 
+use crate::terrain::Block;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ToolType {
     Dash,
     Pickaxe,
+    PlaceBlock(Block)
 }
 
 pub struct ToolDash {

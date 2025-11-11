@@ -7,8 +7,10 @@ pub struct Controller {
     pub input_dir: Vector2,
     pub raycast_direction: Vector2,
     pub menu_pressed: bool,
-    pub use_tool_pressed: bool,
-    pub place_pressed: bool,
+    pub left_hand_pressed: bool,
+    pub right_hand_pressed: bool,
+    pub left_hand_held: bool,
+    pub right_hand_held: bool,
     pub mouse_position: Vector2, // 0.0 to 1.0
 }
 
@@ -21,8 +23,10 @@ impl Controller {
             input_dir: Vector2::zero(),
             raycast_direction: Vector2::zero(),
             menu_pressed: false,
-            use_tool_pressed: false,
-            place_pressed: false,
+            left_hand_pressed: false,
+            right_hand_pressed: false,
+            left_hand_held: false,
+            right_hand_held: false,
             mouse_position: Vector2::zero(),
         }
     }
@@ -71,8 +75,10 @@ impl Controller {
 
         self.menu_pressed = rl.is_key_pressed(KeyboardKey::KEY_TAB);
 
-        self.use_tool_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_LEFT);
-        self.place_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_RIGHT);
+        self.left_hand_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_LEFT);
+        self.right_hand_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_RIGHT);
+        self.left_hand_held = rl.is_mouse_button_down(MouseButton::MOUSE_BUTTON_LEFT);
+        self.right_hand_held = rl.is_mouse_button_down(MouseButton::MOUSE_BUTTON_RIGHT);
     }
 
     pub fn set_raycast_direction(&mut self, direction: Vector2) {
