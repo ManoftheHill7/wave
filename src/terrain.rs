@@ -62,23 +62,6 @@ impl Block {
         )
     }
 
-    pub fn from_item_type(item_type: crate::inventory::ItemType) -> Option<Block> {
-        use crate::inventory::ItemType;
-        match item_type {
-            ItemType::Dirt => Some(Block::Dirt),
-            ItemType::Stone => Some(Block::Stone),
-        }
-    }
-
-    pub fn to_item_type(self) -> ItemType {
-        use crate::inventory::ItemType;
-        match self {
-            Block::Dirt => ItemType::Dirt,
-            Block::Stone => ItemType::Stone,
-            _ => unimplemented!(),
-        }
-    }
-
     pub fn durability(self) -> f32 {
         use std::sync::OnceLock;
         static BLOCKS_DATA: OnceLock<toml::Table> = OnceLock::new();
@@ -88,22 +71,17 @@ impl Block {
             toml::from_str(toml_str).expect("Failed to parse blocks.toml")
         });
 
-        let items = blocks_data
-            .get("items")
+        let blocks = blocks_data
+            .get("blocks")
             .and_then(|v| v.as_table())
-            .expect("Missing [items] table in blocks.toml");
+            .expect("Missing [blocks] table in blocks.toml");
 
-        let key = match self {
-            Block::Stone => "stone",
-            Block::Dirt => "dirt",
-            Block::Grass => "grass",
-            Block::Sand => "sand",
-            Block::Log => "log",
-            Block::Leaf => "leaf",
-            _ => return 1.0, // Default durability for blocks not in config
+        let key = match self.key() {
+            Some(k) => k,
+            None => return 1.0, // Default durability for blocks not in config
         };
 
-        items
+        blocks
             .get(key)
             .and_then(|v| v.as_table())
             .and_then(|t| t.get("durability"))
@@ -118,7 +96,40 @@ impl Block {
             })
             .unwrap_or(1.0)
     }
+
+    /// Returns (item_type, amount) that this block drops when mined
+    pub fn get_drops(self) -> Option<(crate::inventory::ItemType, u32)> {
+        use std::sync::OnceLock;
+        static BLOCKS_DATA: OnceLock<toml::Table> = OnceLock::new();
+
+        let blocks_data = BLOCKS_DATA.get_or_init(|| {
+            let toml_str = include_str!("../assets/data/blocks.toml");
+            toml::from_str(toml_str).expect("Failed to parse blocks.toml")
+        });
+
+        let blocks = blocks_data
+            .get("blocks")
+            .and_then(|v| v.as_table())
+            .expect("Missing [blocks] table in blocks.toml");
+
+        let key = self.key()?; // Return None if block has no key
+
+        let block_data = blocks.get(key).and_then(|v| v.as_table())?;
+
+        let drops_str = block_data.get("drops")?.as_str()?;
+        let amount = block_data
+            .get("amount")
+            .and_then(|v| v.as_integer())
+            .unwrap_or(1) as u32;
+
+        let item_type = crate::inventory::ItemType::from_str(drops_str)?;
+
+        Some((item_type, amount))
+    }
 }
+
+// Generated block-item mappings (to_item_type, from_item_type, and ItemType::to_block)
+include!(concat!(env!("OUT_DIR"), "/generated_block_mappings.rs"));
 
 #[derive(Debug, Clone, Copy)]
 pub struct LiquidData {

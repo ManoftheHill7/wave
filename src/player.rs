@@ -700,6 +700,12 @@ impl Player {
                     pickaxe.durability -= block_durability;
                 }
                 self.is_mining = false;
+
+                // Add drops to inventory before removing the block
+                if let Some((item_type, amount)) = block.get_drops() {
+                    self.inventory.add(item_type, amount);
+                }
+
                 terrain.set(bt.0 as i32, bt.1 as i32, Block::Air);
             }
         }

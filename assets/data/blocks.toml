@@ -1,35 +1,35 @@
 # This file is for blocks in the world (tiles)
-[items.stone]
+[blocks.stone]
 name = "Stone"
 durability = 5.0
 drops = "stone"
 amount = 1
 
-[items.dirt]
+[blocks.dirt]
 name = "Dirt"
 durability = 2.0
 drops = "dirt"
 amount = 1
 
-[items.grass]
+[blocks.grass]
 name = "Grass"
 durability = 2.0
 drops = "dirt"
 amount = 1
 
-[items.sand]
+[blocks.sand]
 name = "Sand"
 durability = 1.5
 drops = "sand"
 amount = 1
 
-[items.log]
+[blocks.log]
 name = "Log"
 durability = 3.0
 drops = "log"
 amount = 1
 
-[items.leaf]
+[blocks.leaf]
 name = "Leaf"
 durability = 0.5
 drops = "leaf"

@@ -8,3 +8,23 @@ type = "block"
 name = "Dirt"
 weight = 2.0
 type = "block"
+
+[items.grass]
+name = "Grass Block"
+weight = 2.0
+type = "block"
+
+[items.sand]
+name = "Sand"
+weight = 2.5
+type = "block"
+
+[items.log]
+name = "Log"
+weight = 4.0
+type = "block"
+
+[items.leaf]
+name = "Leaf"
+weight = 0.5
+type = "block"
