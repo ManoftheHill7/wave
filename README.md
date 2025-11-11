@@ -40,20 +40,20 @@ Things required for the games core concept
 - [x] Stala(gm/ct)ites
 - [ ] Tool - Pickaxe
 - [ ] Ore generation
-- [ ] Bat enemies
-- [ ] Mole enemies
-- [ ] Tool - Spear
 - [ ] Crafting system
 - [ ] Crafting recipes
+- [ ] Save/load/new game
 
 ### Tier 2 Tasks
 
 Things that I would really like to have
 
 - [ ] Tool - Grappling Hook
-- [ ] Save/load/new game
 - [ ] Dynamic lighting
 - [ ] Tool - Lamp
+- [ ] Bat enemies
+- [ ] Mole enemies
+- [ ] Tool - Spear
 - [ ] Parallax backgrounds
 - [ ] Hop over 1 block while walking
 - [ ] Improved hitbox/collision handling

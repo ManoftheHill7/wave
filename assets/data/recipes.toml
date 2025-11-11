@@ -256,6 +256,17 @@ amount = 12
 type = "steel bar"
 amount = 5
 
+[recipes.lamp]
+type = "anvil"
+output = "lamp"
+amount = 1
+[[recipes.lamp.inputs]]
+type = "bronze bar"
+amount = 2
+[[recipes.lamp.inputs]]
+type = "glass"
+amount = 1
+
 [recipes.iron_shell]
 type = "anvil"
 output = "iron shell"
