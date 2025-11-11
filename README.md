@@ -40,18 +40,20 @@ Things required for the games core concept
 - [x] Stala(gm/ct)ites
 - [x] Tool - Pickaxe
 - [ ] Ore generation
-- [ ] Bat enemies
-- [ ] Mole enemies
-- [ ] Tool - Spear
 - [ ] Crafting system
 - [ ] Crafting recipes
+- [ ] Map tile loading
+- [ ] Physics Overhaul
+- [ ] Save/load/new game
 
 ### Tier 2 Tasks
 
 Things that I would really like to have
 
+- [ ] Bat enemies
+- [ ] Mole enemies
+- [ ] Tool - Spear
 - [ ] Tool - Grappling Hook
-- [ ] Save/load/new game
 - [ ] Dynamic lighting
 - [ ] Tool - Lamp
 - [ ] Parallax backgrounds
@@ -60,15 +62,14 @@ Things that I would really like to have
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
 - [ ] Tide clears building items
 - [ ] Multiple cave biomes as you get deeper
-- [ ] Day night cycle
 - [ ] Forageable foods
 - [ ] Tool - Fishing rod
 - [ ] Fishing. Maybe like Stardew Valley?
-- [ ] Dungeons. Sets of connected handmade rooms to find important items
 - [ ] Tool - Glider
 - [ ] Multiple cave generation types
 - [ ] Multiple enemy types
 - [ ] Boots
+- [ ] Boss battles
 
 ### Tier 3 Tasks
 
@@ -80,8 +81,9 @@ Things I will get to if there is time
   - [ ] Creative mode. Infinite of all resources
 - [ ] Decorative tiles for base building
 - [ ] Message in a bottle hints for gameplay
-- [ ] Boss battle
 - [ ] Improve water simulation to support natural waves
+- [ ] Dungeons. Sets of connected handmade rooms to find important items
+- [ ] Day night cycle
 
 ## Links
 
