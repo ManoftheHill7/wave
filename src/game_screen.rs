@@ -349,28 +349,109 @@ fn render_player(
 
     let player_center_x = (player.position.x + player.width / 2.0) * pixels_per_world_unit();
     let player_center_y = (player.position.y + player.height / 2.0) * pixels_per_world_unit();
-    let raycast_end_x = player.raycast_end_pos.x * pixels_per_world_unit();
-    let raycast_end_y = player.raycast_end_pos.y * pixels_per_world_unit();
 
-    if let Some((hit_x, hit_y)) = player.raycast_hit_tile {
+    // Determine highlight color based on whether both tiles are the same
+    let both_same_tile = player.raycast_left_tile.is_some()
+        && player.raycast_right_tile.is_some()
+        && player.raycast_left_tile == player.raycast_right_tile;
+
+    // Draw left hand tile highlight (red or yellow if both same)
+    if let Some((tile_x, tile_y)) = player.raycast_left_tile {
+        let color = if both_same_tile {
+            Color::YELLOW
+        } else {
+            Color::RED
+        };
+
         d.draw_rectangle_lines_ex(
             Rectangle::new(
-                hit_x.floor() * pixels_per_world_unit(),
-                hit_y.floor() * pixels_per_world_unit(),
+                tile_x.floor() * pixels_per_world_unit(),
+                tile_y.floor() * pixels_per_world_unit(),
                 pixels_per_world_unit(),
                 pixels_per_world_unit(),
             ),
             4.0,
-            Color::RED,
+            color,
         );
+
+        // Draw preview for place block tools
+        if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.left_hand {
+            let texture = block_texture(block, textures);
+            let alpha = if both_same_tile { 128 } else { 128 };
+            d.draw_texture_pro(
+                texture,
+                Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
+                Rectangle::new(
+                    tile_x.floor() * pixels_per_world_unit(),
+                    tile_y.floor() * pixels_per_world_unit(),
+                    pixels_per_world_unit(),
+                    pixels_per_world_unit(),
+                ),
+                Vector2::new(0.0, 0.0),
+                0.0,
+                Color::new(255, 255, 255, alpha),
+            );
+        }
     }
+
+    // Draw right hand tile highlight (green or skip if both same)
+    if let Some((tile_x, tile_y)) = player.raycast_right_tile {
+        if !both_same_tile {
+            d.draw_rectangle_lines_ex(
+                Rectangle::new(
+                    tile_x.floor() * pixels_per_world_unit(),
+                    tile_y.floor() * pixels_per_world_unit(),
+                    pixels_per_world_unit(),
+                    pixels_per_world_unit(),
+                ),
+                4.0,
+                Color::GREEN,
+            );
+
+            // Draw preview for place block tools
+            if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.right_hand {
+                let texture = block_texture(block, textures);
+                d.draw_texture_pro(
+                    texture,
+                    Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
+                    Rectangle::new(
+                        tile_x.floor() * pixels_per_world_unit(),
+                        tile_y.floor() * pixels_per_world_unit(),
+                        pixels_per_world_unit(),
+                        pixels_per_world_unit(),
+                    ),
+                    Vector2::new(0.0, 0.0),
+                    0.0,
+                    Color::new(255, 255, 255, 128),
+                );
+            }
+        }
+    }
+
     if debug_render {
-        d.draw_line_ex(
-            Vector2::new(player_center_x, player_center_y),
-            Vector2::new(raycast_end_x, raycast_end_y),
-            2.0,
-            Color::GREEN,
-        );
+        // Draw left hand raycast line
+        if player.left_hand.is_some() {
+            let raycast_left_end_x = player.raycast_left_end.x * pixels_per_world_unit();
+            let raycast_left_end_y = player.raycast_left_end.y * pixels_per_world_unit();
+            d.draw_line_ex(
+                Vector2::new(player_center_x, player_center_y),
+                Vector2::new(raycast_left_end_x, raycast_left_end_y),
+                2.0,
+                Color::RED,
+            );
+        }
+
+        // Draw right hand raycast line
+        if player.right_hand.is_some() {
+            let raycast_right_end_x = player.raycast_right_end.x * pixels_per_world_unit();
+            let raycast_right_end_y = player.raycast_right_end.y * pixels_per_world_unit();
+            d.draw_line_ex(
+                Vector2::new(player_center_x, player_center_y),
+                Vector2::new(raycast_right_end_x, raycast_right_end_y),
+                2.0,
+                Color::GREEN,
+            );
+        }
 
         d.draw_rectangle_lines(
             (player.position.x * pixels_per_world_unit()) as i32,
