@@ -57,10 +57,7 @@ impl FlowData {
 
 impl Block {
     pub fn is_solid(self) -> bool {
-        matches!(
-            self,
-            Block::Dirt | Block::Stone | Block::Grass | Block::Sand | Block::Log | Block::Leaf
-        )
+        !matches!(self, Block::Air | Block::Tide | Block::Stalagmite | Block::Stalactite)
     }
 
     pub fn durability(self) -> f32 {

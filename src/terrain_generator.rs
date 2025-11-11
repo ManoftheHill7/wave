@@ -99,20 +99,151 @@ impl MapGenerator {
             }
         }
 
-        add_ore_vein(&mut chunk, 30, 15, Block::Coal);
+        let a = coord.x.abs();
+        let b = coord.y.abs();
+        let idx = (a + b) * (a + b + 1) / 2 + a;
+        for i in 0..3 {
+            let (mut x, mut y) = halton_2d(i + idx as u32);
+            add_ore_vein(&mut chunk, x as i32, y as i32, Block::Coal);
+        }
 
         chunk
     }
 }
 
+pub fn halton(index: u32, base: u32) -> f64 {
+    let mut result = 0.0;
+    let mut f = 1.0 / base as f64;
+    let mut i = index;
+
+    while i > 0 {
+        result += f * (i % base) as f64;
+        i /= base;
+        f /= base as f64;
+    }
+
+    result
+}
+pub fn halton_2d(index: u32) -> (usize, usize) {
+    let base_a = 2;
+    let base_b = 3;
+    (
+        (halton(index, base_a) * CHUNK_SIZE as f64) as usize,
+        (halton(index, base_b) * CHUNK_SIZE as f64) as usize,
+    )
+}
+
+/// Helper function to check if a block position is adjacent to air
+fn is_adjacent_to_air(chunk: &Chunk, x: i32, y: i32) -> bool {
+    (x > 0 && chunk.get((x - 1) as usize, y as usize) == Block::Air)
+        || (x < CHUNK_SIZE as i32 - 1 && chunk.get((x + 1) as usize, y as usize) == Block::Air)
+        || (y > 0 && chunk.get(x as usize, (y - 1) as usize) == Block::Air)
+        || (y < CHUNK_SIZE as i32 - 1 && chunk.get(x as usize, (y + 1) as usize) == Block::Air)
+}
+
 pub fn add_ore_vein(chunk: &mut Chunk, x: i32, y: i32, ore: Block) {
-    // Algorithm
+    use rand::rngs::StdRng;
+    use rand::{Rng, SeedableRng};
+
+    // Create a seeded RNG based on chunk position and ore position
+    let seed = ((chunk.coord.x as u64) << 32)
+        | ((chunk.coord.y as u64) << 16)
+        | ((x as u64) << 8)
+        | (y as u64);
+    let mut rng = StdRng::seed_from_u64(seed);
+
     // Generate vein size: random number between 2 - 6
-    // Find nearest tile on border of Block::Air not Block::Air
-    // Set x, y to this tile
-    // For each vein size.
-    //   Replace the nearest Stone block in a random direction with the ore type
-    //   Set new x, y to this tile
+    let vein_size = rng.gen_range(2..=6);
+
+    // Find nearest tile on border of Block::Air and not Block::Air
+    let mut current_x = x;
+    let mut current_y = y;
+
+    // Check if starting position is valid (in bounds)
+    if current_x < 0
+        || current_x >= CHUNK_SIZE as i32
+        || current_y < 0
+        || current_y >= CHUNK_SIZE as i32
+    {
+        return;
+    }
+
+    let current_block = chunk.get(current_x as usize, current_y as usize);
+
+    // Determine if we need to search for a stone block adjacent to air
+    let needs_search = match current_block {
+        Block::Air => true, // Need to find stone
+        Block::Stone => !is_adjacent_to_air(chunk, current_x, current_y), // Need better position if not adjacent to air
+        _ => true, // For any other block type, search for valid position
+    };
+
+    if needs_search {
+        // Search in expanding radius for a solid block adjacent to air
+        let mut found = false;
+        'outer: for radius in 1..10 {
+            for dx in -radius..=radius {
+                for dy in -radius..=radius {
+                    let check_x = (current_x + dx).max(0).min(CHUNK_SIZE as i32 - 1);
+                    let check_y = (current_y + dy).max(0).min(CHUNK_SIZE as i32 - 1);
+
+                    let block = chunk.get(check_x as usize, check_y as usize);
+                    if block == Block::Stone && is_adjacent_to_air(chunk, check_x, check_y) {
+                        current_x = check_x;
+                        current_y = check_y;
+                        found = true;
+                        break 'outer;
+                    }
+                }
+            }
+        }
+
+        if !found {
+            return; // No suitable starting position found
+        }
+    }
+
+    // For each vein size, do a "drunk walk" to place ore
+    for _ in 0..vein_size {
+        // Replace current block if it's stone
+        if current_x >= 0
+            && current_x < CHUNK_SIZE as i32
+            && current_y >= 0
+            && current_y < CHUNK_SIZE as i32
+        {
+            let block = chunk.get(current_x as usize, current_y as usize);
+            if block == Block::Stone {
+                chunk.set(current_x as usize, current_y as usize, ore);
+            }
+        }
+
+        // Move in a random direction to find next stone block
+        let directions = [(-1, 0), (1, 0), (0, -1), (0, 1)];
+        let mut attempts = 0;
+        let max_attempts = 8;
+
+        while attempts < max_attempts {
+            let dir = directions[rng.gen_range(0..directions.len())];
+            let new_x = current_x + dir.0;
+            let new_y = current_y + dir.1;
+
+            // Check bounds
+            if new_x >= 0 && new_x < CHUNK_SIZE as i32 && new_y >= 0 && new_y < CHUNK_SIZE as i32 {
+                let block = chunk.get(new_x as usize, new_y as usize);
+                if block == Block::Stone || block == ore {
+                    current_x = new_x;
+                    current_y = new_y;
+                    break;
+                }
+            }
+
+            attempts += 1;
+        }
+
+        // If we couldn't find a valid direction, stop the vein
+        if attempts >= max_attempts {
+            break;
+        }
+    }
 }
 
 pub struct TerrainGenerator {
