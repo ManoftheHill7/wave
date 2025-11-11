@@ -29,12 +29,12 @@ impl InventoryScreen {
         let mouse_y = mouse_pos.y * RENDER_HEIGHT as f32;
 
         // Check if click is in inventory grid
-        let slot_size = 32.0;
-        let slot_padding = 8.0;
+        let slot_size = 24.0;
+        let slot_padding = 4.0;
         let grid_cols = 6;
         let grid_rows = 4;
-        let grid_x = 8.0;
-        let grid_y = 20.0;
+        let grid_x = 32.0;
+        let grid_y = 40.0;
 
         // Collect inventory items
         let inventory_items: Vec<_> = ctx.world_state.player.inventory.iter().collect();
@@ -212,13 +212,13 @@ impl Screen for InventoryScreen {
             // Draw inventory slots grid on the left side
             let slot_texture = &ctx.textures.ui.inventory_slot;
             let slot_size = slot_texture.width as f32;
-            let slot_padding = 8.0;
+            let slot_padding = 4.0;
 
             let grid_cols = 6;
             let grid_rows = 4;
 
-            let grid_x = 8.0;
-            let grid_y = 20.0;
+            let grid_x = 32.0;
+            let grid_y = 40.0;
 
             for row in 0..grid_rows {
                 for col in 0..grid_cols {
@@ -246,13 +246,12 @@ impl Screen for InventoryScreen {
                 // Get texture for this item type
                 let item_texture = get_item_texture(&item_stack.item_type, &ctx.textures);
 
-                // Draw item texture scaled to fit in slot (8x8 texture → 32x32 slot = 4x scale)
-                let texture_scale = slot_size / item_texture.width as f32;
+                // Draw item texture scaled to fit in slot (24x24 texture → 24x24 slot)
                 d.draw_texture_ex(
                     item_texture,
                     Vector2::new(slot_x, slot_y),
                     0.0,
-                    texture_scale,
+                    1.0,
                     Color::WHITE,
                 );
 
@@ -268,15 +267,15 @@ impl Screen for InventoryScreen {
                     &count_text,
                     text_x as i32 + 1,
                     text_y as i32 + 1,
-                    10,
-                    Color::WHITE,
+                    text_size,
+                    Color::RAYWHITE,
                 );
                 d.draw_text(
                     &count_text,
                     text_x as i32,
                     text_y as i32,
                     text_size,
-                    Color::BLACK,
+                    Color::RED,
                 );
             }
 
@@ -362,6 +361,7 @@ impl Screen for InventoryScreen {
 
             // Draw tool selection
             let tool_y = 190;
+            let slot_outline = &ctx.textures.ui.inventory_outline;
 
             let mut draw_tool_slot =
                 |col: usize, tool_texture: Option<&Texture2D>, tool_type: Option<ToolType>| {
@@ -392,13 +392,7 @@ impl Screen for InventoryScreen {
 
                     // Draw selection border if selected
                     if is_selected {
-                        d.draw_rectangle_lines(
-                            tool_x as i32,
-                            tool_y as i32,
-                            slot_size as i32,
-                            slot_size as i32,
-                            Color::GOLD,
-                        );
+                        d.draw_texture(slot_outline, tool_x as i32, tool_y as i32, Color::WHITE);
                     }
                 };
 
