@@ -66,6 +66,94 @@ drops = "copper"
 amount = 1
 image = "tiles.copper_ore"
 
+[blocks.tin]
+name = "Tin"
+type = "solid"
+durability = 3.5
+drops = "tin"
+amount = 1
+image = "tiles.tin_ore"
+
+[blocks.iron]
+name = "Iron"
+type = "solid"
+durability = 4.5
+drops = "iron"
+amount = 1
+image = "tiles.iron_ore"
+
+[blocks.pure_iron]
+name = "Pure Iron"
+type = "solid"
+durability = 5.0
+drops = "pure_iron"
+amount = 1
+image = "tiles.pure_iron_ore"
+
+[blocks.silver]
+name = "Silver"
+type = "solid"
+durability = 5.5
+drops = "silver"
+amount = 1
+image = "tiles.silver_ore"
+
+[blocks.gold]
+name = "Gold"
+type = "solid"
+durability = 6.0
+drops = "gold"
+amount = 1
+image = "tiles.gold_ore"
+
+[blocks.platinum]
+name = "Platinum"
+type = "solid"
+durability = 7.0
+drops = "platinum"
+amount = 1
+image = "tiles.platinum_ore"
+
+[blocks.mithril]
+name = "Mithril"
+type = "solid"
+durability = 8.0
+drops = "mithril"
+amount = 1
+image = "tiles.mithril_ore"
+
+[blocks.lumosite]
+name = "Lumosite"
+type = "solid"
+durability = 6.5
+drops = "lumosite"
+amount = 1
+image = "tiles.lumosite_ore1"
+
+[blocks.ozathinum]
+name = "Ozathinum"
+type = "solid"
+durability = 9.0
+drops = "ozathinum"
+amount = 1
+image = "tiles.ozathinum_ore"
+
+[blocks.torzite]
+name = "Torzite"
+type = "solid"
+durability = 10.0
+drops = "torzite"
+amount = 1
+image = "tiles.torzite_ore"
+
+[blocks.etherealite]
+name = "Etherealite"
+type = "solid"
+durability = 12.0
+drops = "etherealite"
+amount = 1
+image = "tiles.etherealite_ore"
+
 [blocks.water]
 name = "Water"
 type = "liquid"
@@ -94,18 +182,110 @@ type = "spike"
 durability = 0.0
 image = "fallback"
 
+# Early Game Ores (Depth 10-300)
 [ore.coal]
 spawns_from = 0
 spawns_peak = 0
-spawns_to = 400
-spawns_pap = 2 # Spawns Probability at Peak. This is the average number of veins that will spawn in a chunk at the depth of spawns peak
+spawns_to = 1000
+spawns_pap = 2.5
+max_vein_size = 8
+min_vein_size = 3
+
+[ore.tin]
+spawns_from = 10
+spawns_peak = 80
+spawns_to = 250
+spawns_pap = 1.5
+max_vein_size = 8
+min_vein_size = 3
+
+[ore.copper]
+spawns_from = 10
+spawns_peak = 100
+spawns_to = 300
+spawns_pap = 2.0
+max_vein_size = 8
+min_vein_size = 3
+
+# Mid Game Ores (Depth 150-600)
+[ore.iron]
+spawns_from = 150
+spawns_peak = 300
+spawns_to = 600
+spawns_pap = 2.5
+max_vein_size = 8
+min_vein_size = 3
+
+[ore.pure_iron]
+spawns_from = 200
+spawns_peak = 350
+spawns_to = 650
+spawns_pap = 1.8
 max_vein_size = 6
 min_vein_size = 2
 
-[ore.copper]
-spawns_from = 0
-spawns_peak = 100
-spawns_to = 400
-spawns_pap = 2
+[ore.silver]
+spawns_from = 250
+spawns_peak = 450
+spawns_to = 700
+spawns_pap = 1.5
 max_vein_size = 6
 min_vein_size = 2
+
+[ore.gold]
+spawns_from = 300
+spawns_peak = 500
+spawns_to = 750
+spawns_pap = 1.2
+max_vein_size = 6
+min_vein_size = 2
+
+# Late Game Ores (Depth 400-900)
+[ore.platinum]
+spawns_from = 400
+spawns_peak = 600
+spawns_to = 850
+spawns_pap = 1.0
+max_vein_size = 6
+min_vein_size = 2
+
+[ore.mithril]
+spawns_from = 500
+spawns_peak = 700
+spawns_to = 900
+spawns_pap = 1.2
+max_vein_size = 5
+min_vein_size = 2
+
+[ore.lumosite]
+spawns_from = 200
+spawns_peak = 600
+spawns_to = 950
+spawns_pap = 1.5
+max_vein_size = 5
+min_vein_size = 2
+
+# End Game Ores (Depth 600-1000)
+[ore.ozathinum]
+spawns_from = 650
+spawns_peak = 800
+spawns_to = 950
+spawns_pap = 0.8
+max_vein_size = 4
+min_vein_size = 1
+
+[ore.torzite]
+spawns_from = 750
+spawns_peak = 875
+spawns_to = 980
+spawns_pap = 0.6
+max_vein_size = 4
+min_vein_size = 1
+
+[ore.etherealite]
+spawns_from = 850
+spawns_peak = 925
+spawns_to = 1000
+spawns_pap = 0.4
+max_vein_size = 4
+min_vein_size = 1

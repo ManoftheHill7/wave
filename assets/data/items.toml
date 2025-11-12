@@ -30,9 +30,76 @@ type = "block"
 name = "Coal"
 weight = 3.0
 type = "block"
+image = "tiles.coal_ore"
 
 [items.copper]
 name = "Copper"
 weight = 3.0
 type = "block"
 image = "items.copper_ore"
+
+[items.tin]
+name = "Tin"
+weight = 3.0
+type = "block"
+image = "items.tin_ore"
+
+[items.iron]
+name = "Iron"
+weight = 4.0
+type = "block"
+image = "items.iron_ore"
+
+[items.pure_iron]
+name = "Pure Iron"
+weight = 4.5
+type = "block"
+image = "items.pure_iron_ore"
+
+[items.silver]
+name = "Silver"
+weight = 5.0
+type = "block"
+image = "items.silver_ore"
+
+[items.gold]
+name = "Gold"
+weight = 6.0
+type = "block"
+image = "items.gold_ore"
+
+[items.platinum]
+name = "Platinum"
+weight = 7.0
+type = "block"
+image = "items.platinum_ore"
+
+[items.mithril]
+name = "Mithril"
+weight = 8.0
+type = "block"
+image = "items.mithril_ore"
+
+[items.lumosite]
+name = "Lumosite"
+weight = 5.0
+type = "block"
+image = "items.lumosite_ore1"
+
+[items.ozathinum]
+name = "Ozathinum"
+weight = 9.0
+type = "block"
+image = "items.ozathinum_ore"
+
+[items.torzite]
+name = "Torzite"
+weight = 10.0
+type = "block"
+image = "items.torzite_ore"
+
+[items.etherealite]
+name = "Etherealite"
+weight = 12.0
+type = "block"
+image = "items.etherealite_ore"
