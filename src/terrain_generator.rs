@@ -1,5 +1,6 @@
-use crate::terrain::{Block, Chunk, ChunkCoord, CHUNK_SIZE};
+use crate::terrain::{Block, Chunk, ChunkCoord, OreSpawnData, CHUNK_SIZE};
 use noise::{NoiseFn, Perlin};
+use rand::Rng;
 
 const SEA_LEVEL: i32 = 0;
 const SEA_FLOOR: i32 = 30;
@@ -99,20 +100,83 @@ impl MapGenerator {
             }
         }
 
+        // Dynamic ore placement based on chunk depth and spawn data
+        use rand::rngs::StdRng;
+        use rand::SeedableRng;
+
         let a = coord.x.abs();
         let b = coord.y.abs();
         let idx = (a + b) * (a + b + 1) / 2 + a;
-        for i in 0..3 {
-            let (mut x, mut y) = halton_2d(i + idx as u32);
-            add_ore_vein(&mut chunk, x as i32, y as i32, Block::Coal);
-        }
-        for i in 4..6 {
-            let (mut x, mut y) = halton_2d(i + idx as u32);
-            add_ore_vein(&mut chunk, x as i32, y as i32, Block::Copper);
-        }
 
+        // Create seeded RNG for this chunk
+        let chunk_seed = ((coord.x as u64) << 32) | (coord.y as u64);
+        let mut chunk_rng = StdRng::seed_from_u64(chunk_seed);
+
+        // Calculate the average world Y for this chunk
+        let chunk_size = CHUNK_SIZE as i32;
+        let chunk_wy = coord.y * chunk_size + chunk_size / 2;
+
+        // Generate veins for all ore types
+        let mut vein_counter = 0u32;
+        for block in Block::all() {
+            // TODO: seperate ore spawn data from the block enum
+            if let Some(spawn_data) = block.get_ore_spawn_data() {
+                let vein_count = calculate_vein_count(chunk_wy, &spawn_data, &mut chunk_rng);
+
+                for i in 0..vein_count {
+                    let (x, y) = halton_2d(vein_counter + idx as u32);
+                    add_ore_vein(
+                        &mut chunk,
+                        x as i32,
+                        y as i32,
+                        *block,
+                        spawn_data.min_vein_size,
+                        spawn_data.max_vein_size,
+                    );
+                    vein_counter += 1;
+                }
+            }
+        }
 
         chunk
+    }
+}
+
+fn calculate_vein_count<R: Rng>(wy: i32, spawn_data: &OreSpawnData, rng: &mut R) -> usize {
+    // Check if we're in the spawn range
+    if wy < spawn_data.spawns_from || wy > spawn_data.spawns_to {
+        return 0;
+    }
+
+    // Calculate progress through the triangular distribution
+    let progress = if wy <= spawn_data.spawns_peak {
+        // Rising phase: from spawns_from to spawns_peak
+        let range = spawn_data.spawns_peak - spawn_data.spawns_from;
+        if range == 0 {
+            1.0
+        } else {
+            (wy - spawn_data.spawns_from) as f32 / range as f32
+        }
+    } else {
+        // Falling phase: from spawns_peak to spawns_to
+        let range = spawn_data.spawns_to - spawn_data.spawns_peak;
+        if range == 0 {
+            1.0
+        } else {
+            1.0 - (wy - spawn_data.spawns_peak) as f32 / range as f32
+        }
+    };
+
+    // Expected number of veins at this depth
+    let expected_veins = spawn_data.spawns_pap * progress;
+
+    let base_count = expected_veins.floor() as usize;
+    let fractional = expected_veins - expected_veins.floor();
+
+    if rng.gen::<f32>() < fractional {
+        base_count + 1
+    } else {
+        base_count
     }
 }
 
@@ -138,7 +202,6 @@ pub fn halton_2d(index: u32) -> (usize, usize) {
     )
 }
 
-/// Helper function to check if a block position is adjacent to air
 fn is_adjacent_to_air(chunk: &Chunk, x: i32, y: i32) -> bool {
     (x > 0 && chunk.get((x - 1) as usize, y as usize) == Block::Air)
         || (x < CHUNK_SIZE as i32 - 1 && chunk.get((x + 1) as usize, y as usize) == Block::Air)
@@ -146,7 +209,7 @@ fn is_adjacent_to_air(chunk: &Chunk, x: i32, y: i32) -> bool {
         || (y < CHUNK_SIZE as i32 - 1 && chunk.get(x as usize, (y + 1) as usize) == Block::Air)
 }
 
-pub fn add_ore_vein(chunk: &mut Chunk, x: i32, y: i32, ore: Block) {
+pub fn add_ore_vein(chunk: &mut Chunk, x: i32, y: i32, ore: Block, min_size: i32, max_size: i32) {
     use rand::rngs::StdRng;
     use rand::{Rng, SeedableRng};
 
@@ -157,8 +220,8 @@ pub fn add_ore_vein(chunk: &mut Chunk, x: i32, y: i32, ore: Block) {
         | (y as u64);
     let mut rng = StdRng::seed_from_u64(seed);
 
-    // Generate vein size: random number between 2 - 6
-    let vein_size = rng.gen_range(2..=6);
+    // Generate vein size using the provided range
+    let vein_size = rng.gen_range(min_size..=max_size);
 
     // Find nearest tile on border of Block::Air and not Block::Air
     let mut current_x = x;

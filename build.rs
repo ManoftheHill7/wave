@@ -154,6 +154,8 @@ fn generate_blocks(out_dir: &str) {
         .and_then(|v| v.as_table())
         .expect("Missing [blocks] table in blocks.toml");
 
+    let ores = blocks_table.get("ore").and_then(|v| v.as_table());
+
     let mut enum_variants = Vec::new();
     let mut name_match_arms = Vec::new();
     let mut durability_match_arms = Vec::new();
@@ -165,6 +167,7 @@ fn generate_blocks(out_dir: &str) {
     let mut is_spike_match_arms = Vec::new();
     let mut all_blocks = Vec::new();
     let mut texture_match_arms = Vec::new();
+    let mut ore_spawn_match_arms = Vec::new();
 
     for (key, value) in blocks.iter() {
         let table = value.as_table().expect("Block must be a table");
@@ -249,6 +252,51 @@ fn generate_blocks(out_dir: &str) {
 
         all_blocks.push(format!("            Block::{},", variant_name));
 
+        // Check if this block has ore spawn data
+        let has_ore_data = ores.as_ref().and_then(|o| o.get(key)).is_some();
+        if has_ore_data {
+            let ore_table = ores.as_ref().unwrap().get(key).unwrap().as_table().unwrap();
+            let spawns_from = ore_table
+                .get("spawns_from")
+                .and_then(|v| v.as_integer())
+                .unwrap_or(0);
+            let spawns_peak = ore_table
+                .get("spawns_peak")
+                .and_then(|v| v.as_integer())
+                .unwrap_or(100);
+            let spawns_to = ore_table
+                .get("spawns_to")
+                .and_then(|v| v.as_integer())
+                .unwrap_or(200);
+            let spawns_pap = ore_table
+                .get("spawns_pap")
+                .and_then(|v| {
+                    if let Some(f) = v.as_float() {
+                        Some(f)
+                    } else if let Some(i) = v.as_integer() {
+                        Some(i as f64)
+                    } else {
+                        None
+                    }
+                })
+                .unwrap_or(1.0);
+            let min_vein_size = ore_table
+                .get("min_vein_size")
+                .and_then(|v| v.as_integer())
+                .unwrap_or(2);
+            let max_vein_size = ore_table
+                .get("max_vein_size")
+                .and_then(|v| v.as_integer())
+                .unwrap_or(6);
+
+            ore_spawn_match_arms.push(format!(
+                "            Block::{} => Some(OreSpawnData {{ spawns_from: {}, spawns_peak: {}, spawns_to: {}, spawns_pap: {:.1}, min_vein_size: {}, max_vein_size: {} }}),",
+                variant_name, spawns_from, spawns_peak, spawns_to, spawns_pap, min_vein_size, max_vein_size
+            ));
+        } else {
+            ore_spawn_match_arms.push(format!("            Block::{} => None,", variant_name));
+        }
+
         // Generate texture match arm
         if let Some(image_str) = table.get("image").and_then(|v| v.as_str()) {
             // Parse path like "tiles.dirt" or "items.stone"
@@ -271,6 +319,17 @@ fn generate_blocks(out_dir: &str) {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Block {{
 {}
+}}
+
+/// Ore spawn configuration data
+#[derive(Debug, Clone, Copy)]
+pub struct OreSpawnData {{
+    pub spawns_from: i32,
+    pub spawns_peak: i32,
+    pub spawns_to: i32,
+    pub spawns_pap: f32,
+    pub min_vein_size: i32,
+    pub max_vein_size: i32,
 }}
 
 impl Block {{
@@ -339,6 +398,14 @@ impl Block {{
 {}
         }}
     }}
+
+    /// Returns the ore spawn data for this block, if it's an ore.
+    /// Configured in blocks.toml under [ore.blockname] sections.
+    pub fn get_ore_spawn_data(self) -> Option<OreSpawnData> {{
+        match self {{
+{}
+        }}
+    }}
 }}
 "#,
         enum_variants.join("\n"),
@@ -351,7 +418,8 @@ impl Block {{
         is_liquid_match_arms.join("\n"),
         is_spike_match_arms.join("\n"),
         all_blocks.join("\n"),
-        texture_match_arms.join("\n")
+        texture_match_arms.join("\n"),
+        ore_spawn_match_arms.join("\n")
     );
 
     fs::write(&dest_path, generated_code).expect("Failed to write generated blocks");
