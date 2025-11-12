@@ -23,7 +23,7 @@ pub const WALLSLIDE_FRICTION: f32 = 0.85;
 pub const DASH_VELOCITY: f32 = SPEED * 1.7;
 pub const DASHJUMP_COOLDOWN: f32 = 0.075;
 pub const CORNER_CORRECTION_AMOUNT: i32 = 5;
-pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.05;
+pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.25;
 
 pub const BASE_HEIGHT: f32 = 2.0;
 pub const DASH_HEIGHT: f32 = 0.9;

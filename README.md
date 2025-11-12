@@ -56,6 +56,9 @@ Things that I would really like to have
 - [ ] Tool - Grappling Hook
 - [ ] Dynamic lighting
 - [ ] Tool - Lamp
+- [ ] Bat enemies
+- [ ] Mole enemies
+- [ ] Tool - Spear
 - [ ] Parallax backgrounds
 - [ ] Hop over 1 block while walking
 - [ ] Improved hitbox/collision handling
