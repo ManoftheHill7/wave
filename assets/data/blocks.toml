@@ -82,7 +82,8 @@ durability = 0.0
 
 [ore.coal]
 spawns_from = 10
-spawn_peak = 100
+spawns_peak = 100
 spawns_to = 400
+spawns_pap = 2 # Spawns Probability at Peak. This is the average number of veins that will spawn in a chunk at the depth of spawns peak
 max_vein_size = 6
 min_vein_size = 2

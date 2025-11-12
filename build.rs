@@ -37,6 +37,7 @@ fn generate_items(out_dir: &str) {
     let mut weight_match_arms = Vec::new();
     let mut from_str_match_arms = Vec::new();
     let mut all_items = Vec::new();
+    let mut texture_match_arms = Vec::new();
 
     for (key, value) in items.iter() {
         let table = value.as_table().expect("Item must be a table");
@@ -56,6 +57,15 @@ fn generate_items(out_dir: &str) {
             })
             .unwrap_or(1.0);
 
+        // Get optional image field, default to items.{itemname}
+        let texture_path = if let Some(image) = table.get("image").and_then(|v| v.as_str()) {
+            // Parse path like "tools.steel_pickaxe" or "items.stone"
+            format!("textures.{}", image)
+        } else {
+            // Default to textures.items.{key}
+            format!("textures.items.{}", key)
+        };
+
         enum_variants.push(format!("    {},", variant_name));
         name_match_arms.push(format!(
             "            ItemType::{} => \"{}\",",
@@ -71,6 +81,10 @@ fn generate_items(out_dir: &str) {
             variant_name
         ));
         all_items.push(format!("            ItemType::{},", variant_name));
+        texture_match_arms.push(format!(
+            "            ItemType::{} => &{},",
+            variant_name, texture_path
+        ));
     }
 
     let generated_code = format!(
@@ -104,13 +118,23 @@ impl ItemType {{
 {}
         ]
     }}
+
+    /// Returns the texture for this item from the TextureManager.
+    /// The texture path can be customized in items.toml with the 'image' field.
+    /// By default, uses textures.items.{{itemname}}
+    pub fn get_texture<'a>(&self, textures: &'a crate::TextureManager) -> &'a raylib::prelude::Texture2D {{
+        match self {{
+{}
+        }}
+    }}
 }}
 "#,
         enum_variants.join("\n"),
         name_match_arms.join("\n"),
         weight_match_arms.join("\n"),
         from_str_match_arms.join("\n"),
-        all_items.join("\n")
+        all_items.join("\n"),
+        texture_match_arms.join("\n")
     );
 
     fs::write(&dest_path, generated_code).expect("Failed to write generated items");

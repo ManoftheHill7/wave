@@ -148,15 +148,7 @@ impl InventoryScreen {
 }
 
 pub fn get_item_texture<'a>(item_type: &ItemType, textures: &'a TextureManager) -> &'a Texture2D {
-    match item_type {
-        ItemType::Stone => &textures.items.stone,
-        ItemType::Dirt => &textures.items.dirt,
-        ItemType::Grass => unimplemented!(),
-        ItemType::Sand => &textures.items.sand,
-        ItemType::Coal => &textures.items.coal,
-        ItemType::Log => unimplemented!(),
-        ItemType::Leaf => unimplemented!(),
-    }
+    item_type.get_texture(textures)
 }
 
 impl Screen for InventoryScreen {
