@@ -1,5 +1,5 @@
-use toml::Value;
 use toml::map::Map;
+use toml::Value;
 
 use crate::terrain::Block;
 
@@ -7,7 +7,7 @@ use crate::terrain::Block;
 pub enum ToolType {
     Dash,
     Pickaxe,
-    PlaceBlock(Block)
+    PlaceBlock(Block),
 }
 
 pub struct ToolDash {
