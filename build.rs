@@ -164,6 +164,7 @@ fn generate_blocks(out_dir: &str) {
     let mut is_liquid_match_arms = Vec::new();
     let mut is_spike_match_arms = Vec::new();
     let mut all_blocks = Vec::new();
+    let mut texture_match_arms = Vec::new();
 
     for (key, value) in blocks.iter() {
         let table = value.as_table().expect("Block must be a table");
@@ -247,6 +248,22 @@ fn generate_blocks(out_dir: &str) {
         }
 
         all_blocks.push(format!("            Block::{},", variant_name));
+
+        // Generate texture match arm
+        if let Some(image_str) = table.get("image").and_then(|v| v.as_str()) {
+            // Parse path like "tiles.dirt" or "items.stone"
+            let texture_path = format!("textures.{}", image_str);
+            texture_match_arms.push(format!(
+                "            Block::{} => &{},",
+                variant_name, texture_path
+            ));
+        } else {
+            // Default to fallback texture
+            texture_match_arms.push(format!(
+                "            Block::{} => &textures.tiles.{},",
+                variant_name, key
+            ));
+        }
     }
 
     let generated_code = format!(
@@ -313,6 +330,15 @@ impl Block {{
 {}
         ]
     }}
+
+    /// Returns the texture for this block from the TextureManager.
+    /// The texture path can be customized in blocks.toml with the 'image' field.
+    /// By default, uses the fallback texture.
+    pub fn get_texture<'a>(self, textures: &'a crate::TextureManager) -> &'a raylib::prelude::Texture2D {{
+        match self {{
+{}
+        }}
+    }}
 }}
 "#,
         enum_variants.join("\n"),
@@ -324,7 +350,8 @@ impl Block {{
         is_solid_match_arms.join("\n"),
         is_liquid_match_arms.join("\n"),
         is_spike_match_arms.join("\n"),
-        all_blocks.join("\n")
+        all_blocks.join("\n"),
+        texture_match_arms.join("\n")
     );
 
     fs::write(&dest_path, generated_code).expect("Failed to write generated blocks");
@@ -395,7 +422,7 @@ impl Block {{
 {}
         }}
     }}
-    
+
     pub fn from_item_type(item: ItemType) -> Option<Block> {{
         item.to_block()
     }}

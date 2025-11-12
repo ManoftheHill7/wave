@@ -106,6 +106,11 @@ impl MapGenerator {
             let (mut x, mut y) = halton_2d(i + idx as u32);
             add_ore_vein(&mut chunk, x as i32, y as i32, Block::Coal);
         }
+        for i in 4..6 {
+            let (mut x, mut y) = halton_2d(i + idx as u32);
+            add_ore_vein(&mut chunk, x as i32, y as i32, Block::Copper);
+        }
+
 
         chunk
     }

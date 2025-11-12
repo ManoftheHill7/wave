@@ -5,6 +5,7 @@
 name = "Air"
 type = "air"
 durability = 0.0
+image = "fallback"
 
 [blocks.stone]
 name = "Stone"
@@ -47,6 +48,7 @@ type = "solid"
 durability = 0.5
 drops = "leaf"
 amount = 1
+image = "tiles.leaves"
 
 [blocks.coal]
 name = "Coal"
@@ -54,6 +56,15 @@ type = "solid"
 durability = 3.5
 drops = "coal"
 amount = 1
+image = "tiles.coal_ore"
+
+[blocks.copper]
+name = "Copper"
+type = "solid"
+durability = 3.5
+drops = "copper"
+amount = 1
+image = "tiles.copper_ore"
 
 [blocks.water]
 name = "Water"
@@ -69,21 +80,32 @@ durability = 0.0
 name = "Tide"
 type = "air"
 durability = 0.0
+image = "fallback"
 
 [blocks.stalagmite]
 name = "Stalagmite"
 type = "spike"
 durability = 0.0
+image = "fallback"
 
 [blocks.stalactite]
 name = "Stalactite"
 type = "spike"
 durability = 0.0
+image = "fallback"
 
 [ore.coal]
 spawns_from = 10
 spawns_peak = 100
 spawns_to = 400
 spawns_pap = 2 # Spawns Probability at Peak. This is the average number of veins that will spawn in a chunk at the depth of spawns peak
+max_vein_size = 6
+min_vein_size = 2
+
+[ore.copper]
+spawns_from = 10
+spawns_peak = 100
+spawns_to = 400
+spawns_pap = 2
 max_vein_size = 6
 min_vein_size = 2

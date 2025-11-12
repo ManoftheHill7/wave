@@ -49,25 +49,6 @@ fn smooth_camera_to_target(
     camera.target.y = target_y + (change_y + temp_y) * exp;
 }
 
-fn block_texture<'a>(block: Block, textures: &'a crate::TextureManager) -> &'a Texture2D {
-    match block {
-        Block::Dirt => &textures.tiles.dirt,
-        Block::Stone => &textures.tiles.stone,
-        Block::Grass => &textures.tiles.grass,
-        Block::Sand => &textures.tiles.sand,
-        Block::Lava => &textures.tiles.lava,
-        Block::Water => &textures.tiles.water,
-        Block::Log => &textures.tiles.log,
-        Block::Leaf => &textures.tiles.leaves,
-        Block::Coal => &textures.tiles.coal_ore,
-
-        Block::Air => &textures.fallback,
-        Block::Tide => &textures.fallback,
-        Block::Stalagmite => &textures.fallback,
-        Block::Stalactite => &textures.fallback,
-    }
-}
-
 fn render_tile(
     d: &mut RaylibDrawHandle,
     x: f32,
@@ -159,7 +140,7 @@ fn render_terrain(
                         Some(src_rect),
                     );
                 } else {
-                    let texture = block_texture(block, textures);
+                    let texture = block.get_texture(textures);
                     render_tile(d, x as f32, y as f32, texture, None);
                 }
             } else if block == Block::Stalagmite || block == Block::Stalactite {
@@ -377,7 +358,7 @@ fn render_player(
 
         // Draw preview for place block tools
         if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.left_hand {
-            let texture = block_texture(block, textures);
+            let texture = block.get_texture(textures);
             let alpha = if both_same_tile { 128 } else { 128 };
             d.draw_texture_pro(
                 texture,
@@ -411,7 +392,7 @@ fn render_player(
 
             // Draw preview for place block tools
             if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.right_hand {
-                let texture = block_texture(block, textures);
+                let texture = block.get_texture(textures);
                 d.draw_texture_pro(
                     texture,
                     Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
