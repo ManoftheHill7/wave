@@ -3,34 +3,81 @@ use std::fs;
 use std::path::Path;
 
 fn main() {
-    println!("cargo:rerun-if-changed=assets/data/items.toml");
-    println!("cargo:rerun-if-changed=assets/data/blocks.toml");
+    println!("cargo:rerun-if-changed=assets/data");
 
     let out_dir = env::var("OUT_DIR").unwrap();
 
+    // Load all TOML data from assets/data/
+    let game_data = load_game_data();
+
     // Generate items
-    generate_items(&out_dir);
+    generate_items(&out_dir, &game_data);
 
     // Generate blocks
-    generate_blocks(&out_dir);
+    generate_blocks(&out_dir, &game_data);
 
     // Generate block-item mappings
-    generate_block_mappings(&out_dir);
+    generate_block_mappings(&out_dir, &game_data);
 }
 
-fn generate_items(out_dir: &str) {
+/// Loads and merges all TOML files from assets/data/ directory
+fn load_game_data() -> toml::Table {
+    let data_dir = Path::new("assets/data");
+    let mut merged_table = toml::Table::new();
+
+    // Read all .toml files in the directory
+    let entries = fs::read_dir(data_dir)
+        .expect("Failed to read assets/data directory")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().and_then(|s| s.to_str()) == Some("toml"))
+        .collect::<Vec<_>>();
+
+    // Sort by filename for deterministic order
+    let mut entries = entries;
+    entries.sort_by_key(|e| e.file_name());
+
+    for entry in entries {
+        let path = entry.path();
+        let file_name = path.file_name().unwrap().to_string_lossy();
+
+        println!("cargo:rerun-if-changed={}", path.display());
+
+        let content = fs::read_to_string(&path)
+            .unwrap_or_else(|e| panic!("Failed to read {}: {}", file_name, e));
+
+        let table: toml::Table = toml::from_str(&content)
+            .unwrap_or_else(|e| panic!("Failed to parse {}: {}", file_name, e));
+
+        // Merge tables
+        for (key, value) in table {
+            if merged_table.contains_key(&key) {
+                // If the key already exists and both are tables, merge them
+                if let (Some(existing_table), toml::Value::Table(new_table)) = (
+                    merged_table.get_mut(&key).and_then(|v| v.as_table_mut()),
+                    &value,
+                ) {
+                    for (sub_key, sub_value) in new_table {
+                        existing_table.insert(sub_key.clone(), sub_value.clone());
+                    }
+                } else {
+                    panic!("Conflicting key '{}' in TOML files", key);
+                }
+            } else {
+                merged_table.insert(key, value);
+            }
+        }
+    }
+
+    merged_table
+}
+
+fn generate_items(out_dir: &str, game_data: &toml::Table) {
     let dest_path = Path::new(&out_dir).join("generated_items.rs");
 
-    let toml_content =
-        fs::read_to_string("assets/data/items.toml").expect("Failed to read items.toml");
-
-    let items_table: toml::Table =
-        toml::from_str(&toml_content).expect("Failed to parse items.toml");
-
-    let items = items_table
+    let items = game_data
         .get("items")
         .and_then(|v| v.as_table())
-        .expect("Missing [items] table in items.toml");
+        .expect("Missing [items] table in game data");
 
     let mut enum_variants = Vec::new();
     let mut name_match_arms = Vec::new();
@@ -140,21 +187,15 @@ impl ItemType {{
     fs::write(&dest_path, generated_code).expect("Failed to write generated items");
 }
 
-fn generate_blocks(out_dir: &str) {
+fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
     let dest_path = Path::new(&out_dir).join("generated_blocks.rs");
 
-    let toml_content =
-        fs::read_to_string("assets/data/blocks.toml").expect("Failed to read blocks.toml");
-
-    let blocks_table: toml::Table =
-        toml::from_str(&toml_content).expect("Failed to parse blocks.toml");
-
-    let blocks = blocks_table
+    let blocks = game_data
         .get("blocks")
         .and_then(|v| v.as_table())
-        .expect("Missing [blocks] table in blocks.toml");
+        .expect("Missing [blocks] table in game data");
 
-    let ores = blocks_table.get("ore").and_then(|v| v.as_table());
+    let ores = game_data.get("ore").and_then(|v| v.as_table());
 
     let mut enum_variants = Vec::new();
     let mut name_match_arms = Vec::new();
@@ -425,24 +466,16 @@ impl Block {{
     fs::write(&dest_path, generated_code).expect("Failed to write generated blocks");
 }
 
-fn generate_block_mappings(out_dir: &str) {
-    let items_content =
-        fs::read_to_string("assets/data/items.toml").expect("Failed to read items.toml");
-    let items_table: toml::Table =
-        toml::from_str(&items_content).expect("Failed to parse items.toml");
-    let items = items_table
+fn generate_block_mappings(out_dir: &str, game_data: &toml::Table) {
+    let items = game_data
         .get("items")
         .and_then(|v| v.as_table())
-        .expect("Missing [items] table in items.toml");
+        .expect("Missing [items] table in game data");
 
-    let blocks_content =
-        fs::read_to_string("assets/data/blocks.toml").expect("Failed to read blocks.toml");
-    let blocks_table: toml::Table =
-        toml::from_str(&blocks_content).expect("Failed to parse blocks.toml");
-    let blocks = blocks_table
+    let blocks = game_data
         .get("blocks")
         .and_then(|v| v.as_table())
-        .expect("Missing [blocks] table in blocks.toml");
+        .expect("Missing [blocks] table in game data");
 
     // Get all block-type items
     let mut block_items: std::collections::HashMap<String, String> =
