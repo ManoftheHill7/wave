@@ -54,6 +54,7 @@ Things that I would really like to have
 - [ ] Bat enemies
 - [ ] Mole enemies
 - [ ] Tool - Spear
+- [ ] Crouching
 - [ ] Tool - Grappling Hook
 - [ ] Dynamic lighting
 - [ ] Tool - Lamp
