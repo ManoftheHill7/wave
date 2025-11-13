@@ -39,10 +39,10 @@ Things required for the games core concept
 - [x] Load map from file
 - [x] Stala(gm/ct)ites
 - [x] Tool - Pickaxe
-- [ ] Ore generation
+- [x] Ore generation
+- [x] Map tile loading
 - [ ] Crafting system
 - [ ] Crafting recipes
-- [ ] Map tile loading
 - [ ] Physics Overhaul
 - [ ] Save/load/new game
 
