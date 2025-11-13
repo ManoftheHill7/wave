@@ -157,7 +157,7 @@ impl Screen for CraftingScreen {
             );
         }
 
-        // Get filtered recipes before borrowing render_target mutably
+        // Get filtered recipes
         let filtered_recipes = self.get_filtered_recipes(ctx);
 
         let render_target = self.render_target.as_mut().unwrap();
