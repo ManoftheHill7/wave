@@ -18,6 +18,9 @@ fn main() {
 
     // Generate block-item mappings
     generate_block_mappings(&out_dir, &game_data);
+
+    // Generate recipes
+    generate_recipes(&out_dir, &game_data);
 }
 
 /// Loads and merges all TOML files from assets/data/ directory
@@ -560,3 +563,192 @@ fn to_pascal_case(s: &str) -> String {
         })
         .collect()
 }
+
+fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
+    let dest_path = Path::new(&out_dir).join("generated_recipes.rs");
+
+    let recipes = game_data
+        .get("recipes")
+        .and_then(|v| v.as_table())
+        .expect("Missing [recipes] table in game data");
+
+    // Get all available items to validate recipes
+    let items = game_data
+        .get("items")
+        .and_then(|v| v.as_table())
+        .expect("Missing [items] table in game data");
+    let available_items: std::collections::HashSet<String> = items.keys().cloned().collect();
+
+    let mut recipe_definitions = Vec::new();
+    let mut skipped_recipes = Vec::new();
+
+    for (key, value) in recipes.iter() {
+        let table = value.as_table().expect("Recipe must be a table");
+
+        let recipe_type = table
+            .get("type")
+            .and_then(|v| v.as_str())
+            .expect(&format!("Recipe {} missing 'type' field", key));
+
+        let output = table
+            .get("output")
+            .and_then(|v| v.as_str())
+            .expect(&format!("Recipe {} missing 'output' field", key));
+
+        let output_amount = table
+            .get("amount")
+            .and_then(|v| v.as_integer())
+            .unwrap_or(1) as u32;
+
+        let inputs = table
+            .get("inputs")
+            .and_then(|v| v.as_array())
+            .expect(&format!("Recipe {} missing 'inputs' field", key));
+
+        // Check if all inputs and output exist in items.toml
+        let output_normalized = output.replace(" ", "_");
+        if !available_items.contains(&output_normalized) {
+            skipped_recipes.push(format!("{} (output '{}' not found)", key, output));
+            continue;
+        }
+
+        let mut all_inputs_exist = true;
+        for input in inputs {
+            let input_table = input.as_table().expect("Input must be a table");
+            let input_type = input_table
+                .get("type")
+                .and_then(|v| v.as_str())
+                .expect("Input missing 'type' field");
+            let input_type_normalized = input_type.replace(" ", "_");
+            if !available_items.contains(&input_type_normalized) {
+                skipped_recipes.push(format!("{} (input '{}' not found)", key, input_type));
+                all_inputs_exist = false;
+                break;
+            }
+        }
+
+        if !all_inputs_exist {
+            continue;
+        }
+
+        // Generate input definitions
+        let mut input_defs = Vec::new();
+        for input in inputs {
+            let input_table = input.as_table().expect("Input must be a table");
+            let input_type = input_table
+                .get("type")
+                .and_then(|v| v.as_str())
+                .expect("Input missing 'type' field");
+            let input_amount = input_table
+                .get("amount")
+                .and_then(|v| v.as_integer())
+                .unwrap_or(1) as u32;
+
+            // Convert spaces to underscores, then to PascalCase
+            let input_type_normalized = input_type.replace(" ", "_");
+            let input_item = to_pascal_case(&input_type_normalized);
+            input_defs.push(format!(
+                "RecipeInput {{ item_type: ItemType::{}, amount: {} }}",
+                input_item, input_amount
+            ));
+        }
+
+        let recipe_type_enum = match recipe_type {
+            "workbench" => "RecipeType::Workbench",
+            "furnace" => "RecipeType::Furnace",
+            "anvil" => "RecipeType::Anvil",
+            _ => panic!("Unknown recipe type: {}", recipe_type),
+        };
+
+        // Convert spaces to underscores, then to PascalCase
+        let output_normalized = output.replace(" ", "_");
+        let output_item = to_pascal_case(&output_normalized);
+        
+        recipe_definitions.push(format!(
+            r#"    Recipe {{
+        name: "{}",
+        recipe_type: {},
+        output: ItemType::{},
+        output_amount: {},
+        inputs: &[{}],
+    }}"#,
+            key,
+            recipe_type_enum,
+            output_item,
+            output_amount,
+            input_defs.join(", ")
+        ));
+    }
+
+    if !skipped_recipes.is_empty() {
+        println!("cargo:warning=Skipped {} recipes due to missing items:", skipped_recipes.len());
+        for skipped in &skipped_recipes {
+            println!("cargo:warning=  - {}", skipped);
+        }
+    }
+
+    let generated_code = format!(
+        r#"// Generated recipe definitions
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RecipeType {{
+    Workbench,
+    Furnace,
+    Anvil,
+}}
+
+#[derive(Debug, Clone, Copy)]
+pub struct RecipeInput {{
+    pub item_type: ItemType,
+    pub amount: u32,
+}}
+
+#[derive(Debug, Clone)]
+pub struct Recipe {{
+    pub name: &'static str,
+    pub recipe_type: RecipeType,
+    pub output: ItemType,
+    pub output_amount: u32,
+    pub inputs: &'static [RecipeInput],
+}}
+
+impl Recipe {{
+    /// Check if the player has enough items in inventory to craft this recipe
+    pub fn can_craft(&self, inventory: &crate::inventory::Inventory) -> bool {{
+        for input in self.inputs {{
+            if inventory.count(input.item_type) < input.amount {{
+                return false;
+            }}
+        }}
+        true
+    }}
+
+    /// Craft this recipe, removing ingredients and adding output to inventory
+    /// Returns true if successful, false if couldn't craft
+    pub fn craft(&self, inventory: &mut crate::inventory::Inventory) -> bool {{
+        // Check again to be safe
+        if !self.can_craft(inventory) {{
+            return false;
+        }}
+
+        // Remove ingredients
+        for input in self.inputs {{
+            inventory.take(input.item_type, input.amount);
+        }}
+
+        // Add output
+        inventory.add(self.output, self.output_amount);
+
+        true
+    }}
+}}
+
+pub static ALL_RECIPES: &[Recipe] = &[
+{}
+];
+"#,
+        recipe_definitions.join(",\n")
+    );
+
+    fs::write(&dest_path, generated_code).expect("Failed to write generated recipes");
+}
+

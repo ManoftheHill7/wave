@@ -41,9 +41,10 @@ Things required for the games core concept
 - [x] Tool - Pickaxe
 - [x] Ore generation
 - [x] Map tile loading
-- [ ] Crafting system
+- [x] Crafting system
 - [ ] Crafting recipes
 - [ ] Physics Overhaul
+- [ ] Crafting only when near crafting table items
 - [ ] Save/load/new game
 
 ### Tier 2 Tasks

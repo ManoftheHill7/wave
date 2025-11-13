@@ -26,6 +26,10 @@ name = "Sand"
 weight = 2.5
 type = "block"
 
+[items.glass]
+name = "Glass"
+weight = 0.5
+
 [items.coal]
 name = "Coal"
 weight = 3.0

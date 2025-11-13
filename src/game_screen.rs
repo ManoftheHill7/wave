@@ -495,6 +495,11 @@ impl Screen for GameScreen {
             return ScreenCommand::Push(Box::new(InventoryScreen::new()));
         }
 
+        // Check if M is pressed to open crafting
+        if ctx.controller.crafting_pressed {
+            return ScreenCommand::Push(Box::new(crate::crafting_screen::CraftingScreen::new()));
+        }
+
         ScreenCommand::None
     }
 

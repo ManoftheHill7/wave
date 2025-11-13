@@ -16,6 +16,8 @@ fn main() {
     use inventory::ItemType;
     ctx.world_state.player.inventory.add(ItemType::Stone, 3);
     ctx.world_state.player.inventory.add(ItemType::Dirt, 10);
+    ctx.world_state.player.inventory.add(ItemType::Copper, 10);
+    ctx.world_state.player.inventory.add(ItemType::Sand, 10);
 
     while !rl.window_should_close() && !manager.is_empty() {
         let dt = rl.get_frame_time();
