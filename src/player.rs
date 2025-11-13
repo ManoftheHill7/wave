@@ -506,7 +506,9 @@ impl Player {
                     self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
                 }
             }
-            self.velocity.x += topout_vel;
+            if !self.is_jumping {
+                self.velocity.x += topout_vel;
+            }
         }
         self.apply_movement_and_collision(dt, terrain);
         if self.spike_check(terrain) {
@@ -648,7 +650,6 @@ impl Player {
                     self.width - little_buffer * 2.0,
                     self.height - double_buffer,
                 ) {
-                    dbg!("double collide");
                     dx = ox;
                 }
                 self.velocity.x = 0.0;
@@ -659,7 +660,9 @@ impl Player {
 
         let target_y = self.position.y + self.velocity.y * dt;
         let mut dy = self.position.y;
+        let mut oy;
         while dy != target_y {
+            oy = dy;
             dy = Self::move_toward(dy, target_y, step_size);
             if let Some((_, ty)) = terrain.collides_with_solid_terrain(
                 self.position.x + buffer,
@@ -672,6 +675,14 @@ impl Player {
                     dy = ty - self.height;
                 } else {
                     dy = ty + 1.0;
+                }
+                if let Some((_, _)) = terrain.collides_with_solid_terrain(
+                    dx + buffer,
+                    dy + little_buffer,
+                    self.width - double_buffer,
+                    self.height - little_buffer * 2.0,
+                ) {
+                    dy = oy;
                 }
                 self.velocity.y = 0.0;
                 break;
@@ -820,7 +831,7 @@ impl Player {
                     self.started_mining_at = self.time;
                     self.currently_mining = Some(bt);
                 } else {
-                    self.facing_dir = (raycast_end.x - self.position.x).signum() as i32;
+                    self.facing_dir = (raycast_end.x - (self.position.x + self.width / 2.0)).signum() as i32;
                     if let Some(ot) = self.currently_mining {
                         if ot.0 != bt.0 || ot.1 != bt.1 {
                             self.started_mining_at = self.time;
