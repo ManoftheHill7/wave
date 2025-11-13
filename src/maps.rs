@@ -1,5 +1,5 @@
-use raylib::prelude::*;
 use rand::Rng;
+use raylib::prelude::*;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -44,7 +44,7 @@ impl std::fmt::Display for EdgeType {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum MapOrientation {
     Horizontal, // 64x32
     Vertical,   // 32x64
@@ -104,6 +104,9 @@ impl MapEdges {
 pub struct Map {
     pub name: String,
     pub image: Image,
+    pub pixels: Vec<u8>, // RGB pixels pre-extracted for fast access
+    pub width: i32,
+    pub height: i32,
     pub orientation: MapOrientation,
     pub edges: MapEdges,
 }
@@ -118,20 +121,45 @@ impl Map {
 
         let edges = extract_edges_from_image(&mut image, orientation);
 
+        // Pre-extract pixels for fast access without needing mutable reference
+        let width = image.width;
+        let height = image.height;
+        let mut pixels = Vec::new();
+        for y in 0..height {
+            for x in 0..width {
+                let color = image.get_color(x, y);
+                pixels.push(color.r);
+                pixels.push(color.g);
+                pixels.push(color.b);
+            }
+        }
+
         Ok(Map {
             name,
             image,
+            pixels,
+            width,
+            height,
             orientation,
             edges,
         })
+    }
+
+    /// Get pixel color at position without needing mutable reference
+    pub fn get_pixel(&self, x: i32, y: i32) -> (u8, u8, u8) {
+        if x < 0 || x >= self.width || y < 0 || y >= self.height {
+            return (0, 0, 0); // Black for out of bounds
+        }
+        let idx = ((y * self.width + x) * 3) as usize;
+        (self.pixels[idx], self.pixels[idx + 1], self.pixels[idx + 2])
     }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum EdgeConstraint {
-    Any,                    // No constraint
-    Exact(EdgeType),        // Must match exactly
-    Compatible(EdgeType),   // Must be compatible
+    Any,                  // No constraint
+    Exact(EdgeType),      // Must match exactly
+    Compatible(EdgeType), // Must be compatible
 }
 
 pub struct MapQuery {
@@ -288,10 +316,7 @@ impl MapSet {
     }
 
     pub fn find_matching(&self, query: &MapQuery) -> Vec<&Map> {
-        self.maps
-            .iter()
-            .filter(|map| query.matches(map))
-            .collect()
+        self.maps.iter().filter(|map| query.matches(map)).collect()
     }
 
     pub fn get_random<R: Rng>(&self, query: &MapQuery, rng: &mut R) -> Option<&Map> {
@@ -304,11 +329,7 @@ impl MapSet {
         }
     }
 
-    pub fn get_by_edges(
-        &self,
-        orientation: MapOrientation,
-        edges: MapEdges,
-    ) -> Vec<&Map> {
+    pub fn get_by_edges(&self, orientation: MapOrientation, edges: MapEdges) -> Vec<&Map> {
         let index_map = match orientation {
             MapOrientation::Horizontal => &self.horizontal_index,
             MapOrientation::Vertical => &self.vertical_index,

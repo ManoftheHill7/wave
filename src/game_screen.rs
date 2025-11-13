@@ -1,6 +1,6 @@
 use crate::inventory_screen::InventoryScreen;
 use crate::player::{Player, SPIKE_IMMUNITY_COOLDOWN};
-use crate::terrain::{Block, Terrain, CELL_RESOLUTION, NO_LIQUID_THRESHOLD};
+use crate::terrain::{Block, Terrain, CELL_RESOLUTION, CHUNK_SIZE, NO_LIQUID_THRESHOLD};
 use crate::{pixels_per_world_unit, GameContext, Neighbors, ShaderLocs};
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
@@ -819,10 +819,17 @@ impl Screen for GameScreen {
         draw_hand_slot(ctx.world_state.player.right_hand, hud_x, "R");
 
         if ctx.debug_enabled {
+            let player_x = ctx.world_state.player.position.x;
+            let player_y = ctx.world_state.player.position.y;
+            let chunk_x = (player_x as i32).div_euclid(CHUNK_SIZE as i32);
+            let chunk_y = (player_y as i32).div_euclid(CHUNK_SIZE as i32);
+            let local_x = (player_x as i32).rem_euclid(CHUNK_SIZE as i32);
+            let local_y = (player_y as i32).rem_euclid(CHUNK_SIZE as i32);
+
             d.draw_text(
                 &format!(
-                    "Pos: ({:.2}, {:.2})",
-                    ctx.world_state.player.position.x, ctx.world_state.player.position.y
+                    "Pos: ({:.2}, {:.2}) | Chunk: ({}, {}) | Local: ({}, {})",
+                    player_x, player_y, chunk_x, chunk_y, local_x, local_y
                 ),
                 10,
                 10,

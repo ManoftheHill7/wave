@@ -32,7 +32,9 @@ pub use game_screen::GameScreen;
 pub use world::WorldState;
 
 // Re-export map system types
-pub use maps::{EdgeConstraint, EdgeType, Map, MapEdges, MapOrientation, MapQuery, MapSet, MapStats};
+pub use maps::{
+    EdgeConstraint, EdgeType, Map, MapEdges, MapOrientation, MapQuery, MapSet, MapStats,
+};
 
 // Export types and structs from main
 use raylib::prelude::*;

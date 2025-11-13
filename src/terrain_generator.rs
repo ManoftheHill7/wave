@@ -1,6 +1,9 @@
+use crate::maps::{EdgeConstraint, EdgeType, MapOrientation, MapQuery, MapSet};
 use crate::terrain::{Block, Chunk, ChunkCoord, OreSpawnData, CHUNK_SIZE};
 use noise::{NoiseFn, Perlin};
 use rand::Rng;
+use std::collections::HashMap;
+use std::path::Path;
 
 const SEA_LEVEL: i32 = 0;
 const SEA_FLOOR: i32 = 30;
@@ -12,7 +15,7 @@ pub enum Generator {
 }
 
 impl Generator {
-    pub fn generate_chunk(&self, coord: ChunkCoord) -> Chunk {
+    pub fn generate_chunk(&mut self, coord: ChunkCoord) -> Chunk {
         match self {
             Generator::Procedural(gen) => gen.generate_chunk(coord),
             Generator::Map(gen) => gen.generate_chunk(coord),
@@ -314,18 +317,349 @@ pub fn add_ore_vein(chunk: &mut Chunk, x: i32, y: i32, ore: Block, min_size: i32
     }
 }
 
+// Identifies which half of a tile this is
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum HalfTilePosition {
+    Left,   // Left half of horizontal tile (32x32)
+    Right,  // Right half of horizontal tile (32x32)
+    Top,    // Top half of vertical tile (32x32)
+    Bottom, // Bottom half of vertical tile (32x32)
+}
+
+// A half-tile stores the full tile data and which portion it represents
+#[derive(Clone)]
+struct HalfTile {
+    position: HalfTilePosition,
+    edges: crate::maps::MapEdges,
+    pixels: Vec<u8>, // Full tile's RGB pixels
+    width: i32,      // Full tile's width
+    height: i32,     // Full tile's height
+}
+
+// Coordinate in the half-tile grid (each half-tile is 32x32 pixels)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct HalfTileCoord {
+    x: i32, // x * 32 = world pixel x
+    y: i32, // y * 32 = world pixel y
+}
+
 pub struct TerrainGenerator {
     seed: u64,
     noise: Perlin,
+    map_set: MapSet,
+    // Grid storing which half-tile occupies each 32x32 cell
+    half_tile_grid: HashMap<HalfTileCoord, HalfTile>,
+}
+
+impl HalfTile {
+    fn get_pixel(&self, x: i32, y: i32) -> (u8, u8, u8) {
+        if x < 0 || x >= self.width || y < 0 || y >= self.height {
+            return (0, 0, 0); // Black for out of bounds
+        }
+        let idx = ((y * self.width + x) * 3) as usize;
+        (self.pixels[idx], self.pixels[idx + 1], self.pixels[idx + 2])
+    }
 }
 
 impl TerrainGenerator {
     pub fn new(seed: u64) -> Self {
         let noise = Perlin::new(seed as u32);
-        TerrainGenerator { seed, noise }
+
+        // Load map tiles from assets/maps directory
+        let map_set = MapSet::load_from_directory(Path::new("assets/maps")).unwrap_or_else(|e| {
+            eprintln!("Warning: Failed to load maps: {}. Using empty MapSet.", e);
+            MapSet::new()
+        });
+
+        println!(
+            "Loaded {} map tiles ({} horizontal, {} vertical)",
+            map_set.len(),
+            map_set.count_horizontal(),
+            map_set.count_vertical()
+        );
+
+        TerrainGenerator {
+            seed,
+            noise,
+            map_set,
+            half_tile_grid: HashMap::new(),
+        }
     }
 
-    pub fn generate_chunk(&self, coord: ChunkCoord) -> Chunk {
+    /// Get the 4 half-tile coordinates that make up a chunk (64x64 = 2x2 grid of 32x32 half-tiles)
+    fn get_half_tile_coords_for_chunk(&self, coord: ChunkCoord) -> [HalfTileCoord; 4] {
+        let base_x = coord.x * 2; // Each chunk is 2 half-tiles wide
+        let base_y = coord.y * 2; // Each chunk is 2 half-tiles tall
+        [
+            HalfTileCoord {
+                x: base_x,
+                y: base_y,
+            }, // Top-left
+            HalfTileCoord {
+                x: base_x + 1,
+                y: base_y,
+            }, // Top-right
+            HalfTileCoord {
+                x: base_x,
+                y: base_y + 1,
+            }, // Bottom-left
+            HalfTileCoord {
+                x: base_x + 1,
+                y: base_y + 1,
+            }, // Bottom-right
+        ]
+    }
+
+    /// Determine which half-tile position this coordinate represents based on herringbone pattern
+    fn calculate_half_tile_position(
+        &self,
+        half_coord: HalfTileCoord,
+    ) -> (MapOrientation, HalfTilePosition, HalfTileCoord) {
+        // Herringbone pattern logic:
+        // - Pattern alternates H-V based on diagonal position
+        // - Horizontal tiles (64x32) occupy 2 horizontal half-tiles
+        // - Vertical tiles (32x64) occupy 2 vertical half-tiles
+
+        let diff = half_coord.x - half_coord.y;
+        let modulo = diff.rem_euclid(4);
+
+        match modulo {
+            0 => (
+                MapOrientation::Horizontal,
+                HalfTilePosition::Left,
+                half_coord,
+            ),
+            1 => {
+                let tile_origin = HalfTileCoord {
+                    x: half_coord.x - 1,
+                    y: half_coord.y,
+                };
+                (
+                    MapOrientation::Horizontal,
+                    HalfTilePosition::Right,
+                    tile_origin,
+                )
+            }
+            2 => {
+                let tile_origin = HalfTileCoord {
+                    x: half_coord.x,
+                    y: half_coord.y - 1,
+                };
+                (
+                    MapOrientation::Vertical,
+                    HalfTilePosition::Bottom,
+                    tile_origin,
+                )
+            }
+            3 => (MapOrientation::Vertical, HalfTilePosition::Top, half_coord),
+            _ => unreachable!(),
+        }
+    }
+
+    /// Ensure a half-tile exists in the grid, generating the full tile if necessary
+    fn ensure_half_tile(&mut self, half_coord: HalfTileCoord) {
+        if self.half_tile_grid.contains_key(&half_coord) {
+            return;
+        }
+
+        let (orientation, position, tile_origin) = self.calculate_half_tile_position(half_coord);
+
+        // Check if the tile origin already has a half-tile (meaning the full tile was already generated)
+        if let Some(existing_tile) = self.half_tile_grid.get(&tile_origin).cloned() {
+            // Use the existing tile data for this half
+            let half_tile = HalfTile {
+                position,
+                edges: existing_tile.edges,
+                pixels: existing_tile.pixels.clone(),
+                width: existing_tile.width,
+                height: existing_tile.height,
+            };
+            self.half_tile_grid.insert(half_coord, half_tile);
+            return;
+        }
+
+        // Generate the full tile with constraints
+        let (edges, pixels, width, height) =
+            self.generate_tile_with_constraints(orientation, tile_origin);
+
+        // Store both halves of the tile in the grid
+        let (first_coord, first_position, second_coord, second_position) = match orientation {
+            MapOrientation::Horizontal => (
+                tile_origin,
+                HalfTilePosition::Left,
+                HalfTileCoord {
+                    x: tile_origin.x + 1,
+                    y: tile_origin.y,
+                },
+                HalfTilePosition::Right,
+            ),
+            MapOrientation::Vertical => (
+                tile_origin,
+                HalfTilePosition::Top,
+                HalfTileCoord {
+                    x: tile_origin.x,
+                    y: tile_origin.y + 1,
+                },
+                HalfTilePosition::Bottom,
+            ),
+        };
+
+        let first_half = HalfTile {
+            position: first_position,
+            edges,
+            pixels: pixels.clone(),
+            width,
+            height,
+        };
+
+        let second_half = HalfTile {
+            position: second_position,
+            edges,
+            pixels,
+            width,
+            height,
+        };
+
+        self.half_tile_grid.insert(first_coord, first_half);
+        self.half_tile_grid.insert(second_coord, second_half);
+    }
+
+    /// Generate a tile with constraints based on neighboring tiles
+    /// Returns (edges, pixels, width, height)
+    fn generate_tile_with_constraints(
+        &mut self,
+        orientation: MapOrientation,
+        tile_origin: HalfTileCoord,
+    ) -> (crate::maps::MapEdges, Vec<u8>, i32, i32) {
+        // Calculate edge constraints based on neighboring tiles
+        let constraints = self.calculate_tile_edge_constraints(orientation, tile_origin);
+
+        // Query for a matching tile
+        let mut query = MapQuery::new().with_orientation(orientation);
+        for (i, constraint) in constraints.iter().enumerate() {
+            query = query.with_constraint(i, *constraint);
+        }
+
+        // Get random matching tile using seeded RNG
+        use rand::SeedableRng;
+        let tile_x = tile_origin.x * 32;
+        let tile_y = tile_origin.y * 32;
+        let seed = self.seed ^ ((tile_x as u64) << 32) ^ (tile_y as u64);
+        let mut rng = rand::rngs::StdRng::seed_from_u64(seed);
+
+        if let Some(map) = self.map_set.get_random(&query, &mut rng) {
+            (map.edges, map.pixels.clone(), map.width, map.height)
+        } else {
+            // Fallback: generate a simple tile
+            eprintln!(
+                "Warning: No matching tile found for {:?} at ({}, {})",
+                orientation, tile_x, tile_y
+            );
+            let (pixels, width, height) = self.generate_fallback_tile_data(orientation);
+            (
+                crate::maps::MapEdges::new([EdgeType::Tunnel; 6]),
+                pixels,
+                width,
+                height,
+            )
+        }
+    }
+
+    /// Calculate edge constraints for a tile based on its neighbors in the herringbone pattern
+    fn calculate_tile_edge_constraints(
+        &self,
+        orientation: MapOrientation,
+        tile_origin: HalfTileCoord,
+    ) -> [EdgeConstraint; 6] {
+        let mut constraints = [EdgeConstraint::Any; 6];
+
+        match orientation {
+            MapOrientation::Horizontal => {
+                // Horizontal tile (64x32) edges: [top_left, top_right, bottom_left, bottom_right, left, right]
+
+                // Check left neighbor (another horizontal tile at x-2)
+                let left_neighbor = HalfTileCoord {
+                    x: tile_origin.x - 2,
+                    y: tile_origin.y,
+                };
+                if let Some(left_tile) = self.half_tile_grid.get(&left_neighbor) {
+                    constraints[4] = EdgeConstraint::Compatible(left_tile.edges.edges[5]);
+                }
+
+                // Check right neighbor (another horizontal tile at x+2)
+                let right_neighbor = HalfTileCoord {
+                    x: tile_origin.x + 2,
+                    y: tile_origin.y,
+                };
+                if let Some(right_tile) = self.half_tile_grid.get(&right_neighbor) {
+                    constraints[5] = EdgeConstraint::Compatible(right_tile.edges.edges[4]);
+                }
+
+                // TODO: Check vertical neighbors above/below for more precise constraints
+            }
+            MapOrientation::Vertical => {
+                // Vertical tile (32x64) edges: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+
+                // Check top neighbor (another vertical tile at y-2)
+                let top_neighbor = HalfTileCoord {
+                    x: tile_origin.x,
+                    y: tile_origin.y - 2,
+                };
+                if let Some(top_tile) = self.half_tile_grid.get(&top_neighbor) {
+                    constraints[4] = EdgeConstraint::Compatible(top_tile.edges.edges[5]);
+                }
+
+                // Check bottom neighbor (another vertical tile at y+2)
+                let bottom_neighbor = HalfTileCoord {
+                    x: tile_origin.x,
+                    y: tile_origin.y + 2,
+                };
+                if let Some(bottom_tile) = self.half_tile_grid.get(&bottom_neighbor) {
+                    constraints[5] = EdgeConstraint::Compatible(bottom_tile.edges.edges[4]);
+                }
+
+                // TODO: Check horizontal neighbors left/right for more precise constraints
+            }
+        }
+
+        // Default to Tunnel edges if no constraints
+        for constraint in &mut constraints {
+            if matches!(constraint, EdgeConstraint::Any) {
+                *constraint = EdgeConstraint::Compatible(EdgeType::Tunnel);
+            }
+        }
+
+        constraints
+    }
+
+    /// Generate a fallback tile when no matching tile is found
+    fn generate_fallback_tile_data(&self, orientation: MapOrientation) -> (Vec<u8>, i32, i32) {
+        let (width, height) = match orientation {
+            MapOrientation::Horizontal => (64, 32),
+            MapOrientation::Vertical => (32, 64),
+        };
+
+        // Create a simple pattern: alternating stone and air
+        let mut pixels = Vec::new();
+        for _y in 0..height {
+            for _x in 0..width {
+                // Simple checkerboard: stone (0,0,0) or air (255,255,255)
+                if (_x + _y) % 2 == 0 {
+                    pixels.push(0);
+                    pixels.push(0);
+                    pixels.push(0);
+                } else {
+                    pixels.push(255);
+                    pixels.push(255);
+                    pixels.push(255);
+                }
+            }
+        }
+
+        (pixels, width, height)
+    }
+
+    pub fn generate_chunk(&mut self, coord: ChunkCoord) -> Chunk {
         return if coord.x < 0 {
             self.generate_ocean_chunk(coord)
         } else if coord.x == 0 && (coord.y == -1 || coord.y == 0) {
@@ -339,7 +673,7 @@ impl TerrainGenerator {
         };
     }
 
-    pub fn generate_hill_chunk(&self, coord: ChunkCoord) -> Chunk {
+    pub fn generate_hill_chunk(&mut self, coord: ChunkCoord) -> Chunk {
         let mut chunk = Chunk::new(coord);
         let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
         let noise_detail = 100;
@@ -367,41 +701,74 @@ impl TerrainGenerator {
         }
         // self.add_tree(&mut chunk, 15, 1, 10, 20, coord);
         // self.add_tree(&mut chunk, -10, 1, 10, 60, coord);
+
         chunk
     }
 
-    pub fn generate_tunnels_chunk(&self, coord: ChunkCoord) -> Chunk {
+    pub fn generate_tunnels_chunk(&mut self, coord: ChunkCoord) -> Chunk {
         let mut chunk = Chunk::new(coord);
-        let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
-        let noise_detail = 8.0;
-        let air_percent = 0.6;
-        let water_spawn_percent = 0.05;
-        for lx in 0..CHUNK_SIZE {
-            let wx = coord.x * chunk_size + lx as i32;
-            for ly in 0..CHUNK_SIZE {
-                let wy = coord.y * chunk_size + ly as i32;
-                let nv = (1.0
-                    + self
-                        .noise
-                        .get([wx as f64 / noise_detail, wy as f64 / noise_detail]))
-                    / 2.0;
-                let block_type = if air_percent > nv {
-                    if water_spawn_percent > nv {
-                        Block::Tide
-                    } else {
-                        Block::Air
+
+        // Get the 4 half-tile coordinates for this chunk
+        let half_coords = self.get_half_tile_coords_for_chunk(coord);
+
+        // Ensure all half-tiles exist (generates missing tiles)
+        for half_coord in &half_coords {
+            self.ensure_half_tile(*half_coord);
+        }
+
+        // Now render each half-tile into the chunk
+        for (i, half_coord) in half_coords.iter().enumerate() {
+            let half_tile = self.half_tile_grid.get(half_coord).unwrap();
+
+            // Determine which 32x32 quadrant of the chunk this half-tile fills
+            let chunk_x = (i % 2) * 32; // 0 or 32
+            let chunk_y = (i / 2) * 32; // 0 or 32
+
+            // Determine which pixels from the tile to read
+            let (tile_src_x, tile_src_y) = match half_tile.position {
+                HalfTilePosition::Left => (0, 0),
+                HalfTilePosition::Right => (32, 0),
+                HalfTilePosition::Top => (0, 0),
+                HalfTilePosition::Bottom => (0, 32),
+            };
+
+            // Copy 32x32 pixels from tile to chunk
+            for dy in 0..32 {
+                for dx in 0..32 {
+                    let tile_px = tile_src_x + dx;
+                    let tile_py = tile_src_y + dy;
+                    let chunk_px = chunk_x + dx as usize;
+                    let chunk_py = chunk_y + dy as usize;
+
+                    if chunk_px < CHUNK_SIZE && chunk_py < CHUNK_SIZE {
+                        let (r, g, b) = half_tile.get_pixel(tile_px, tile_py);
+                        let block = Self::color_to_block(r, g, b);
+                        chunk.set(chunk_px, chunk_py, block);
                     }
-                } else {
-                    Block::Stone
-                };
-                chunk.set(lx, ly, block_type);
+                }
             }
         }
 
-        return chunk;
+        chunk
     }
 
-    pub fn generate_ocean_chunk(&self, coord: ChunkCoord) -> Chunk {
+    /// Convert RGB color from map image to Block type
+    fn color_to_block(r: u8, g: u8, b: u8) -> Block {
+        if r == 0 && g == 0 && b == 0 {
+            Block::Stone
+        } else if r == 127 && g == 127 && b == 127 {
+            // Stalactite/Stalagmite - for now just use Stone
+            Block::Stone
+        } else if r == 255 && g == 255 && b == 255 {
+            Block::Air
+        } else if r == 0 && g == 149 && b == 199 {
+            Block::Tide
+        } else {
+            unimplemented!("We have unknown pixel of color r={} g={} b={}", r, g, b)
+        }
+    }
+
+    pub fn generate_ocean_chunk(&mut self, coord: ChunkCoord) -> Chunk {
         let mut chunk = Chunk::new(coord);
         let chunk_size: i32 = CHUNK_SIZE.try_into().unwrap();
 
@@ -419,10 +786,11 @@ impl TerrainGenerator {
                 chunk.set(lx, ly, block_type);
             }
         }
+
         chunk
     }
 
-    pub fn generate_sky_chunk(&self, coord: ChunkCoord) -> Chunk {
+    pub fn generate_sky_chunk(&mut self, coord: ChunkCoord) -> Chunk {
         let mut chunk = Chunk::new(coord);
         for lx in 0..CHUNK_SIZE {
             for ly in 0..CHUNK_SIZE {
@@ -432,7 +800,7 @@ impl TerrainGenerator {
         chunk
     }
 
-    pub fn generate_beach_chunk(&self, coord: ChunkCoord) -> Chunk {
+    pub fn generate_beach_chunk(&mut self, coord: ChunkCoord) -> Chunk {
         let mut chunk = Chunk::new(coord);
         let chunk_size: i32 = CHUNK_SIZE as i32;
 
@@ -473,6 +841,7 @@ impl TerrainGenerator {
                 chunk.set(lx, ly, block_type);
             }
         }
+
         chunk
     }
 
