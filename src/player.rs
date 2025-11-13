@@ -91,6 +91,8 @@ pub struct Player {
     pub landing_speed: Vector2,
     pub last_velocity: Vector2,
 
+    pub currently_mining: Option<(f32, f32)>,
+
     pub raycast_left_tile: Option<(f32, f32)>,
     pub raycast_right_tile: Option<(f32, f32)>,
     pub raycast_left_end: Vector2,
@@ -145,6 +147,8 @@ impl Player {
             dash_dir: Vector2::zero(),
             landing_speed: Vector2::zero(),
             last_velocity: Vector2::zero(),
+
+            currently_mining: None,
 
             raycast_left_tile: None,
             raycast_right_tile: None,
@@ -794,8 +798,15 @@ impl Player {
                 if !self.is_mining {
                     self.is_mining = true;
                     self.started_mining_at = self.time;
+                    self.currently_mining = Some(bt);
                 } else {
-                    self.facing_dir = (raycast_end.x - self.position.x).signum() as i32
+                    self.facing_dir = (raycast_end.x - self.position.x).signum() as i32;
+                    if let Some(ot) = self.currently_mining {
+                        if ot.0 != bt.0 || ot.1 != bt.1 {
+                            self.started_mining_at = self.time;
+                            self.currently_mining = Some(bt);
+                        }
+                    }
                 }
 
                 if !self.within_grace(self.started_mining_at, block_durability) {
