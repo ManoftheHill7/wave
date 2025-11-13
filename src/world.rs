@@ -31,7 +31,8 @@ impl WorldState {
     }
 
     pub fn tide_level(&self) -> i32 {
-        (((self.tide_timer * TIDE_FREQUENCY - std::f32::consts::PI / 2.0 + 0.4).sin() + 1.0)
+        let initial_offset = 3.14;
+        (((self.tide_timer * TIDE_FREQUENCY - std::f32::consts::PI / 2.0 + initial_offset).sin() + 1.0)
             * MAX_TIDE_DEPTH
             / 2.0) as i32
     }

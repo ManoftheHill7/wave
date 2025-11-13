@@ -23,7 +23,8 @@ pub const WALLSLIDE_FRICTION: f32 = 0.85;
 pub const DASH_VELOCITY: f32 = SPEED * 1.7;
 pub const DASHJUMP_COOLDOWN: f32 = 0.075;
 pub const CORNER_CORRECTION_AMOUNT: i32 = 5;
-pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.25;
+pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.125;
+pub const CLIMBING_TOPOUT_ASSIST: f32 = 10.0;
 
 pub const BASE_HEIGHT: f32 = 2.0;
 pub const DASH_HEIGHT: f32 = 0.9;
@@ -379,6 +380,11 @@ impl Player {
         }
 
         let on_wall = self.check_wall(terrain);
+        let topout_vel = if !on_wall && self.is_climbing {
+            self.facing_dir as f32 * CLIMBING_TOPOUT_ASSIST
+        } else {
+            0.0
+        };
 
         // Wall slide
         self.is_sliding = false;
@@ -457,8 +463,7 @@ impl Player {
             self.dashes = max_dashes;
         }
 
-        let mut used_tool = false;
-        used_tool = self.use_tool(terrain, controller, true);
+        let mut used_tool = self.use_tool(terrain, controller, true);
         used_tool = self.use_tool(terrain, controller, false) || used_tool;
         if !used_tool {
             self.is_mining = false;
@@ -501,8 +506,8 @@ impl Player {
                     self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
                 }
             }
+            self.velocity.x += topout_vel;
         }
-
         self.apply_movement_and_collision(dt, terrain);
         if self.spike_check(terrain) {
             self.spike_touched_at = self.time;
@@ -616,6 +621,7 @@ impl Player {
 
     fn apply_movement_and_collision(&mut self, dt: f32, terrain: &Terrain) {
         let buffer = 0.125;
+        let little_buffer = 0.0001;
         let double_buffer = buffer * 2.0;
         let step_size = 1.0 / 8.0;
 
@@ -625,13 +631,26 @@ impl Player {
         while dx != target_x {
             ox = dx;
             dx = Self::move_toward(dx, target_x, step_size);
-            if let Some((_, _)) = terrain.collides_with_solid_terrain(
+            if let Some((tx, _)) = terrain.collides_with_solid_terrain(
                 dx,
                 self.position.y + buffer,
                 self.width,
                 self.height - double_buffer,
             ) {
-                dx = ox;
+                if target_x > self.position.x {
+                    dx = tx - self.width;
+                } else {
+                    dx = tx + 1.0;
+                }
+                if let Some((_, _)) = terrain.collides_with_solid_terrain(
+                    dx + little_buffer,
+                    self.position.y + buffer,
+                    self.width - little_buffer * 2.0,
+                    self.height - double_buffer,
+                ) {
+                    dbg!("double collide");
+                    dx = ox;
+                }
                 self.velocity.x = 0.0;
                 break;
             }
@@ -648,7 +667,7 @@ impl Player {
                 self.width - double_buffer,
                 self.height,
             ) {
-                if self.velocity.y > 0.0 {
+                if target_y > self.position.y {
                     self.on_ground = true;
                     dy = ty - self.height;
                 } else {
@@ -687,12 +706,13 @@ impl Player {
 
     fn check_wall(&self, terrain: &Terrain) -> bool {
         let buffer = WALLJUMP_DETECT_DISTANCE;
+        let y_buf = 0.0001;
         terrain
             .collides_with_solid_terrain(
                 self.position.x + buffer * self.facing_dir as f32,
-                self.position.y + buffer,
+                self.position.y - y_buf,
                 self.width,
-                self.height - 2.0 * buffer,
+                self.height - 2.0 * y_buf,
             )
             .is_some()
     }
