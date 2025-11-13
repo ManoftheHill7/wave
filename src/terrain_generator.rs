@@ -4,6 +4,8 @@ use noise::{NoiseFn, Perlin};
 use rand::Rng;
 use std::collections::HashMap;
 use std::path::Path;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 
 const SEA_LEVEL: i32 = 0;
 const SEA_FLOOR: i32 = 30;
@@ -102,45 +104,6 @@ impl MapGenerator {
                 chunk.set(lx, ly, block);
             }
         }
-
-        // Dynamic ore placement based on chunk depth and spawn data
-        use rand::rngs::StdRng;
-        use rand::SeedableRng;
-
-        let a = coord.x.abs();
-        let b = coord.y.abs();
-        let idx = (a + b) * (a + b + 1) / 2 + a;
-
-        // Create seeded RNG for this chunk
-        let chunk_seed = ((coord.x as u64) << 32) | (coord.y as u64);
-        let mut chunk_rng = StdRng::seed_from_u64(chunk_seed);
-
-        // Calculate the average world Y for this chunk
-        let chunk_size = CHUNK_SIZE as i32;
-        let chunk_wy = coord.y * chunk_size + chunk_size / 2;
-
-        // Generate veins for all ore types
-        let mut vein_counter = 0u32;
-        for block in Block::all() {
-            // TODO: seperate ore spawn data from the block enum
-            if let Some(spawn_data) = block.get_ore_spawn_data() {
-                let vein_count = calculate_vein_count(chunk_wy, &spawn_data, &mut chunk_rng);
-
-                for i in 0..vein_count {
-                    let (x, y) = halton_2d(vein_counter + idx as u32);
-                    add_ore_vein(
-                        &mut chunk,
-                        x as i32,
-                        y as i32,
-                        *block,
-                        spawn_data.min_vein_size,
-                        spawn_data.max_vein_size,
-                    );
-                    vein_counter += 1;
-                }
-            }
-        }
-
         chunk
     }
 }
@@ -748,6 +711,33 @@ impl TerrainGenerator {
                 }
             }
         }
+
+        let chunk_seed = ((coord.x as u64) << 32) | (coord.y as u64);
+        let mut chunk_rng = StdRng::seed_from_u64(chunk_seed);
+        let a = coord.x.abs();
+        let b = coord.y.abs();
+        let idx = (a + b) * (a + b + 1) / 2 + a;
+        let mut vein_counter = 0u32;
+        for block in Block::all() {
+            // TODO: seperate ore spawn data from the block enum
+            if let Some(spawn_data) = block.get_ore_spawn_data() {
+                let vein_count = calculate_vein_count(coord.y * CHUNK_SIZE as i32, &spawn_data, &mut chunk_rng);
+
+                for i in 0..vein_count {
+                    let (x, y) = halton_2d(vein_counter + idx as u32);
+                    add_ore_vein(
+                        &mut chunk,
+                        x as i32,
+                        y as i32,
+                        *block,
+                        spawn_data.min_vein_size,
+                        spawn_data.max_vein_size,
+                    );
+                    vein_counter += 1;
+                }
+            }
+        }
+
 
         chunk
     }

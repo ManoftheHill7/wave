@@ -30,7 +30,6 @@ type = "block"
 name = "Coal"
 weight = 3.0
 type = "block"
-image = "tiles.coal_ore"
 
 [items.copper]
 name = "Copper"

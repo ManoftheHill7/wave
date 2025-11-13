@@ -153,6 +153,59 @@ impl Map {
         let idx = ((y * self.width + x) * 3) as usize;
         (self.pixels[idx], self.pixels[idx + 1], self.pixels[idx + 2])
     }
+
+    /// Create a horizontally mirrored version of this map
+    pub fn create_mirrored(&self) -> Self {
+        let mut mirrored_pixels = Vec::with_capacity(self.pixels.len());
+
+        // Flip each row horizontally
+        for y in 0..self.height {
+            for x in (0..self.width).rev() {
+                let idx = ((y * self.width + x) * 3) as usize;
+                mirrored_pixels.push(self.pixels[idx]);
+                mirrored_pixels.push(self.pixels[idx + 1]);
+                mirrored_pixels.push(self.pixels[idx + 2]);
+            }
+        }
+
+        // Mirror the edges based on orientation
+        let mirrored_edges = match self.orientation {
+            MapOrientation::Horizontal => {
+                // Horizontal tile (64x32) edges: [top_left, top_right, bottom_left, bottom_right, left, right]
+                // When mirrored: swap left<->right, and swap the half-edges
+                MapEdges::new([
+                    self.edges.edges[1], // top_right -> top_left
+                    self.edges.edges[0], // top_left -> top_right
+                    self.edges.edges[3], // bottom_right -> bottom_left
+                    self.edges.edges[2], // bottom_left -> bottom_right
+                    self.edges.edges[5], // right -> left
+                    self.edges.edges[4], // left -> right
+                ])
+            }
+            MapOrientation::Vertical => {
+                // Vertical tile (32x64) edges: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+                // When mirrored: swap left<->right sides
+                MapEdges::new([
+                    self.edges.edges[2], // right_top -> left_top
+                    self.edges.edges[3], // right_bottom -> left_bottom
+                    self.edges.edges[0], // left_top -> right_top
+                    self.edges.edges[1], // left_bottom -> right_bottom
+                    self.edges.edges[4], // top stays the same
+                    self.edges.edges[5], // bottom stays the same
+                ])
+            }
+        };
+
+        Map {
+            name: format!("{}_mirrored", self.name),
+            image: self.image.clone(),
+            pixels: mirrored_pixels,
+            width: self.width,
+            height: self.height,
+            orientation: self.orientation,
+            edges: mirrored_edges,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -264,7 +317,13 @@ impl MapSet {
 
             // Create map
             match Map::from_image(filename.clone(), image) {
-                Ok(map) => map_set.add_map(map),
+                Ok(map) => {
+                    // Add the original map
+                    let mirrored = map.create_mirrored();
+                    map_set.add_map(map);
+                    // Add the mirrored version
+                    map_set.add_map(mirrored);
+                }
                 Err(e) => eprintln!("Warning: Skipping {}: {}", filename, e),
             }
         }
