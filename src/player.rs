@@ -26,9 +26,9 @@ pub const CORNER_CORRECTION_AMOUNT: i32 = 5;
 pub const WALLJUMP_DETECT_DISTANCE: f32 = 0.125;
 pub const CLIMBING_TOPOUT_ASSIST: f32 = 10.0;
 
-pub const BASE_HEIGHT: f32 = 2.0;
+pub const BASE_HEIGHT: f32 = 1.99;
 pub const DASH_HEIGHT: f32 = 0.9;
-pub const BASE_WIDTH: f32 = 1.3;
+pub const BASE_WIDTH: f32 = 1.29;
 pub const DASH_WIDTH: f32 = 0.9;
 
 pub const WATER_BUOYANCY: f32 = -GRAVITY / 4.0;
