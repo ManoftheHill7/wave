@@ -14,26 +14,57 @@ pub struct CraftingScreen {
     scroll_offset: f32,
     show_craftable_only: bool,
     hovered_recipe_index: Option<usize>,
+    recipe_filter: Option<RecipeType>,
 }
 
 impl CraftingScreen {
-    pub fn new() -> Self {
+    pub fn new(filter: Option<RecipeType>) -> Self {
         CraftingScreen {
             render_target: None,
             scroll_offset: 0.0,
             show_craftable_only: false,
             hovered_recipe_index: None,
+            recipe_filter: filter,
         }
     }
 
     fn get_filtered_recipes(&self, ctx: &GameContext) -> Vec<&'static Recipe> {
-        if self.show_craftable_only {
-            ALL_RECIPES
-                .iter()
-                .filter(|recipe| recipe.can_craft(&ctx.world_state.player.inventory))
-                .collect()
-        } else {
-            ALL_RECIPES.iter().collect()
+        ALL_RECIPES
+            .iter()
+            .filter(|recipe| {
+                // Filter by recipe type first
+                let type_matches = match self.recipe_filter {
+                    None => recipe.recipe_type == RecipeType::Always,
+                    Some(RecipeType::Workbench) => {
+                        recipe.recipe_type == RecipeType::Always
+                            || recipe.recipe_type == RecipeType::Workbench
+                    }
+                    Some(RecipeType::Anvil) => recipe.recipe_type == RecipeType::Anvil,
+                    Some(RecipeType::Furnace) => recipe.recipe_type == RecipeType::Furnace,
+                    Some(RecipeType::Always) => recipe.recipe_type == RecipeType::Always,
+                };
+
+                if !type_matches {
+                    return false;
+                }
+
+                // Then filter by craftability if toggle is on
+                if self.show_craftable_only {
+                    recipe.can_craft(&ctx.world_state.player.inventory)
+                } else {
+                    true
+                }
+            })
+            .collect()
+    }
+
+    fn get_title(&self) -> String {
+        match self.recipe_filter {
+            None => "Crafting".to_string(),
+            Some(RecipeType::Workbench) => "Crafting - Workbench".to_string(),
+            Some(RecipeType::Anvil) => "Crafting - Anvil".to_string(),
+            Some(RecipeType::Furnace) => "Crafting - Furnace".to_string(),
+            Some(RecipeType::Always) => "Crafting".to_string(),
         }
     }
 
@@ -159,6 +190,7 @@ impl Screen for CraftingScreen {
 
         // Get filtered recipes
         let filtered_recipes = self.get_filtered_recipes(ctx);
+        let title = self.get_title();
 
         let render_target = self.render_target.as_mut().unwrap();
 
@@ -168,7 +200,7 @@ impl Screen for CraftingScreen {
             d.clear_background(Color::new(40, 40, 50, 255));
 
             // Draw title
-            d.draw_text("Crafting", 10, 10, 20, Color::WHITE);
+            d.draw_text(&title, 10, 10, 20, Color::WHITE);
 
             // Draw toggle button
             let toggle_x = 260;

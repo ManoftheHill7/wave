@@ -334,6 +334,29 @@ impl Player {
         self.raycast_right_end = right_end;
     }
 
+    pub fn get_intersecting_crafting_station(&self, terrain: &Terrain) -> Option<Block> {
+        // Check multiple points in player bounding box
+        let points = [
+            (self.position.x, self.position.y),               // top-left
+            (self.position.x + self.width, self.position.y),  // top-right
+            (self.position.x, self.position.y + self.height), // bottom-left
+            (self.position.x + self.width, self.position.y + self.height), // bottom-right
+            (
+                self.position.x + self.width / 2.0,
+                self.position.y + self.height / 2.0,
+            ), // center
+        ];
+
+        for (x, y) in points {
+            let block = terrain.at(x as i32, y as i32);
+            if matches!(block, Block::Workbench | Block::Anvil | Block::Furnace) {
+                return Some(block);
+            }
+        }
+
+        None
+    }
+
     pub fn can_place_block_at(&self, terrain: &Terrain, block: Block, x: i32, y: i32) -> bool {
         // Restrict workbench and anvil placement to underground (y < 0)
         if matches!(block, Block::Workbench | Block::Anvil) && y >= 0 {

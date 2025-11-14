@@ -558,7 +558,22 @@ impl Screen for GameScreen {
 
         // Check if M is pressed to open crafting
         if ctx.controller.crafting_pressed {
-            return ScreenCommand::Push(Box::new(crate::crafting_screen::CraftingScreen::new()));
+            use crate::crafting_screen::RecipeType;
+            use crate::terrain::Block;
+
+            let filter = match ctx
+                .world_state
+                .player
+                .get_intersecting_crafting_station(&ctx.world_state.terrain)
+            {
+                Some(Block::Workbench) => Some(RecipeType::Workbench),
+                Some(Block::Anvil) => Some(RecipeType::Anvil),
+                Some(Block::Furnace) => Some(RecipeType::Furnace),
+                _ => None,
+            };
+            return ScreenCommand::Push(Box::new(crate::crafting_screen::CraftingScreen::new(
+                filter,
+            )));
         }
 
         ScreenCommand::None
@@ -911,6 +926,40 @@ impl Screen for GameScreen {
                 20,
                 Color::DARKGRAY,
             );
+        }
+
+        // Draw crafting station prompt at bottom of screen
+        if let Some(station) = ctx
+            .world_state
+            .player
+            .get_intersecting_crafting_station(&ctx.world_state.terrain)
+        {
+            use crate::terrain::Block;
+
+            let prompt = match station {
+                Block::Workbench => "Press M to use Workbench",
+                Block::Anvil => "Press M to use Anvil",
+                Block::Furnace => "Press M to use Furnace",
+                _ => "",
+            };
+
+            if !prompt.is_empty() {
+                let text_width = d.measure_text(prompt, 20);
+                let text_x = (self.screen_width - text_width as f32) / 2.0;
+                let text_y = self.screen_height - 60.0;
+
+                // Draw background box
+                d.draw_rectangle(
+                    text_x as i32 - 10,
+                    text_y as i32 - 5,
+                    text_width + 20,
+                    30,
+                    Color::new(0, 0, 0, 180),
+                );
+
+                // Draw text
+                d.draw_text(prompt, text_x as i32, text_y as i32, 20, Color::WHITE);
+            }
         }
     }
 }
