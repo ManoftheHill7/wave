@@ -5,8 +5,9 @@ use wave_github_gameoff2025::*;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    // Check for --resume flag
+    // Check for flags
     let resume_mode = args.iter().any(|arg| arg == "--resume");
+    let new_game_mode = args.iter().any(|arg| arg == "--new");
     let map_path = args
         .iter()
         .skip(1)
@@ -19,8 +20,19 @@ fn main() {
 
     let mut ctx = GameContext::new(&mut rl, &thread, map_path);
 
-    // Start with menu or game screen based on --resume flag
-    let initial_screen: Box<dyn screen_manager::Screen<Context = GameContext>> = if resume_mode {
+    // Start with menu or game screen based on flags
+    let initial_screen: Box<dyn screen_manager::Screen<Context = GameContext>> = if new_game_mode {
+        // Start a new game directly
+        println!("Starting new game...");
+
+        use inventory::ItemType;
+        ctx.world_state.player.inventory.add(ItemType::Stone, 3);
+        ctx.world_state.player.inventory.add(ItemType::Dirt, 10);
+        ctx.world_state.player.inventory.add(ItemType::Copper, 10);
+        ctx.world_state.player.inventory.add(ItemType::Sand, 10);
+
+        Box::new(GameScreen::new(&ctx))
+    } else if resume_mode {
         // Try to load save, if it fails, go to menu
         if save_load::save_exists(0) {
             match save_load::load_game(0) {

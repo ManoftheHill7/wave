@@ -174,7 +174,7 @@ impl Player {
             velocity: Vector2::zero(),
             height: BASE_HEIGHT,
             width: BASE_WIDTH,
-            facing_dir: 1,
+            facing_dir: -1,
 
             on_ground: false,
             is_jumping: false,

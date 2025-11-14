@@ -21,8 +21,7 @@ pub struct WorldState {
 impl WorldState {
     pub fn new() -> Self {
         WorldState {
-            // player: Player::new(85.0, -1.0),
-            player: Player::new(148.0, 8.0),
+            player: Player::new(32.0, -3.0),
             terrain: Terrain::new(12345),
             ghost_mode: false,
             flow_timer: 0.0,

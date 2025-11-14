@@ -667,28 +667,118 @@ impl TerrainGenerator {
             }
         }
 
+        // Generate chunk below to find cave openings
+        let below_coord = ChunkCoord {
+            x: coord.x,
+            y: coord.y + 1,
+        };
+        let below_chunk = self.generate_tunnels_chunk(below_coord);
+
+        // Find air pockets at the top of the chunk below (y = 0)
+        let mut cave_openings = Vec::new();
+        for lx in 0..CHUNK_SIZE {
+            if below_chunk.get(lx, 0) == Block::Air {
+                // Check if this is the start of an air pocket (not already in a run)
+                if lx == 0 || below_chunk.get(lx - 1, 0) != Block::Air {
+                    // Find the width of this air pocket
+                    let mut width = 1;
+                    while lx + width < CHUNK_SIZE && below_chunk.get(lx + width, 0) == Block::Air {
+                        width += 1;
+                    }
+                    cave_openings.push((lx, width));
+                }
+            }
+        }
+
+        // Create angled shafts from cave openings with varying slopes
+        let mut rng = StdRng::seed_from_u64(
+            self.seed
+                .wrapping_add(coord.x as u64)
+                .wrapping_add(coord.y as u64),
+        );
+        for (start_x, width) in cave_openings {
+            // Decide if this opening should reach the surface (10% chance)
+            let reaches_surface = rng.gen_range(0..10) == 0;
+
+            // Random horizontal direction for the shaft (-1 or 1)
+            let direction = if rng.gen_bool(0.5) { 1 } else { -1 };
+
+            // Random slope: 0 = 2H:1V (gentle), 1 = 1H:1V (45°), 2 = 1H:2V (steep)
+            let slope_type = rng.gen_range(0..3);
+
+            // Partial shaft that doesn't reach surface
+            let shaft_length = rng.gen_range(5..20).min(CHUNK_SIZE);
+            let mut current_center = start_x as f32 + (width as f32 / 2.0);
+            let mut step_counter = 0;
+
+            for ly in (CHUNK_SIZE - shaft_length..CHUNK_SIZE).rev() {
+                // Preserve width throughout the shaft
+                let current_width = width;
+
+                // Move horizontally based on slope type
+                match slope_type {
+                    0 => {
+                        // 2 horizontal per 1 vertical (gentle slope)
+                        current_center += direction as f32 * 2.0;
+                    }
+                    1 => {
+                        // 1 horizontal per 1 vertical (45 degrees)
+                        current_center += direction as f32;
+                    }
+                    2 => {
+                        // 1 horizontal per 2 vertical (steep slope)
+                        if step_counter % 2 == 0 {
+                            current_center += direction as f32;
+                        }
+                        step_counter += 1;
+                    }
+                    _ => {}
+                }
+
+                let row_start = (current_center - (current_width as f32 / 2.0)).round() as i32;
+
+                for dx in 0..current_width {
+                    let x = row_start + dx as i32;
+                    if x >= 0 && x < CHUNK_SIZE as i32 {
+                        chunk.set(x as usize, ly, Block::Air);
+                    }
+                }
+            }
+        }
+
         // Add trees with 1/100 chance per x coordinate
-        let mut rng = StdRng::seed_from_u64(self.seed.wrapping_add(coord.x as u64));
+        let mut tree_rng =
+            StdRng::seed_from_u64(self.seed.wrapping_add(coord.x as u64).wrapping_add(1000));
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
 
             // 1% chance to spawn a tree at this x coordinate
-            if rng.gen_range(0..100) == 0 {
+            if tree_rng.gen_range(0..100) == 0 {
                 let height_f =
                     noise_height as f64 * self.noise.get([wx as f64 * (1.0 / noise_detail as f64)]);
                 let ground_height = height_f as i32 - coord.x + BEACH_HEIGHT;
 
-                // Spawn tree on the grass surface
-                let tree_height = rng.gen_range(8..15);
-                let tree_width = rng.gen_range(3..6);
-                self.add_tree(
-                    &mut chunk,
-                    wx,
-                    ground_height,
-                    tree_width,
-                    tree_height,
-                    coord,
-                );
+                // Check if the tree would be spawning over air (cave opening)
+                let ground_y = (ground_height - coord.y * chunk_size) as usize;
+                let block_below = if ground_y + 1 < CHUNK_SIZE {
+                    chunk.get(lx, ground_y + 1)
+                } else {
+                    Block::Dirt // Assume solid if at chunk boundary
+                };
+
+                // Only spawn tree if there's solid ground below
+                if block_below != Block::Air {
+                    let tree_height = tree_rng.gen_range(8..15);
+                    let tree_width = tree_rng.gen_range(3..6);
+                    self.add_tree(
+                        &mut chunk,
+                        wx,
+                        ground_height,
+                        tree_width,
+                        tree_height,
+                        coord,
+                    );
+                }
             }
         }
 
