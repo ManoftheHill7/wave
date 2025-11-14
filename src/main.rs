@@ -25,10 +25,6 @@ fn main() {
         // Start a new game directly
         println!("Starting new game...");
 
-        use inventory::ItemType;
-        // ctx.world_state.player.inventory.add(ItemType::Log, 5);
-        ctx.world_state.player.inventory.add(ItemType::Workbench, 1);
-        ctx.world_state.player.inventory.add(ItemType::Anvil, 1);
 
         Box::new(GameScreen::new(&ctx))
     } else if resume_mode {
@@ -38,13 +34,6 @@ fn main() {
                 Ok(save_data) => {
                     save_load::apply_save_data(&mut ctx.world_state, save_data);
                     println!("✓ Game loaded successfully!");
-
-                    use inventory::ItemType;
-                    ctx.world_state.player.inventory.add(ItemType::Stone, 3);
-                    ctx.world_state.player.inventory.add(ItemType::Dirt, 10);
-                    ctx.world_state.player.inventory.add(ItemType::Copper, 10);
-                    ctx.world_state.player.inventory.add(ItemType::Sand, 10);
-
                     Box::new(GameScreen::new(&ctx))
                 }
                 Err(e) => {
@@ -59,6 +48,12 @@ fn main() {
     } else {
         Box::new(MenuScreen::new())
     };
+
+    use inventory::ItemType;
+    // ctx.world_state.player.inventory.add(ItemType::Log, 5);
+    // ctx.world_state.player.inventory.add(ItemType::Workbench, 1);
+    // ctx.world_state.player.inventory.add(ItemType::Furnace, 1);
+    // ctx.world_state.player.inventory.add(ItemType::Anvil, 1);
 
     let mut manager = ScreenManager::new(initial_screen, &mut ctx);
 

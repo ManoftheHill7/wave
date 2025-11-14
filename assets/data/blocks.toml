@@ -207,3 +207,13 @@ amount = 1
 image = "tiles.anvil1"
 width = 2
 height = 2
+
+[blocks.furnace]
+name = "Furnace"
+type = "air"
+durability = 5.0
+drops = "furnace"
+amount = 1
+image = "tiles.furnace"
+width = 2
+height = 1

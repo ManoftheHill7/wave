@@ -127,3 +127,9 @@ name = "Workbench"
 weight = 50.0
 type = "block"
 image = "tiles.workbench"
+
+[items.furnace]
+name = "Furnace"
+weight = 50.0
+type = "block"
+image = "tiles.furnace"
