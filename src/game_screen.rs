@@ -134,7 +134,47 @@ fn render_terrain(
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
 
-            if block.is_solid() {
+            if block == Block::Air {
+                for cell_y in 0..CELL_RESOLUTION {
+                    for cell_x in 0..CELL_RESOLUTION {
+                        render_water(
+                            d,
+                            terrain,
+                            x as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
+                            y as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
+                        );
+                    }
+                }
+            } else if block.is_spike() {
+                let neighbors = Neighbors {
+                    up: terrain.spike_at(x, y - 1),
+                    up_right: terrain.spike_at(x + 1, y - 1),
+                    right: terrain.spike_at(x + 1, y),
+                    down_right: terrain.spike_at(x + 1, y + 1),
+                    down: terrain.spike_at(x, y + 1),
+                    down_left: terrain.spike_at(x - 1, y + 1),
+                    left: terrain.spike_at(x - 1, y),
+                    up_left: terrain.spike_at(x - 1, y - 1),
+                };
+                let src_rect = textures.tiles.spikes.get_tile_rect(x, y, &neighbors);
+                let final_src_rect = if block == Block::Stalactite {
+                    Rectangle::new(
+                        src_rect.x,
+                        src_rect.y + src_rect.height,
+                        src_rect.width,
+                        -src_rect.height,
+                    )
+                } else {
+                    src_rect
+                };
+                render_tile(
+                    d,
+                    x as f32,
+                    y as f32,
+                    &textures.tiles.spikes.texture(),
+                    Some(final_src_rect),
+                );
+            } else {
                 // Handle multi-tile blocks - only render from anchor position
                 if block.is_multi_tile() {
                     // Only render if this is the anchor tile
@@ -187,46 +227,6 @@ fn render_terrain(
                 } else {
                     let texture = block.get_texture(textures);
                     render_tile(d, x as f32, y as f32, texture, None);
-                }
-            } else if block == Block::Stalagmite || block == Block::Stalactite {
-                let neighbors = Neighbors {
-                    up: terrain.spike_at(x, y - 1),
-                    up_right: terrain.spike_at(x + 1, y - 1),
-                    right: terrain.spike_at(x + 1, y),
-                    down_right: terrain.spike_at(x + 1, y + 1),
-                    down: terrain.spike_at(x, y + 1),
-                    down_left: terrain.spike_at(x - 1, y + 1),
-                    left: terrain.spike_at(x - 1, y),
-                    up_left: terrain.spike_at(x - 1, y - 1),
-                };
-                let src_rect = textures.tiles.spikes.get_tile_rect(x, y, &neighbors);
-                let final_src_rect = if block == Block::Stalactite {
-                    Rectangle::new(
-                        src_rect.x,
-                        src_rect.y + src_rect.height,
-                        src_rect.width,
-                        -src_rect.height,
-                    )
-                } else {
-                    src_rect
-                };
-                render_tile(
-                    d,
-                    x as f32,
-                    y as f32,
-                    &textures.tiles.spikes.texture(),
-                    Some(final_src_rect),
-                );
-            } else {
-                for cell_y in 0..CELL_RESOLUTION {
-                    for cell_x in 0..CELL_RESOLUTION {
-                        render_water(
-                            d,
-                            terrain,
-                            x as f32 + cell_x as f32 / CELL_RESOLUTION as f32,
-                            y as f32 + cell_y as f32 / CELL_RESOLUTION as f32,
-                        );
-                    }
                 }
             }
         }

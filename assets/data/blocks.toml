@@ -191,7 +191,7 @@ image = "fallback"
 
 [blocks.workbench]
 name = "Workbench"
-type = "solid"
+type = "air"
 durability = 5.0
 drops = "workbench"
 amount = 1
@@ -200,7 +200,7 @@ height = 3
 
 [blocks.anvil]
 name = "Anvil"
-type = "solid"
+type = "air"
 durability = 5.0
 drops = "anvil"
 amount = 1
