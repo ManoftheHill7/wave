@@ -1,0 +1,69 @@
+# furnace tool repair recipes
+
+# dash amulets
+
+[repairs.amethyst_amulet]
+type = "furnace"
+output = "amethyst amulet"
+amount = 1
+[[repairs.amethyst_amulet.inputs]]
+type = "amethyst amulet"
+amount = 1
+[[repairs.amethyst_amulet.inputs]]
+type = "amethyst"
+amount = 5
+
+[repairs.diamond_amulet]
+type = "furnace"
+output = "diamond amulet"
+amount = 1
+[[repairs.diamond_amulet.inputs]]
+type = "diamond amulet"
+amount = 1
+[[repairs.diamond_amulet.inputs]]
+type = "diamond"
+amount = 5
+
+[repairs.emerald_amulet]
+type = "furnace"
+output = "emerald amulet"
+amount = 1
+[[repairs.emerald_amulet.inputs]]
+type = "emerald amulet"
+amount = 1
+[[repairs.emerald_amulet.inputs]]
+type = "emerald"
+amount = 5
+
+[repairs.jasper_amulet]
+type = "furnace"
+output = "jasper amulet"
+amount = 1
+[[repairs.jasper_amulet.inputs]]
+type = "jasper amulet"
+amount = 1
+[[repairs.jasper_amulet.inputs]]
+type = "jasper"
+amount = 5
+
+[repairs.ruby_amulet]
+type = "furnace"
+output = "ruby amulet"
+amount = 1
+[[repairs.ruby_amulet.inputs]]
+type = "ruby amulet"
+amount = 1
+[[repairs.ruby_amulet.inputs]]
+type = "ruby"
+amount = 5
+
+[repairs.topaz_amulet]
+type = "furnace"
+output = "topaz amulet"
+amount = 1
+[[repairs.topaz_amulet.inputs]]
+type = "topaz amulet"
+amount = 1
+[[repairs.topaz_amulet.inputs]]
+type = "topaz"
+amount = 5

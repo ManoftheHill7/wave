@@ -1,96 +1,7 @@
-# workbench recipes
-
-[recipes.stick]
-type = "workbench"
-output = "stick"
-amount = 10
-[[recipes.stick.inputs]]
-type = "log"
-amount = 1
-
-[recipes.chest]
-type = "workbench"
-output = "chest"
-amount = 1
-[[recipes.chest.inputs]]
-type = "log"
-amount = 2
-
-[recipes.torch]
-type = "workbench"
-output = "torch"
-amount = 5
-[[recipes.torch.inputs]]
-type = "stick"
-amount = 1
-[[recipes.torch.inputs]]
-type = "coal"
-amount = 1
-
-[recipes.lumostorch]
-type = "workbench"
-output = "lumostorch"
-amount = 1
-[[recipes.lumostorch.inputs]]
-type = "stick"
-amount = 1
-[[recipes.lumostorch.inputs]]
-type = "lumostone"
-amount = 1
-
-[recipes.wooden_ladder]
-type = "workbench"
-output = "wooden_ladder"
-amount = 6
-[[recipes.wooden_ladder.inputs]]
-type = "stick"
-amount = 5
-
-[recipes.rope]
-type = "workbench"
-output = "rope"
-amount = 2
-[[recipes.rope.inputs]]
-type = "flax"
-amount = 1
-
-[recipes.linen]
-type = "workbench"
-output = "linen"
-amount = 1
-[[recipes.linen.inputs]]
-type = "flax"
-amount = 10
-
-[recipes.bomb]
-type = "workbench"
-output = "bomb"
-amount = 1
-[[recipes.bomb.inputs]]
-type = "explosive dust"
-amount = 1
-[[recipes.bomb.inputs]]
-type = "iron shell"
-amount = 1
-
-[recipes.tidalcave_clock]
-type = "workbench"
-output = "tidalcave_clock"
-amount = 1
-[[recipes.tidalcave_clock.inputs]]
-type = "bronze bar"
-amount = 2
-[[recipes.tidalcave_clock.inputs]]
-type = "conch shell"
-amount = 1
-[[recipes.tidalcave_clock.inputs]]
-type = "pearl"
-amount = 2
-[[recipes.tidalcave_clock.inputs]]
-type = "glass"
-amount = 3
-
 # furnace recipes
+
+
+# metal bar recipes
 
 [recipes.copper_bar]
 type = "furnace"
@@ -222,6 +133,111 @@ amount = 30
 type = "mithril_lava_bucket"
 amount = 1
 
+
+# pickaxe upgrade recipes
+
+[recipes.copper_pickaxe]
+type = "furnace"
+output = "copper_pickaxe"
+amount = 1
+[[recipes.copper_pickaxe.inputs]]
+type = "stone pickaxe"
+amount = 1
+[[recipes.copper_pickaxe.inputs]]
+type = "copper bar"
+amount = 1
+
+[recipes.bronze_pickaxe]
+type = "furnace"
+output = "bronze_pickaxe"
+amount = 1
+[[recipes.bronze_pickaxe.inputs]]
+type = "copper pickaxe"
+amount = 1
+[[recipes.bronze_pickaxe.inputs]]
+type = "bronze bar"
+amount = 1
+
+[recipes.iron_pickaxe]
+type = "furnace"
+output = "iron_pickaxe"
+amount = 1
+[[recipes.iron_pickaxe.inputs]]
+type = "bronze pickaxe"
+amount = 1
+[[recipes.iron_pickaxe.inputs]]
+type = "iron bar"
+amount = 1
+
+[recipes.steel_pickaxe]
+type = "furnace"
+output = "steel_pickaxe"
+amount = 1
+[[recipes.steel_pickaxe.inputs]]
+type = "iron pickaxe"
+amount = 1
+[[recipes.steel_pickaxe.inputs]]
+type = "steel bar"
+amount = 1
+
+[recipes.platinum_pickaxe]
+type = "furnace"
+output = "platinum_pickaxe"
+amount = 1
+[[recipes.platinum_pickaxe.inputs]]
+type = "steel pickaxe"
+amount = 1
+[[recipes.platinum_pickaxe.inputs]]
+type = "platinum bar"
+amount = 1
+
+[recipes.mithril_pickaxe]
+type = "furnace"
+output = "mithril_pickaxe"
+amount = 1
+[[recipes.mithril_pickaxe.inputs]]
+type = "platinum pickaxe"
+amount = 1
+[[recipes.mithril_pickaxe.inputs]]
+type = "mithril bar"
+amount = 1
+
+[recipes.ozathinum_pickaxe]
+type = "furnace"
+output = "ozathinum_pickaxe"
+amount = 1
+[[recipes.ozathinum_pickaxe.inputs]]
+type = "mithril pickaxe"
+amount = 1
+[[recipes.ozathinum_pickaxe.inputs]]
+type = "ozathinum bar"
+amount = 1
+
+[recipes.torzite_pickaxe]
+type = "furnace"
+output = "torzite_pickaxe"
+amount = 1
+[[recipes.torzite_pickaxe.inputs]]
+type = "ozathinum pickaxe"
+amount = 1
+[[recipes.torzite_pickaxe.inputs]]
+type = "torzite bar"
+amount = 1
+
+[recipes.etherealite_pickaxe]
+type = "furnace"
+output = "etherealite_pickaxe"
+amount = 1
+[[recipes.etherealite_pickaxe.inputs]]
+type = "torzite pickaxe"
+amount = 1
+[[recipes.etherealite_pickaxe.inputs]]
+type = "etherealite bar"
+amount = 1
+
+
+# misc furnace recipes
+
 [recipes.lumostone]
 type = "furnace"
 output = "lumostone"
@@ -237,59 +253,3 @@ amount = 1
 [[recipes.glass.inputs]]
 type = "sand"
 amount = 1
-
-# anvil recipes
-
-[recipes.copper_ladder]
-type = "anvil"
-output = "copper ladder"
-amount = 12
-[[recipes.copper_ladder.inputs]]
-type = "copper bar"
-amount = 5
-
-[recipes.steel_ladder]
-type = "anvil"
-output = "steel ladder"
-amount = 12
-[[recipes.steel_ladder.inputs]]
-type = "steel bar"
-amount = 5
-
-[recipes.lamp]
-type = "anvil"
-output = "lamp"
-amount = 1
-[[recipes.lamp.inputs]]
-type = "bronze bar"
-amount = 2
-[[recipes.lamp.inputs]]
-type = "glass"
-amount = 1
-
-[recipes.iron_shell]
-type = "anvil"
-output = "iron shell"
-amount = 1
-[[recipes.iron_shell.inputs]]
-type = "iron bar"
-amount = 1
-
-[recipes.mithril_bucket]
-type = "anvil"
-output = "mithril bucket"
-amount = 1
-[[recipes.mithril_bucket.inputs]]
-type = "mithril bar"
-amount = 2
-
-[recipes.explosive_dust]
-type = "anvil"
-output = "explosive_dust"
-amount = 1
-[[recipes.explosive_dust.inputs]]
-type = "coal"
-amount = 3
-[[recipes.explosive_dust.inputs]]
-type = "lumostone"
-amount = 3

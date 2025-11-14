@@ -1,0 +1,55 @@
+# anvil recipes
+
+[recipes.copper_ladder]
+type = "anvil"
+output = "copper ladder"
+amount = 12
+[[recipes.copper_ladder.inputs]]
+type = "copper bar"
+amount = 5
+
+[recipes.steel_ladder]
+type = "anvil"
+output = "steel ladder"
+amount = 12
+[[recipes.steel_ladder.inputs]]
+type = "steel bar"
+amount = 5
+
+[recipes.lamp]
+type = "anvil"
+output = "lamp"
+amount = 1
+[[recipes.lamp.inputs]]
+type = "bronze bar"
+amount = 2
+[[recipes.lamp.inputs]]
+type = "glass"
+amount = 1
+
+[recipes.iron_shell]
+type = "anvil"
+output = "iron shell"
+amount = 1
+[[recipes.iron_shell.inputs]]
+type = "iron bar"
+amount = 1
+
+[recipes.mithril_bucket]
+type = "anvil"
+output = "mithril bucket"
+amount = 1
+[[recipes.mithril_bucket.inputs]]
+type = "mithril bar"
+amount = 2
+
+[recipes.explosive_dust]
+type = "anvil"
+output = "explosive_dust"
+amount = 1
+[[recipes.explosive_dust.inputs]]
+type = "coal"
+amount = 3
+[[recipes.explosive_dust.inputs]]
+type = "lumostone"
+amount = 3
