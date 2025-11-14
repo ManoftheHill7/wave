@@ -26,10 +26,9 @@ fn main() {
         println!("Starting new game...");
 
         use inventory::ItemType;
-        ctx.world_state.player.inventory.add(ItemType::Stone, 3);
-        ctx.world_state.player.inventory.add(ItemType::Dirt, 10);
-        ctx.world_state.player.inventory.add(ItemType::Copper, 10);
-        ctx.world_state.player.inventory.add(ItemType::Sand, 10);
+        // ctx.world_state.player.inventory.add(ItemType::Log, 5);
+        ctx.world_state.player.inventory.add(ItemType::Workbench, 1);
+        ctx.world_state.player.inventory.add(ItemType::Anvil, 1);
 
         Box::new(GameScreen::new(&ctx))
     } else if resume_mode {

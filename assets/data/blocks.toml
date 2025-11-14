@@ -188,3 +188,22 @@ name = "Stalactite"
 type = "spike"
 durability = 0.0
 image = "fallback"
+
+[blocks.workbench]
+name = "Workbench"
+type = "solid"
+durability = 5.0
+drops = "workbench"
+amount = 1
+width = 2
+height = 3
+
+[blocks.anvil]
+name = "Anvil"
+type = "solid"
+durability = 5.0
+drops = "anvil"
+amount = 1
+image = "tiles.anvil1"
+width = 2
+height = 2

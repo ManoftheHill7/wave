@@ -81,12 +81,22 @@ pub struct ChunkCoord {
     pub y: i32,
 }
 
+/// Metadata for tiles that are part of a multi-tile block
+#[derive(Debug, Clone, Copy, serde::Serialize, serde::Deserialize)]
+pub struct MultiTileData {
+    pub anchor_x: i32, // World position of anchor tile (bottom-left)
+    pub anchor_y: i32,
+    pub block_type: Block,
+}
+
 #[derive(Debug, Clone)]
 pub struct Chunk {
     blocks: Vec<Block>,
     cells: Vec<LiquidData>,
     cells_next: Vec<LiquidData>,
     pub coord: ChunkCoord,
+    /// Maps local (x, y) coordinates to multi-tile data
+    multi_tile_data: HashMap<(usize, usize), MultiTileData>,
 }
 
 impl Chunk {
@@ -96,12 +106,35 @@ impl Chunk {
             cells: vec![LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],
             cells_next: vec![LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],
             coord,
+            multi_tile_data: HashMap::new(),
         }
     }
 
     pub fn get(&self, local_x: usize, local_y: usize) -> Block {
+        // Check if this tile is part of a multi-tile block
+        if let Some(data) = self.multi_tile_data.get(&(local_x, local_y)) {
+            return data.block_type;
+        }
+
         let index = local_y * CHUNK_SIZE + local_x;
         self.blocks[index]
+    }
+
+    pub fn get_multi_tile_data(&self, local_x: usize, local_y: usize) -> Option<MultiTileData> {
+        self.multi_tile_data.get(&(local_x, local_y)).copied()
+    }
+
+    pub fn set_multi_tile_data(
+        &mut self,
+        local_x: usize,
+        local_y: usize,
+        data: Option<MultiTileData>,
+    ) {
+        if let Some(d) = data {
+            self.multi_tile_data.insert((local_x, local_y), d);
+        } else {
+            self.multi_tile_data.remove(&(local_x, local_y));
+        }
     }
 
     pub fn set(&mut self, local_x: usize, local_y: usize, block: Block) {
@@ -598,6 +631,22 @@ impl Terrain {
         self.at(x, y).is_spike()
     }
 
+    /// Returns true if this position is a multi-tile anchor (or not part of a multi-tile block)
+    /// Returns false if this position is a secondary tile of a multi-tile block
+    pub fn is_multi_tile_anchor(&self, x: i32, y: i32) -> bool {
+        let chunk_coord = self.world_to_chunk(x, y);
+        let local_coord = self.world_to_local(x, y);
+
+        if let Some(chunk) = self.chunks.get(&chunk_coord) {
+            // If there's multi-tile data, this is a secondary tile (not an anchor)
+            chunk
+                .get_multi_tile_data(local_coord.0, local_coord.1)
+                .is_none()
+        } else {
+            true
+        }
+    }
+
     pub fn liquid_terrain_at(&self, x: i32, y: i32) -> bool {
         // matches!(self.at(x, y), Block::Water | Block::Lava)
         self.liquid_at(x as f32, y as f32).volume
@@ -666,6 +715,129 @@ impl Terrain {
         if let Some(chunk) = self.chunks.get_mut(&chunk_coord) {
             chunk.set(local_coord.0, local_coord.1, block);
         }
+    }
+
+    /// Check if a multi-tile block can be placed at the given position
+    /// Returns true if all required tiles are clear (air or non-solid)
+    pub fn can_place_multi_tile(&self, x: i32, y: i32, block: Block) -> bool {
+        if !block.is_multi_tile() {
+            return !self.at(x, y).is_solid();
+        }
+
+        let width = block.width() as i32;
+        let height = block.height() as i32;
+
+        // Check all tiles that this block would occupy
+        for dy in 0..height {
+            for dx in 0..width {
+                let check_x = x + dx;
+                let check_y = y - dy; // y increases downward, blocks grow upward
+
+                let block_at = self.at(check_x, check_y);
+                if block_at.is_solid() || block_at.is_multi_tile() {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+
+    /// Place a multi-tile block at the given position (bottom-left anchor)
+    pub fn place_multi_tile(&mut self, x: i32, y: i32, block: Block) {
+        if !block.is_multi_tile() {
+            // Single tile block, use regular set
+            self.set(x, y, block);
+            return;
+        }
+
+        let width = block.width() as i32;
+        let height = block.height() as i32;
+
+        // Place anchor block at bottom-left
+        self.set(x, y, block);
+
+        // Set multi-tile data for all other tiles
+        for dy in 0..height {
+            for dx in 0..width {
+                if dx == 0 && dy == 0 {
+                    continue; // Skip anchor tile
+                }
+
+                let tile_x = x + dx;
+                let tile_y = y - dy;
+
+                // Set tile to air (occupied by multi-tile)
+                self.set(tile_x, tile_y, Block::Air);
+
+                // Add multi-tile metadata
+                let chunk_coord = self.world_to_chunk(tile_x, tile_y);
+                let local_coord = self.world_to_local(tile_x, tile_y);
+
+                if let Some(chunk) = self.chunks.get_mut(&chunk_coord) {
+                    chunk.set_multi_tile_data(
+                        local_coord.0,
+                        local_coord.1,
+                        Some(MultiTileData {
+                            anchor_x: x,
+                            anchor_y: y,
+                            block_type: block,
+                        }),
+                    );
+                }
+            }
+        }
+    }
+
+    /// Break a multi-tile block, removing all its tiles
+    /// Returns the block type that was broken and the anchor position
+    pub fn break_multi_tile(&mut self, x: i32, y: i32) -> Option<(Block, i32, i32)> {
+        let chunk_coord = self.world_to_chunk(x, y);
+        let local_coord = self.world_to_local(x, y);
+
+        // Check if this tile has multi-tile data (it's part of a multi-tile block)
+        let multi_tile_data = if let Some(chunk) = self.chunks.get(&chunk_coord) {
+            chunk.get_multi_tile_data(local_coord.0, local_coord.1)
+        } else {
+            None
+        };
+
+        let (anchor_x, anchor_y, block_type) = if let Some(data) = multi_tile_data {
+            // This is a secondary tile, find the anchor
+            (data.anchor_x, data.anchor_y, data.block_type)
+        } else {
+            // Check if this tile itself is a multi-tile anchor
+            let block = self.at(x, y);
+            if block.is_multi_tile() {
+                (x, y, block)
+            } else {
+                // Not a multi-tile block
+                return None;
+            }
+        };
+
+        // Remove all tiles of this multi-tile block
+        let width = block_type.width() as i32;
+        let height = block_type.height() as i32;
+
+        for dy in 0..height {
+            for dx in 0..width {
+                let tile_x = anchor_x + dx;
+                let tile_y = anchor_y - dy;
+
+                self.set(tile_x, tile_y, Block::Air);
+
+                // Clear multi-tile metadata
+                let chunk_coord = self.world_to_chunk(tile_x, tile_y);
+                let local_coord = self.world_to_local(tile_x, tile_y);
+
+                if let Some(chunk) = self.chunks.get_mut(&chunk_coord) {
+                    chunk.set_multi_tile_data(local_coord.0, local_coord.1, None);
+                }
+            }
+        }
+
+        Some((block_type, anchor_x, anchor_y))
     }
 
     pub fn world_to_chunk(&self, x: i32, y: i32) -> ChunkCoord {

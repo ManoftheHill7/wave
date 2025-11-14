@@ -1,5 +1,5 @@
 use crate::player::Player;
-use crate::terrain::{Block, Chunk, ChunkCoord};
+use crate::terrain::{Block, Chunk, ChunkCoord, MultiTileData};
 use crate::terrain_generator::Generator;
 use crate::world::WorldState;
 use serde::{Deserialize, Serialize};
@@ -21,32 +21,49 @@ pub struct SaveData {
 pub struct ChunkData {
     pub coord: ChunkCoord,
     pub blocks: Vec<Block>,
+    pub multi_tile_data: HashMap<(usize, usize), MultiTileData>,
 }
 
 impl ChunkData {
     pub fn from_chunk(chunk: &Chunk) -> Self {
         use crate::terrain::CHUNK_SIZE;
         let mut blocks = Vec::with_capacity(CHUNK_SIZE * CHUNK_SIZE);
+        let mut multi_tile_data = HashMap::new();
+
         for y in 0..CHUNK_SIZE {
             for x in 0..CHUNK_SIZE {
                 blocks.push(chunk.get(x, y));
+
+                // Save multi-tile data if present
+                if let Some(data) = chunk.get_multi_tile_data(x, y) {
+                    multi_tile_data.insert((x, y), data);
+                }
             }
         }
+
         ChunkData {
             coord: chunk.coord,
             blocks,
+            multi_tile_data,
         }
     }
 
     pub fn to_chunk(&self) -> Chunk {
         use crate::terrain::CHUNK_SIZE;
         let mut chunk = Chunk::new(self.coord);
+
         for y in 0..CHUNK_SIZE {
             for x in 0..CHUNK_SIZE {
                 let index = y * CHUNK_SIZE + x;
                 chunk.set(x, y, self.blocks[index]);
             }
         }
+
+        // Restore multi-tile data
+        for ((x, y), data) in &self.multi_tile_data {
+            chunk.set_multi_tile_data(*x, *y, Some(*data));
+        }
+
         chunk
     }
 }

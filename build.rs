@@ -212,6 +212,9 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
     let mut all_blocks = Vec::new();
     let mut texture_match_arms = Vec::new();
     let mut ore_spawn_match_arms = Vec::new();
+    let mut width_match_arms = Vec::new();
+    let mut height_match_arms = Vec::new();
+    let mut is_multi_tile_match_arms = Vec::new();
 
     for (key, value) in blocks.iter() {
         let table = value.as_table().expect("Block must be a table");
@@ -295,6 +298,25 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
         }
 
         all_blocks.push(format!("            Block::{},", variant_name));
+
+        // Parse width and height (default to 1)
+        let width = table.get("width").and_then(|v| v.as_integer()).unwrap_or(1) as usize;
+        let height = table
+            .get("height")
+            .and_then(|v| v.as_integer())
+            .unwrap_or(1) as usize;
+
+        width_match_arms.push(format!("            Block::{} => {},", variant_name, width));
+        height_match_arms.push(format!(
+            "            Block::{} => {},",
+            variant_name, height
+        ));
+
+        let is_multi = width > 1 || height > 1;
+        is_multi_tile_match_arms.push(format!(
+            "            Block::{} => {},",
+            variant_name, is_multi
+        ));
 
         // Check if this block has ore spawn data
         let has_ore_data = ores.as_ref().and_then(|o| o.get(key)).is_some();
@@ -450,6 +472,27 @@ impl Block {{
 {}
         }}
     }}
+
+    /// Returns the width of this block in tiles (default 1)
+    pub fn width(self) -> usize {{
+        match self {{
+{}
+        }}
+    }}
+
+    /// Returns the height of this block in tiles (default 1)
+    pub fn height(self) -> usize {{
+        match self {{
+{}
+        }}
+    }}
+
+    /// Returns true if this block occupies multiple tiles
+    pub fn is_multi_tile(self) -> bool {{
+        match self {{
+{}
+        }}
+    }}
 }}
 "#,
         enum_variants.join("\n"),
@@ -463,7 +506,10 @@ impl Block {{
         is_spike_match_arms.join("\n"),
         all_blocks.join("\n"),
         texture_match_arms.join("\n"),
-        ore_spawn_match_arms.join("\n")
+        ore_spawn_match_arms.join("\n"),
+        width_match_arms.join("\n"),
+        height_match_arms.join("\n"),
+        is_multi_tile_match_arms.join("\n")
     );
 
     fs::write(&dest_path, generated_code).expect("Failed to write generated blocks");
@@ -654,6 +700,7 @@ fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
         }
 
         let recipe_type_enum = match recipe_type {
+            "always" => "RecipeType::Always",
             "workbench" => "RecipeType::Workbench",
             "furnace" => "RecipeType::Furnace",
             "anvil" => "RecipeType::Anvil",
@@ -697,6 +744,7 @@ pub enum RecipeType {{
     Workbench,
     Furnace,
     Anvil,
+    Always
 }}
 
 #[derive(Debug, Clone, Copy)]

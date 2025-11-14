@@ -358,10 +358,19 @@ impl Player {
         };
 
         if let Some((tile_x, tile_y)) = tile {
+            let x = tile_x.floor() as i32;
+            let y = tile_y.floor() as i32;
+
+            // Check if placement is valid for multi-tile blocks
+            if !terrain.can_place_multi_tile(x, y, block) {
+                return;
+            }
+
             if let Some(item_type) = block.to_item_type() {
                 let taken = self.inventory.take(item_type, 1);
                 if taken > 0 {
-                    terrain.set(tile_x.floor() as i32, tile_y.floor() as i32, block);
+                    // Use multi-tile placement (works for both single and multi-tile blocks)
+                    terrain.place_multi_tile(x, y, block);
                     if self.inventory.count(item_type) == 0 {
                         // TODO: remove from hand
                     }
@@ -906,12 +915,15 @@ impl Player {
                     }
                     self.is_mining = false;
 
-                    // Add drops to inventory before removing the block
-                    if let Some((item_type, amount)) = block.get_drops() {
-                        self.inventory.add(item_type, amount);
+                    // Break the block (handles both single-tile and multi-tile blocks)
+                    if let Some((broken_block, _, _)) =
+                        terrain.break_multi_tile(bt.0 as i32, bt.1 as i32)
+                    {
+                        // Add drops to inventory
+                        if let Some((item_type, amount)) = broken_block.get_drops() {
+                            self.inventory.add(item_type, amount);
+                        }
                     }
-
-                    terrain.set(bt.0 as i32, bt.1 as i32, Block::Air);
                 }
             }
         }

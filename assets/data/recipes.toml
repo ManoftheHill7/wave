@@ -1,23 +1,14 @@
-# workbench recipes
-
-[recipes.stick]
-type = "workbench"
-output = "stick"
-amount = 10
-[[recipes.stick.inputs]]
-type = "log"
+# Hand recipes
+[recipes.workbench]
+type = "always"
+output = "workbench"
 amount = 1
-
-[recipes.chest]
-type = "workbench"
-output = "chest"
-amount = 1
-[[recipes.chest.inputs]]
-type = "log"
-amount = 2
+[[recipes.workbench.inputs]]
+type = "stick"
+amount = 50
 
 [recipes.torch]
-type = "workbench"
+type = "always"
 output = "torch"
 amount = 5
 [[recipes.torch.inputs]]
@@ -26,6 +17,23 @@ amount = 1
 [[recipes.torch.inputs]]
 type = "coal"
 amount = 1
+
+[recipes.stick]
+type = "always"
+output = "stick"
+amount = 10
+[[recipes.stick.inputs]]
+type = "log"
+amount = 1
+
+# workbench recipes
+[recipes.chest]
+type = "workbench"
+output = "chest"
+amount = 1
+[[recipes.chest.inputs]]
+type = "log"
+amount = 2
 
 [recipes.lumostorch]
 type = "workbench"
