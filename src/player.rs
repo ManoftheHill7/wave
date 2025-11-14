@@ -3,6 +3,26 @@ use crate::inventory::Inventory;
 use crate::terrain::{Block, Terrain};
 use crate::tools::*;
 use raylib::prelude::*;
+use serde::{Deserialize, Serialize};
+
+// Serializable wrapper for Vector2
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+struct SerVec2 {
+    x: f32,
+    y: f32,
+}
+
+impl From<Vector2> for SerVec2 {
+    fn from(v: Vector2) -> Self {
+        SerVec2 { x: v.x, y: v.y }
+    }
+}
+
+impl From<SerVec2> for Vector2 {
+    fn from(v: SerVec2) -> Self {
+        Vector2::new(v.x, v.y)
+    }
+}
 
 pub const ACCEL: f32 = 50.0;
 pub const SPEED: f32 = 12.0;
@@ -55,8 +75,11 @@ struct RaycastResult {
     hit: bool,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Player {
+    #[serde(with = "vector2_serde")]
     pub position: Vector2,
+    #[serde(with = "vector2_serde")]
     pub velocity: Vector2,
     pub height: f32,
     pub width: f32,
@@ -87,16 +110,21 @@ pub struct Player {
 
     pub gravity_reduction: f32,
 
+    #[serde(with = "vector2_serde")]
     pub dash_dir: Vector2,
 
+    #[serde(with = "vector2_serde")]
     pub landing_speed: Vector2,
+    #[serde(with = "vector2_serde")]
     pub last_velocity: Vector2,
 
     pub currently_mining: Option<(f32, f32)>,
 
     pub raycast_left_tile: Option<(f32, f32)>,
     pub raycast_right_tile: Option<(f32, f32)>,
+    #[serde(with = "vector2_serde")]
     pub raycast_left_end: Vector2,
+    #[serde(with = "vector2_serde")]
     pub raycast_right_end: Vector2,
 
     pub health: i32,
@@ -108,6 +136,33 @@ pub struct Player {
     pub right_hand: Option<ToolType>,
     pub tool_dash: Option<ToolDash>,
     pub tool_pickaxe: Option<ToolPickaxe>,
+}
+
+// Custom serialization for raylib Vector2
+mod vector2_serde {
+    use raylib::prelude::Vector2;
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    #[derive(Serialize, Deserialize)]
+    struct V2 {
+        x: f32,
+        y: f32,
+    }
+
+    pub fn serialize<S>(v: &Vector2, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        V2 { x: v.x, y: v.y }.serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Vector2, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let v = V2::deserialize(deserializer)?;
+        Ok(Vector2::new(v.x, v.y))
+    }
 }
 
 impl Player {
@@ -831,7 +886,8 @@ impl Player {
                     self.started_mining_at = self.time;
                     self.currently_mining = Some(bt);
                 } else {
-                    self.facing_dir = (raycast_end.x - (self.position.x + self.width / 2.0)).signum() as i32;
+                    self.facing_dir =
+                        (raycast_end.x - (self.position.x + self.width / 2.0)).signum() as i32;
                     if let Some(ot) = self.currently_mining {
                         if ot.0 != bt.0 || ot.1 != bt.1 {
                             self.started_mining_at = self.time;

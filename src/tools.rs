@@ -1,15 +1,17 @@
+use serde::{Deserialize, Serialize};
 use toml::map::Map;
 use toml::Value;
 
 use crate::terrain::Block;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ToolType {
     Dash,
     Pickaxe,
     PlaceBlock(Block),
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolDash {
     pub durability: f32,
     pub max_durability: f32,
@@ -19,6 +21,7 @@ pub struct ToolDash {
     pub dash_control_modifier: f32,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolPickaxe {
     pub durability: f32,
     pub max_durability: f32,

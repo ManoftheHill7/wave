@@ -1,0 +1,193 @@
+use crate::player::Player;
+use crate::terrain::{Block, Chunk, ChunkCoord};
+use crate::terrain_generator::Generator;
+use crate::world::WorldState;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs::{self, File};
+use std::io::{Read, Write};
+use std::path::PathBuf;
+
+#[derive(Serialize, Deserialize)]
+pub struct SaveData {
+    pub player: Player,
+    pub chunks: HashMap<ChunkCoord, ChunkData>,
+    pub flow_timer: f32,
+    pub tide_timer: f32,
+    pub terrain_seed: Option<u64>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ChunkData {
+    pub coord: ChunkCoord,
+    pub blocks: Vec<Block>,
+}
+
+impl ChunkData {
+    pub fn from_chunk(chunk: &Chunk) -> Self {
+        use crate::terrain::CHUNK_SIZE;
+        let mut blocks = Vec::with_capacity(CHUNK_SIZE * CHUNK_SIZE);
+        for y in 0..CHUNK_SIZE {
+            for x in 0..CHUNK_SIZE {
+                blocks.push(chunk.get(x, y));
+            }
+        }
+        ChunkData {
+            coord: chunk.coord,
+            blocks,
+        }
+    }
+
+    pub fn to_chunk(&self) -> Chunk {
+        use crate::terrain::CHUNK_SIZE;
+        let mut chunk = Chunk::new(self.coord);
+        for y in 0..CHUNK_SIZE {
+            for x in 0..CHUNK_SIZE {
+                let index = y * CHUNK_SIZE + x;
+                chunk.set(x, y, self.blocks[index]);
+            }
+        }
+        chunk
+    }
+}
+
+fn get_save_dir() -> PathBuf {
+    let mut path = if let Some(data_dir) = dirs::data_local_dir() {
+        data_dir
+    } else {
+        PathBuf::from(".")
+    };
+    path.push("waves");
+    path.push("saves");
+    path
+}
+
+fn get_save_path(slot: u32) -> PathBuf {
+    let mut path = get_save_dir();
+    path.push(format!("save_{}.bin", slot));
+    path
+}
+
+pub fn save_game(world_state: &WorldState, slot: u32) -> Result<(), String> {
+    let save_dir = get_save_dir();
+    fs::create_dir_all(&save_dir).map_err(|e| format!("Failed to create save directory: {}", e))?;
+
+    let mut chunks = HashMap::new();
+    for (coord, chunk) in &world_state.terrain.chunks {
+        chunks.insert(*coord, ChunkData::from_chunk(chunk));
+    }
+
+    // Extract seed from terrain generator
+    let terrain_seed = match &world_state.terrain.generator {
+        Generator::Procedural(gen) => Some(gen.get_seed()),
+        Generator::Map(_) => None,
+    };
+
+    let save_data = SaveData {
+        player: world_state.player.clone(),
+        chunks,
+        flow_timer: world_state.get_flow_timer(),
+        tide_timer: world_state.get_tide_timer(),
+        terrain_seed,
+    };
+
+    let encoded = bincode::serialize(&save_data)
+        .map_err(|e| format!("Failed to serialize save data: {}", e))?;
+
+    let save_path = get_save_path(slot);
+    let mut file =
+        File::create(&save_path).map_err(|e| format!("Failed to create save file: {}", e))?;
+
+    file.write_all(&encoded)
+        .map_err(|e| format!("Failed to write save file: {}", e))?;
+
+    println!("Game saved to: {:?} ({} bytes)", save_path, encoded.len());
+    Ok(())
+}
+
+pub fn load_game(slot: u32) -> Result<SaveData, String> {
+    let save_path = get_save_path(slot);
+
+    if !save_path.exists() {
+        return Err(format!("Save file not found: {:?}", save_path));
+    }
+
+    let mut file =
+        File::open(&save_path).map_err(|e| format!("Failed to open save file: {}", e))?;
+
+    let mut encoded = Vec::new();
+    file.read_to_end(&mut encoded)
+        .map_err(|e| format!("Failed to read save file: {}", e))?;
+
+    let save_data: SaveData = bincode::deserialize(&encoded)
+        .map_err(|e| format!("Failed to deserialize save data: {}", e))?;
+
+    println!(
+        "Game loaded from: {:?} ({} bytes)",
+        save_path,
+        encoded.len()
+    );
+    Ok(save_data)
+}
+
+pub fn apply_save_data(world_state: &mut WorldState, save_data: SaveData) {
+    world_state.player = save_data.player;
+    world_state.set_flow_timer(save_data.flow_timer);
+    world_state.set_tide_timer(save_data.tide_timer);
+
+    world_state.terrain.chunks.clear();
+    for (coord, chunk_data) in save_data.chunks {
+        world_state
+            .terrain
+            .chunks
+            .insert(coord, chunk_data.to_chunk());
+    }
+}
+
+pub fn save_exists(slot: u32) -> bool {
+    get_save_path(slot).exists()
+}
+
+pub fn delete_save(slot: u32) -> Result<(), String> {
+    let save_path = get_save_path(slot);
+
+    if !save_path.exists() {
+        return Err(format!("Save file not found: {:?}", save_path));
+    }
+
+    fs::remove_file(&save_path).map_err(|e| format!("Failed to delete save file: {}", e))?;
+
+    println!("Save file deleted: {:?}", save_path);
+    Ok(())
+}
+
+pub fn delete_all_saves() -> Result<(), String> {
+    let save_dir = get_save_dir();
+
+    if !save_dir.exists() {
+        return Ok(()); // No saves directory, nothing to delete
+    }
+
+    let entries =
+        fs::read_dir(&save_dir).map_err(|e| format!("Failed to read save directory: {}", e))?;
+
+    let mut deleted_count = 0;
+    for entry in entries {
+        if let Ok(entry) = entry {
+            let path = entry.path();
+            if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("bin") {
+                if let Err(e) = fs::remove_file(&path) {
+                    eprintln!("Failed to delete {:?}: {}", path, e);
+                } else {
+                    deleted_count += 1;
+                }
+            }
+        }
+    }
+
+    println!(
+        "Deleted {} save file(s) from: {:?}",
+        deleted_count, save_dir
+    );
+    Ok(())
+}

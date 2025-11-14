@@ -138,7 +138,7 @@ fn generate_items(out_dir: &str, game_data: &toml::Table) {
     }
 
     let generated_code = format!(
-        r#"#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        r#"#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ItemType {{
 {}
 }}
@@ -360,7 +360,7 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
 
     let generated_code = format!(
         r#"// Generated block definitions
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Block {{
 {}
 }}
@@ -663,7 +663,7 @@ fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
         // Convert spaces to underscores, then to PascalCase
         let output_normalized = output.replace(" ", "_");
         let output_item = to_pascal_case(&output_normalized);
-        
+
         recipe_definitions.push(format!(
             r#"    Recipe {{
         name: "{}",
@@ -681,7 +681,10 @@ fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
     }
 
     if !skipped_recipes.is_empty() {
-        println!("cargo:warning=Skipped {} recipes due to missing items:", skipped_recipes.len());
+        println!(
+            "cargo:warning=Skipped {} recipes due to missing items:",
+            skipped_recipes.len()
+        );
         for skipped in &skipped_recipes {
             println!("cargo:warning=  - {}", skipped);
         }
@@ -751,4 +754,3 @@ pub static ALL_RECIPES: &[Recipe] = &[
 
     fs::write(&dest_path, generated_code).expect("Failed to write generated recipes");
 }
-

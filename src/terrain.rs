@@ -75,7 +75,7 @@ impl LiquidData {
 }
 
 // Chunk coordinate (not block coordinate)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ChunkCoord {
     pub x: i32,
     pub y: i32,

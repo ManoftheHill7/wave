@@ -22,6 +22,7 @@ pub mod inventory;
 pub mod inventory_screen;
 pub mod maps;
 pub mod player;
+pub mod save_load;
 pub mod terrain;
 pub mod terrain_generator;
 pub mod tools;
@@ -104,7 +105,7 @@ impl GameContext {
         }
     }
 
-    pub fn handle_global_input(&mut self, rl: &RaylibHandle) {
+    pub fn handle_debug_input(&mut self, rl: &RaylibHandle) {
         if rl.is_key_pressed(KeyboardKey::KEY_SLASH) {
             self.debug_enabled = !self.debug_enabled;
         }
@@ -113,6 +114,35 @@ impl GameContext {
         }
         if rl.is_key_pressed(KeyboardKey::KEY_ENTER) {
             self.updating = !self.updating;
+        }
+
+        // Save/Load with F5/F9
+        if rl.is_key_pressed(KeyboardKey::KEY_F5) {
+            match save_load::save_game(&self.world_state, 0) {
+                Ok(()) => println!("✓ Game saved successfully!"),
+                Err(e) => eprintln!("✗ Failed to save game: {}", e),
+            }
+        }
+        if rl.is_key_pressed(KeyboardKey::KEY_F9) {
+            if save_load::save_exists(0) {
+                match save_load::load_game(0) {
+                    Ok(save_data) => {
+                        save_load::apply_save_data(&mut self.world_state, save_data);
+                        println!("✓ Game loaded successfully!");
+                    }
+                    Err(e) => eprintln!("✗ Failed to load game: {}", e),
+                }
+            } else {
+                println!("✗ No save file found!");
+            }
+        }
+
+        // Delete all saves with F1
+        if rl.is_key_pressed(KeyboardKey::KEY_F1) {
+            match save_load::delete_all_saves() {
+                Ok(()) => println!("✓ All save data deleted!"),
+                Err(e) => eprintln!("✗ Failed to delete saves: {}", e),
+            }
         }
     }
 }

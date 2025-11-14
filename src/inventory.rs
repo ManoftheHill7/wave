@@ -1,8 +1,9 @@
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 include!(concat!(env!("OUT_DIR"), "/generated_items.rs"));
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ItemStack {
     pub item_type: ItemType,
     pub count: u32,
@@ -18,6 +19,7 @@ impl ItemStack {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Inventory {
     items: HashMap<ItemType, u32>,
     max_weight: f32,

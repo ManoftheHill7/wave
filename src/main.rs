@@ -22,7 +22,7 @@ fn main() {
     while !rl.window_should_close() && !manager.is_empty() {
         let dt = rl.get_frame_time();
 
-        ctx.handle_global_input(&rl);
+        ctx.handle_debug_input(&rl);
         ctx.controller.update(&rl);
 
         manager.update(dt, &mut ctx);

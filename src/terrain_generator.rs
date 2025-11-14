@@ -1,11 +1,11 @@
 use crate::maps::{EdgeConstraint, EdgeType, MapOrientation, MapQuery, MapSet};
 use crate::terrain::{Block, Chunk, ChunkCoord, OreSpawnData, CHUNK_SIZE};
 use noise::{NoiseFn, Perlin};
+use rand::rngs::StdRng;
 use rand::Rng;
+use rand::SeedableRng;
 use std::collections::HashMap;
 use std::path::Path;
-use rand::rngs::StdRng;
-use rand::SeedableRng;
 
 const SEA_LEVEL: i32 = 0;
 const SEA_FLOOR: i32 = 30;
@@ -347,6 +347,10 @@ impl TerrainGenerator {
             map_set,
             half_tile_grid: HashMap::new(),
         }
+    }
+
+    pub fn get_seed(&self) -> u64 {
+        self.seed
     }
 
     /// Get the 4 half-tile coordinates that make up a chunk (64x64 = 2x2 grid of 32x32 half-tiles)
@@ -721,7 +725,8 @@ impl TerrainGenerator {
         for block in Block::all() {
             // TODO: seperate ore spawn data from the block enum
             if let Some(spawn_data) = block.get_ore_spawn_data() {
-                let vein_count = calculate_vein_count(coord.y * CHUNK_SIZE as i32, &spawn_data, &mut chunk_rng);
+                let vein_count =
+                    calculate_vein_count(coord.y * CHUNK_SIZE as i32, &spawn_data, &mut chunk_rng);
 
                 for i in 0..vein_count {
                     let (x, y) = halton_2d(vein_counter + idx as u32);
@@ -737,7 +742,6 @@ impl TerrainGenerator {
                 }
             }
         }
-
 
         chunk
     }

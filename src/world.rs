@@ -30,9 +30,26 @@ impl WorldState {
         }
     }
 
+    pub fn get_flow_timer(&self) -> f32 {
+        self.flow_timer
+    }
+
+    pub fn get_tide_timer(&self) -> f32 {
+        self.tide_timer
+    }
+
+    pub fn set_flow_timer(&mut self, value: f32) {
+        self.flow_timer = value;
+    }
+
+    pub fn set_tide_timer(&mut self, value: f32) {
+        self.tide_timer = value;
+    }
+
     pub fn tide_level(&self) -> i32 {
         let initial_offset = 3.14;
-        (((self.tide_timer * TIDE_FREQUENCY - std::f32::consts::PI / 2.0 + initial_offset).sin() + 1.0)
+        (((self.tide_timer * TIDE_FREQUENCY - std::f32::consts::PI / 2.0 + initial_offset).sin()
+            + 1.0)
             * MAX_TIDE_DEPTH
             / 2.0) as i32
     }
