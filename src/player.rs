@@ -26,6 +26,7 @@ impl From<SerVec2> for Vector2 {
 
 pub const ACCEL: f32 = 50.0;
 pub const SPEED: f32 = 12.0;
+pub const MIN_SPEED: f32 = 2.0;
 pub const CLIMB_SPEED: f32 = 3.125;
 pub const CLIMB_STAMINA: f32 = 4.0;
 pub const JUMP_VELOCITY: f32 = -15.0;
@@ -556,6 +557,9 @@ impl Player {
                 if input_dir.x != 0.0 {
                     self.velocity.x =
                         Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
+                    if self.velocity.x.abs() < MIN_SPEED {
+                        self.velocity.x = self.velocity.x.signum() * MIN_SPEED;
+                    }
                     self.facing_dir = input_dir.x.signum() as i32;
                 } else {
                     self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);

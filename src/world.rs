@@ -21,6 +21,7 @@ pub struct WorldState {
 impl WorldState {
     pub fn new() -> Self {
         WorldState {
+            // player: Player::new(38.74, -3.99), // This spot reproduces the getting stuck bug
             player: Player::new(32.0, -3.0),
             terrain: Terrain::new(12345),
             ghost_mode: false,
