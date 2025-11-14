@@ -65,5 +65,4 @@ fn main() {
         Ok(()) => println!("✓ Game saved successfully!"),
         Err(e) => eprintln!("✗ Failed to save game: {}", e),
     }
-
 }

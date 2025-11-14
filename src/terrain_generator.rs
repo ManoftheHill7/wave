@@ -666,8 +666,31 @@ impl TerrainGenerator {
                 chunk.set(lx, ly, block_type);
             }
         }
-        // self.add_tree(&mut chunk, 15, 1, 10, 20, coord);
-        // self.add_tree(&mut chunk, -10, 1, 10, 60, coord);
+
+        // Add trees with 1/100 chance per x coordinate
+        let mut rng = StdRng::seed_from_u64(self.seed.wrapping_add(coord.x as u64));
+        for lx in 0..CHUNK_SIZE {
+            let wx = coord.x * chunk_size + lx as i32;
+
+            // 1% chance to spawn a tree at this x coordinate
+            if rng.gen_range(0..100) == 0 {
+                let height_f =
+                    noise_height as f64 * self.noise.get([wx as f64 * (1.0 / noise_detail as f64)]);
+                let ground_height = height_f as i32 - coord.x + BEACH_HEIGHT;
+
+                // Spawn tree on the grass surface
+                let tree_height = rng.gen_range(8..15);
+                let tree_width = rng.gen_range(3..6);
+                self.add_tree(
+                    &mut chunk,
+                    wx,
+                    ground_height,
+                    tree_width,
+                    tree_height,
+                    coord,
+                );
+            }
+        }
 
         chunk
     }
