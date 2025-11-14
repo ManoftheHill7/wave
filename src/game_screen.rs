@@ -364,149 +364,87 @@ fn render_player(
         && player.raycast_right_tile.is_some()
         && player.raycast_left_tile == player.raycast_right_tile;
 
-    // Draw left hand tile highlight (red or yellow if both same)
-    if let Some((tile_x, tile_y)) = player.raycast_left_tile {
-        let color = if both_same_tile {
-            Color::YELLOW
-        } else {
-            Color::RED
-        };
-
-        // Draw highlight - if placing a multi-tile block, show full bounds
-        let ppw = pixels_per_world_unit();
-        if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.left_hand {
-            if block.is_multi_tile() {
-                let width = block.width();
-                let height = block.height();
-                d.draw_rectangle_lines_ex(
-                    Rectangle::new(
-                        tile_x.floor() * ppw,
-                        (tile_y.floor() - height as f32 + 1.0) * ppw,
-                        width as f32 * ppw,
-                        height as f32 * ppw,
-                    ),
-                    4.0,
-                    color,
-                );
-            } else {
-                d.draw_rectangle_lines_ex(
-                    Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
-                    4.0,
-                    color,
-                );
-            }
-        } else {
-            d.draw_rectangle_lines_ex(
-                Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
-                4.0,
-                color,
-            );
-        }
-
-        // Draw preview for place block tools
-        if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.left_hand {
-            let texture = block.get_texture(textures);
-            let alpha = if both_same_tile { 128 } else { 128 };
-            let ppw = pixels_per_world_unit();
-
-            // Handle multi-tile blocks
-            if block.is_multi_tile() {
-                let width = block.width();
-                let height = block.height();
-                d.draw_texture_pro(
-                    texture,
-                    Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
-                    Rectangle::new(
-                        tile_x.floor() * ppw,
-                        (tile_y.floor() - height as f32 + 1.0) * ppw,
-                        width as f32 * ppw,
-                        height as f32 * ppw,
-                    ),
-                    Vector2::new(0.0, 0.0),
-                    0.0,
-                    Color::new(255, 255, 255, alpha),
-                );
-            } else {
-                d.draw_texture_pro(
-                    texture,
-                    Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
-                    Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
-                    Vector2::new(0.0, 0.0),
-                    0.0,
-                    Color::new(255, 255, 255, alpha),
-                );
-            }
-        }
-    }
-
-    // Draw right hand tile highlight (green or skip if both same)
-    if let Some((tile_x, tile_y)) = player.raycast_right_tile {
-        if !both_same_tile {
-            // Draw highlight - if placing a multi-tile block, show full bounds
-            let ppw = pixels_per_world_unit();
-            if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.right_hand {
-                if block.is_multi_tile() {
-                    let width = block.width();
-                    let height = block.height();
-                    d.draw_rectangle_lines_ex(
-                        Rectangle::new(
-                            tile_x.floor() * ppw,
-                            (tile_y.floor() - height as f32 + 1.0) * ppw,
-                            width as f32 * ppw,
-                            height as f32 * ppw,
-                        ),
-                        4.0,
-                        Color::GREEN,
-                    );
-                } else {
-                    d.draw_rectangle_lines_ex(
-                        Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
-                        4.0,
-                        Color::GREEN,
-                    );
-                }
-            } else {
-                d.draw_rectangle_lines_ex(
-                    Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
-                    4.0,
-                    Color::GREEN,
-                );
-            }
-
-            // Draw preview for place block tools
-            if let Some(crate::tools::ToolType::PlaceBlock(block)) = player.right_hand {
-                let texture = block.get_texture(textures);
+    let mut draw_hand_preview =
+        |tile: Option<(f32, f32)>, tool: Option<crate::tools::ToolType>, color: Color| {
+            if let Some((tile_x, tile_y)) = tile {
                 let ppw = pixels_per_world_unit();
 
-                // Handle multi-tile blocks
-                if block.is_multi_tile() {
-                    let width = block.width();
-                    let height = block.height();
-                    d.draw_texture_pro(
-                        texture,
-                        Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
-                        Rectangle::new(
-                            tile_x.floor() * ppw,
-                            (tile_y.floor() - height as f32 + 1.0) * ppw,
-                            width as f32 * ppw,
-                            height as f32 * ppw,
-                        ),
-                        Vector2::new(0.0, 0.0),
-                        0.0,
-                        Color::new(255, 255, 255, 128),
-                    );
+                // Draw highlight - if placing a multi-tile block, show full bounds
+                if let Some(crate::tools::ToolType::PlaceBlock(block)) = tool {
+                    if block.is_multi_tile() {
+                        let width = block.width();
+                        let height = block.height();
+                        d.draw_rectangle_lines_ex(
+                            Rectangle::new(
+                                tile_x.floor() * ppw,
+                                (tile_y.floor() - height as f32 + 1.0) * ppw,
+                                width as f32 * ppw,
+                                height as f32 * ppw,
+                            ),
+                            4.0,
+                            color,
+                        );
+                    } else {
+                        d.draw_rectangle_lines_ex(
+                            Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
+                            4.0,
+                            color,
+                        );
+                    }
                 } else {
-                    d.draw_texture_pro(
-                        texture,
-                        Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
+                    d.draw_rectangle_lines_ex(
                         Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
-                        Vector2::new(0.0, 0.0),
-                        0.0,
-                        Color::new(255, 255, 255, 128),
+                        4.0,
+                        color,
                     );
                 }
+
+                // Draw preview for place block tools
+                if let Some(crate::tools::ToolType::PlaceBlock(block)) = tool {
+                    let texture = block.get_texture(textures);
+
+                    // Handle multi-tile blocks
+                    if block.is_multi_tile() {
+                        let width = block.width();
+                        let height = block.height();
+                        d.draw_texture_pro(
+                            texture,
+                            Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
+                            Rectangle::new(
+                                tile_x.floor() * ppw,
+                                (tile_y.floor() - height as f32 + 1.0) * ppw,
+                                width as f32 * ppw,
+                                height as f32 * ppw,
+                            ),
+                            Vector2::new(0.0, 0.0),
+                            0.0,
+                            Color::new(255, 255, 255, 128),
+                        );
+                    } else {
+                        d.draw_texture_pro(
+                            texture,
+                            Rectangle::new(0.0, 0.0, texture.width as f32, texture.height as f32),
+                            Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
+                            Vector2::new(0.0, 0.0),
+                            0.0,
+                            Color::new(255, 255, 255, 128),
+                        );
+                    }
+                }
             }
-        }
+        };
+
+    // Draw left hand tile highlight (red or yellow if both same)
+    let left_color = if both_same_tile {
+        Color::YELLOW
+    } else {
+        Color::RED
+    };
+    draw_hand_preview(player.raycast_left_tile, player.left_hand, left_color);
+
+    // Draw right hand tile highlight (green or skip if both same)
+    if !both_same_tile {
+        draw_hand_preview(player.raycast_right_tile, player.right_hand, Color::GREEN);
     }
 
     if debug_render {

@@ -566,7 +566,7 @@ impl Player {
                 if input_dir.x != 0.0 {
                     self.velocity.x =
                         Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
-                    if self.velocity.x.abs() < MIN_SPEED {
+                    if self.velocity.x.abs() < MIN_SPEED && self.velocity.x.signum() == input_dir.x.signum() {
                         self.velocity.x = self.velocity.x.signum() * MIN_SPEED;
                     }
                     self.facing_dir = input_dir.x.signum() as i32;
