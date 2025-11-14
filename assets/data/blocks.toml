@@ -28,6 +28,13 @@ durability = 2.0
 drops = "dirt"
 amount = 1
 
+[blocks.glass]
+name = "Glass"
+type = "solid"
+durability = 0.5
+drops = "glass"
+amount = 0
+
 [blocks.sand]
 name = "Sand"
 type = "solid"

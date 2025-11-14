@@ -28,6 +28,7 @@ type = "block"
 
 [items.glass]
 name = "Glass"
+type = "block"
 weight = 0.5
 
 [items.coal]
