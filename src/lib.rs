@@ -21,6 +21,7 @@ pub mod game_screen;
 pub mod inventory;
 pub mod inventory_screen;
 pub mod maps;
+pub mod menu_screen;
 pub mod player;
 pub mod save_load;
 pub mod terrain;
@@ -31,6 +32,7 @@ pub mod world;
 // Re-export commonly used types
 pub use controller::Controller;
 pub use game_screen::GameScreen;
+pub use menu_screen::MenuScreen;
 pub use world::WorldState;
 
 // Re-export map system types
