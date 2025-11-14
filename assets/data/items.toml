@@ -9,6 +9,14 @@ name = "Dirt"
 weight = 2.0
 type = "block"
 
+[items.stick]
+name = "Stick"
+weight = 0.5
+
+[items.torch]
+name = "Torch"
+weight = 1.0
+
 [items.log]
 name = "Log"
 weight = 4.0
