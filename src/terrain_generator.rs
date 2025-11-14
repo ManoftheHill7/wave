@@ -7,7 +7,7 @@ use rand::SeedableRng;
 use std::collections::HashMap;
 use std::path::Path;
 
-const SEA_LEVEL: i32 = 0;
+pub const SEA_LEVEL: i32 = 0;
 const SEA_FLOOR: i32 = 30;
 const BEACH_HEIGHT: i32 = -10;
 

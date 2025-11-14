@@ -73,9 +73,14 @@ pub fn save_game(world_state: &WorldState, slot: u32) -> Result<(), String> {
     fs::create_dir_all(&save_dir).map_err(|e| format!("Failed to create save directory: {}", e))?;
 
     let mut chunks = HashMap::new();
+
+    // Save all chunks including ocean and beach chunks
+    // Water will be restored to air blocks below sea level on load
     for (coord, chunk) in &world_state.terrain.chunks {
         chunks.insert(*coord, ChunkData::from_chunk(chunk));
     }
+
+    let chunk_count = chunks.len();
 
     // Extract seed from terrain generator
     let terrain_seed = match &world_state.terrain.generator {
@@ -101,7 +106,12 @@ pub fn save_game(world_state: &WorldState, slot: u32) -> Result<(), String> {
     file.write_all(&encoded)
         .map_err(|e| format!("Failed to write save file: {}", e))?;
 
-    println!("Game saved to: {:?} ({} bytes)", save_path, encoded.len());
+    println!(
+        "Game saved to: {:?} ({} bytes, {} chunks)",
+        save_path,
+        encoded.len(),
+        chunk_count
+    );
     Ok(())
 }
 
@@ -131,16 +141,39 @@ pub fn load_game(slot: u32) -> Result<SaveData, String> {
 }
 
 pub fn apply_save_data(world_state: &mut WorldState, save_data: SaveData) {
+    use crate::terrain::{Block, CHUNK_SIZE};
+
     world_state.player = save_data.player;
     world_state.set_flow_timer(save_data.flow_timer);
     world_state.set_tide_timer(save_data.tide_timer);
 
     world_state.terrain.chunks.clear();
+
+    let chunk_size = CHUNK_SIZE as i32;
+
+    // Define sea level constant (should match terrain_generator)
+
     for (coord, chunk_data) in save_data.chunks {
-        world_state
-            .terrain
-            .chunks
-            .insert(coord, chunk_data.to_chunk());
+        let mut chunk = chunk_data.to_chunk();
+
+        // For ocean and beach chunks, restore water to air blocks below sea level
+        let is_ocean = coord.x < 0;
+        let is_beach = coord.x == 0 && (coord.y == -1 || coord.y == 0);
+
+        if is_ocean || is_beach {
+            for lx in 0..CHUNK_SIZE {
+                for ly in 0..CHUNK_SIZE {
+                    let wy = coord.y * chunk_size + ly as i32;
+
+                    // If block is air and below sea level, fill with water
+                    if chunk.get(lx, ly) == Block::Air && wy > crate::terrain_generator::SEA_LEVEL {
+                        chunk.set(lx, ly, Block::Water);
+                    }
+                }
+            }
+        }
+
+        world_state.terrain.chunks.insert(coord, chunk);
     }
 }
 
