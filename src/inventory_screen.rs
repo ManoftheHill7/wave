@@ -311,45 +311,35 @@ impl Screen for InventoryScreen {
             d.draw_texture(slot_texture, boots_x as i32, boots_y as i32, Color::WHITE);
 
             // Draw selected tool in left hand slot if set
-            if let Some(selected_tool) = ctx.world_state.player.left_hand {
-                let tool_texture = match selected_tool {
-                    ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
-                    ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
-                    ToolType::PlaceBlock(blk) => blk
-                        .to_item_type()
-                        .map(|item| get_item_texture(&item, &ctx.textures)),
-                };
-
-                if let Some(texture) = tool_texture {
-                    d.draw_texture_ex(
-                        texture,
-                        Vector2::new(left_hand_x, left_hand_y),
-                        0.0,
-                        1.0,
-                        Color::WHITE,
-                    );
-                }
+            if let Some(texture) = ctx
+                .world_state
+                .player
+                .left_hand
+                .and_then(|tool| tool.get_texture(&ctx.textures))
+            {
+                d.draw_texture_ex(
+                    texture,
+                    Vector2::new(left_hand_x, left_hand_y),
+                    0.0,
+                    1.0,
+                    Color::WHITE,
+                );
             }
 
             // Draw selected tool in right hand slot if set
-            if let Some(selected_tool) = ctx.world_state.player.right_hand {
-                let tool_texture = match selected_tool {
-                    ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
-                    ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
-                    ToolType::PlaceBlock(blk) => blk
-                        .to_item_type()
-                        .map(|item| get_item_texture(&item, &ctx.textures)),
-                };
-
-                if let Some(texture) = tool_texture {
-                    d.draw_texture_ex(
-                        texture,
-                        Vector2::new(right_hand_x, right_hand_y),
-                        0.0,
-                        1.0,
-                        Color::WHITE,
-                    );
-                }
+            if let Some(texture) = ctx
+                .world_state
+                .player
+                .right_hand
+                .and_then(|tool| tool.get_texture(&ctx.textures))
+            {
+                d.draw_texture_ex(
+                    texture,
+                    Vector2::new(right_hand_x, right_hand_y),
+                    0.0,
+                    1.0,
+                    Color::WHITE,
+                );
             }
 
             // Draw tool selection

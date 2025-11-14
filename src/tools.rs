@@ -1,14 +1,26 @@
+use raylib::prelude::Texture2D;
 use serde::{Deserialize, Serialize};
 use toml::map::Map;
 use toml::Value;
 
 use crate::terrain::Block;
+use crate::TextureManager;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ToolType {
     Dash,
     Pickaxe,
     PlaceBlock(Block),
+}
+
+impl ToolType {
+    pub fn get_texture<'a>(&self, textures: &'a TextureManager) -> Option<&'a Texture2D> {
+        match self {
+            ToolType::Dash => Some(&textures.tools.emerald_amulet),
+            ToolType::Pickaxe => Some(&textures.tools.steel_pickaxe),
+            ToolType::PlaceBlock(blk) => blk.to_item_type().map(|item| item.get_texture(textures)),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

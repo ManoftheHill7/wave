@@ -478,66 +478,41 @@ fn edge_to_number(image: &mut Image, pixels: &[(i32, i32)]) -> u32 {
 
 /// Extract 6 edges from a horizontal map (64x32)
 /// Returns: [top_left, top_right, bottom_left, bottom_right, left, right]
-fn extract_horizontal_edges(image: &mut Image) -> [u32; 6] {
-    let mut edges = [0u32; 6];
-
-    // Top left (pixels 0-31 of row 0)
-    let top_left: Vec<(i32, i32)> = (0..32).map(|x| (x, 0)).collect();
-    edges[0] = edge_to_number(image, &top_left);
-
-    // Top right (pixels 32-63 of row 0)
-    let top_right: Vec<(i32, i32)> = (32..64).map(|x| (x, 0)).collect();
-    edges[1] = edge_to_number(image, &top_right);
-
-    // Bottom left (pixels 0-31 of row 31)
-    let bottom_left: Vec<(i32, i32)> = (0..32).map(|x| (x, 31)).collect();
-    edges[2] = edge_to_number(image, &bottom_left);
-
-    // Bottom right (pixels 32-63 of row 31)
-    let bottom_right: Vec<(i32, i32)> = (32..64).map(|x| (x, 31)).collect();
-    edges[3] = edge_to_number(image, &bottom_right);
-
-    // Left (column 0, rows 0-31)
-    let left: Vec<(i32, i32)> = (0..32).map(|y| (0, y)).collect();
-    edges[4] = edge_to_number(image, &left);
-
-    // Right (column 63, rows 0-31)
-    let right: Vec<(i32, i32)> = (0..32).map(|y| (63, y)).collect();
-    edges[5] = edge_to_number(image, &right);
-
-    edges
+fn extract_edge_line(image: &mut Image, start: (i32, i32), end: (i32, i32)) -> u32 {
+    let pixels: Vec<(i32, i32)> = if start.0 == end.0 {
+        // Vertical line
+        (start.1.min(end.1)..=start.1.max(end.1))
+            .map(|y| (start.0, y))
+            .collect()
+    } else {
+        // Horizontal line
+        (start.0.min(end.0)..=start.0.max(end.0))
+            .map(|x| (x, start.1))
+            .collect()
+    };
+    edge_to_number(image, &pixels)
 }
 
-/// Extract 6 edges from a vertical map (32x64)
-/// Returns: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+fn extract_horizontal_edges(image: &mut Image) -> [u32; 6] {
+    [
+        extract_edge_line(image, (0, 0), (31, 0)),    // Top left
+        extract_edge_line(image, (32, 0), (63, 0)),   // Top right
+        extract_edge_line(image, (0, 31), (31, 31)),  // Bottom left
+        extract_edge_line(image, (32, 31), (63, 31)), // Bottom right
+        extract_edge_line(image, (0, 0), (0, 31)),    // Left
+        extract_edge_line(image, (63, 0), (63, 31)),  // Right
+    ]
+}
+
 fn extract_vertical_edges(image: &mut Image) -> [u32; 6] {
-    let mut edges = [0u32; 6];
-
-    // Left top (column 0, rows 0-31)
-    let left_top: Vec<(i32, i32)> = (0..32).map(|y| (0, y)).collect();
-    edges[0] = edge_to_number(image, &left_top);
-
-    // Left bottom (column 0, rows 32-63)
-    let left_bottom: Vec<(i32, i32)> = (32..64).map(|y| (0, y)).collect();
-    edges[1] = edge_to_number(image, &left_bottom);
-
-    // Right top (column 31, rows 0-31)
-    let right_top: Vec<(i32, i32)> = (0..32).map(|y| (31, y)).collect();
-    edges[2] = edge_to_number(image, &right_top);
-
-    // Right bottom (column 31, rows 32-63)
-    let right_bottom: Vec<(i32, i32)> = (32..64).map(|y| (31, y)).collect();
-    edges[3] = edge_to_number(image, &right_bottom);
-
-    // Top (row 0, columns 0-31)
-    let top: Vec<(i32, i32)> = (0..32).map(|x| (x, 0)).collect();
-    edges[4] = edge_to_number(image, &top);
-
-    // Bottom (row 63, columns 0-31)
-    let bottom: Vec<(i32, i32)> = (0..32).map(|x| (x, 63)).collect();
-    edges[5] = edge_to_number(image, &bottom);
-
-    edges
+    [
+        extract_edge_line(image, (0, 0), (0, 31)),    // Left top
+        extract_edge_line(image, (0, 32), (0, 63)),   // Left bottom
+        extract_edge_line(image, (31, 0), (31, 31)),  // Right top
+        extract_edge_line(image, (31, 32), (31, 63)), // Right bottom
+        extract_edge_line(image, (0, 0), (31, 0)),    // Top
+        extract_edge_line(image, (0, 63), (31, 63)),  // Bottom
+    ]
 }
 
 fn extract_edges_from_image(image: &mut Image, orientation: MapOrientation) -> MapEdges {

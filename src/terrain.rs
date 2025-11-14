@@ -501,99 +501,56 @@ impl Terrain {
 
         let chunks_ptr = SyncPtr(&mut self.chunks as *mut HashMap<ChunkCoord, Chunk>);
 
-        // Process phase 0 chunks in parallel (no two are adjacent)
-        phase_0.par_iter().for_each(|chunk_coord| {
-            let ptr = chunks_ptr;
-            unsafe {
-                let neighbor_up_coord = ChunkCoord {
-                    x: chunk_coord.x,
-                    y: chunk_coord.y - 1,
-                };
-                let neighbor_down_coord = ChunkCoord {
-                    x: chunk_coord.x,
-                    y: chunk_coord.y + 1,
-                };
-                let neighbor_left_coord = ChunkCoord {
-                    x: chunk_coord.x - 1,
-                    y: chunk_coord.y,
-                };
-                let neighbor_right_coord = ChunkCoord {
-                    x: chunk_coord.x + 1,
-                    y: chunk_coord.y,
-                };
+        let process_phase = |phase: &[ChunkCoord]| {
+            phase.par_iter().for_each(|chunk_coord| {
+                let ptr = chunks_ptr;
+                unsafe {
+                    let neighbor_up_coord = ChunkCoord {
+                        x: chunk_coord.x,
+                        y: chunk_coord.y - 1,
+                    };
+                    let neighbor_down_coord = ChunkCoord {
+                        x: chunk_coord.x,
+                        y: chunk_coord.y + 1,
+                    };
+                    let neighbor_left_coord = ChunkCoord {
+                        x: chunk_coord.x - 1,
+                        y: chunk_coord.y,
+                    };
+                    let neighbor_right_coord = ChunkCoord {
+                        x: chunk_coord.x + 1,
+                        y: chunk_coord.y,
+                    };
 
-                let current_chunk = (*ptr.0).get_mut(chunk_coord).map(|c| c as *mut Chunk);
+                    let current_chunk = (*ptr.0).get_mut(chunk_coord).map(|c| c as *mut Chunk);
 
-                if let Some(current_ptr) = current_chunk {
-                    let neighbor_up = (*ptr.0)
-                        .get_mut(&neighbor_up_coord)
-                        .map(|c| c as *mut Chunk);
-                    let neighbor_down = (*ptr.0)
-                        .get_mut(&neighbor_down_coord)
-                        .map(|c| c as *mut Chunk);
-                    let neighbor_left = (*ptr.0)
-                        .get_mut(&neighbor_left_coord)
-                        .map(|c| c as *mut Chunk);
-                    let neighbor_right = (*ptr.0)
-                        .get_mut(&neighbor_right_coord)
-                        .map(|c| c as *mut Chunk);
+                    if let Some(current_ptr) = current_chunk {
+                        let neighbor_up = (*ptr.0)
+                            .get_mut(&neighbor_up_coord)
+                            .map(|c| c as *mut Chunk);
+                        let neighbor_down = (*ptr.0)
+                            .get_mut(&neighbor_down_coord)
+                            .map(|c| c as *mut Chunk);
+                        let neighbor_left = (*ptr.0)
+                            .get_mut(&neighbor_left_coord)
+                            .map(|c| c as *mut Chunk);
+                        let neighbor_right = (*ptr.0)
+                            .get_mut(&neighbor_right_coord)
+                            .map(|c| c as *mut Chunk);
 
-                    (*current_ptr).flow(
-                        neighbor_up.map(|p| &mut *p),
-                        neighbor_down.map(|p| &mut *p),
-                        neighbor_left.map(|p| &mut *p),
-                        neighbor_right.map(|p| &mut *p),
-                    );
+                        (*current_ptr).flow(
+                            neighbor_up.map(|p| &mut *p),
+                            neighbor_down.map(|p| &mut *p),
+                            neighbor_left.map(|p| &mut *p),
+                            neighbor_right.map(|p| &mut *p),
+                        );
+                    }
                 }
-            }
-        });
+            });
+        };
 
-        // Process phase 1 chunks in parallel (no two are adjacent)
-        phase_1.par_iter().for_each(|chunk_coord| {
-            let ptr = chunks_ptr;
-            unsafe {
-                let neighbor_up_coord = ChunkCoord {
-                    x: chunk_coord.x,
-                    y: chunk_coord.y - 1,
-                };
-                let neighbor_down_coord = ChunkCoord {
-                    x: chunk_coord.x,
-                    y: chunk_coord.y + 1,
-                };
-                let neighbor_left_coord = ChunkCoord {
-                    x: chunk_coord.x - 1,
-                    y: chunk_coord.y,
-                };
-                let neighbor_right_coord = ChunkCoord {
-                    x: chunk_coord.x + 1,
-                    y: chunk_coord.y,
-                };
-
-                let current_chunk = (*ptr.0).get_mut(chunk_coord).map(|c| c as *mut Chunk);
-
-                if let Some(current_ptr) = current_chunk {
-                    let neighbor_up = (*ptr.0)
-                        .get_mut(&neighbor_up_coord)
-                        .map(|c| c as *mut Chunk);
-                    let neighbor_down = (*ptr.0)
-                        .get_mut(&neighbor_down_coord)
-                        .map(|c| c as *mut Chunk);
-                    let neighbor_left = (*ptr.0)
-                        .get_mut(&neighbor_left_coord)
-                        .map(|c| c as *mut Chunk);
-                    let neighbor_right = (*ptr.0)
-                        .get_mut(&neighbor_right_coord)
-                        .map(|c| c as *mut Chunk);
-
-                    (*current_ptr).flow(
-                        neighbor_up.map(|p| &mut *p),
-                        neighbor_down.map(|p| &mut *p),
-                        neighbor_left.map(|p| &mut *p),
-                        neighbor_right.map(|p| &mut *p),
-                    );
-                }
-            }
-        });
+        process_phase(&phase_0);
+        process_phase(&phase_1);
     }
 
     pub fn at(&self, x: i32, y: i32) -> Block {

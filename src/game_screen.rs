@@ -14,6 +14,26 @@ const COLOR_PALETTES: &[[f32; 4]] = &[
     [0.6, 0.9, 0.3, 1.0],                             // Green scarf
 ];
 
+fn smooth_axis(
+    current: f32,
+    velocity: &mut f32,
+    target: f32,
+    omega: f32,
+    dt: f32,
+    exp: f32,
+    max_speed: f32,
+) -> f32 {
+    let change = current - target;
+    let temp = (*velocity + omega * change) * dt;
+    *velocity = (*velocity - omega * temp) * exp;
+
+    if velocity.abs() > max_speed {
+        *velocity = velocity.signum() * max_speed;
+    }
+
+    target + (change + temp) * exp
+}
+
 fn smooth_camera_to_target(
     camera: &mut Camera2D,
     camera_velocity: &mut Vector2,
@@ -23,30 +43,28 @@ fn smooth_camera_to_target(
     smooth_time: f32,
 ) {
     let max_speed = 10000.0;
-
     let omega = 2.0 / smooth_time;
     let x = omega * dt;
     let exp = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x);
 
-    let change_x = camera.target.x - target_x;
-    let temp_x = (camera_velocity.x + omega * change_x) * dt;
-    camera_velocity.x = (camera_velocity.x - omega * temp_x) * exp;
-
-    if camera_velocity.x.abs() > max_speed {
-        camera_velocity.x = camera_velocity.x.signum() * max_speed;
-    }
-
-    camera.target.x = target_x + (change_x + temp_x) * exp;
-
-    let change_y = camera.target.y - target_y;
-    let temp_y = (camera_velocity.y + omega * change_y) * dt;
-    camera_velocity.y = (camera_velocity.y - omega * temp_y) * exp;
-
-    if camera_velocity.y.abs() > max_speed {
-        camera_velocity.y = camera_velocity.y.signum() * max_speed;
-    }
-
-    camera.target.y = target_y + (change_y + temp_y) * exp;
+    camera.target.x = smooth_axis(
+        camera.target.x,
+        &mut camera_velocity.x,
+        target_x,
+        omega,
+        dt,
+        exp,
+        max_speed,
+    );
+    camera.target.y = smooth_axis(
+        camera.target.y,
+        &mut camera_velocity.y,
+        target_y,
+        omega,
+        dt,
+        exp,
+        max_speed,
+    );
 }
 
 fn render_tile(
@@ -697,47 +715,29 @@ impl Screen for GameScreen {
                 .min(1.0);
 
             if breath_percent < 0.50 {
-                // Base vignette intensity
                 let base_alpha = ((1.0 - breath_percent * 2.0) * 255.0) as u8;
                 let color = Color::new(0, 0, 100, 0);
                 let color_alpha = Color::new(0, 0, 100, base_alpha);
                 let vin_size = 500;
-                // Top vignette
+
+                let screen_w = self.screen_width as i32;
+                let screen_h = self.screen_height as i32;
+
+                d.draw_rectangle_gradient_v(0, 0, screen_w, vin_size, color_alpha, color);
                 d.draw_rectangle_gradient_v(
                     0,
-                    0,
-                    self.screen_width as i32,
-                    vin_size,
-                    color_alpha,
-                    color,
-                );
-
-                // Bottom vignette
-                d.draw_rectangle_gradient_v(
-                    0,
-                    self.screen_height as i32 - vin_size,
-                    self.screen_width as i32,
+                    screen_h - vin_size,
+                    screen_w,
                     vin_size,
                     color,
                     color_alpha,
                 );
-
-                // Left vignette
+                d.draw_rectangle_gradient_h(0, 0, vin_size, screen_h, color_alpha, color);
                 d.draw_rectangle_gradient_h(
-                    0,
-                    0,
-                    vin_size,
-                    self.screen_height as i32,
-                    color_alpha,
-                    color,
-                );
-
-                // Right vignette
-                d.draw_rectangle_gradient_h(
-                    self.screen_width as i32 - vin_size,
+                    screen_w - vin_size,
                     0,
                     vin_size,
-                    self.screen_height as i32,
+                    screen_h,
                     color,
                     color_alpha,
                 );
@@ -769,15 +769,7 @@ impl Screen for GameScreen {
 
             // Draw selected tool icon if present
             if let Some(selected_tool) = hand {
-                let tool_texture = match selected_tool {
-                    crate::tools::ToolType::Dash => Some(&ctx.textures.tools.emerald_amulet),
-                    crate::tools::ToolType::Pickaxe => Some(&ctx.textures.tools.steel_pickaxe),
-                    crate::tools::ToolType::PlaceBlock(blk) => blk.to_item_type().map(|item| {
-                        crate::inventory_screen::get_item_texture(&item, &ctx.textures)
-                    }),
-                };
-
-                if let Some(texture) = tool_texture {
+                if let Some(texture) = selected_tool.get_texture(&ctx.textures) {
                     let scale = hud_box_size / texture.width as f32;
                     d.draw_texture_ex(texture, Vector2::new(x, hud_y), 0.0, scale, Color::WHITE);
                 }

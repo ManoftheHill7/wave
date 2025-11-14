@@ -268,86 +268,70 @@ impl Player {
             && player_top < block_bottom
     }
 
+    fn calculate_hand_raycast(
+        &self,
+        tool: Option<ToolType>,
+        raycast_start: Vector2,
+        raycast_direction: Vector2,
+        terrain: &Terrain,
+    ) -> (Option<(f32, f32)>, Vector2) {
+        if let Some(tool) = tool {
+            let max_length = match tool {
+                ToolType::Pickaxe => MAX_RAYCAST_PICKAXE,
+                ToolType::Dash => MAX_RAYCAST_DASH,
+                ToolType::PlaceBlock(_) => MAX_RAYCAST_PLACE_BLOCK,
+            };
+            let rayresult = self.raycast(
+                raycast_start,
+                raycast_start + raycast_direction * max_length,
+                terrain,
+            );
+            let end_position = rayresult.final_position;
+
+            if rayresult.hit {
+                let tile_pos = if matches!(tool, ToolType::PlaceBlock(_)) {
+                    rayresult.last_free_position
+                } else {
+                    rayresult.final_position
+                };
+                let tile_x = tile_pos.x.floor() as i32;
+                let tile_y = tile_pos.y.floor() as i32;
+
+                if matches!(tool, ToolType::PlaceBlock(_))
+                    && self.block_would_intersect_player(tile_x, tile_y)
+                {
+                    (None, end_position)
+                } else {
+                    (Some((tile_x as f32, tile_y as f32)), end_position)
+                }
+            } else {
+                (None, end_position)
+            }
+        } else {
+            (None, Vector2::zero())
+        }
+    }
+
     pub fn calculated_selected_blocks(&mut self, terrain: &Terrain, controller: &Controller) {
         let raycast_start = self.position + Vector2::new(self.width / 2.0, self.height / 2.0);
 
-        // Left hand raycast
-        if let Some(left_tool) = self.left_hand {
-            let max_length = match left_tool {
-                ToolType::Pickaxe => MAX_RAYCAST_PICKAXE,
-                ToolType::Dash => MAX_RAYCAST_DASH,
-                ToolType::PlaceBlock(_) => MAX_RAYCAST_PLACE_BLOCK,
-            };
-            let rayresult = self.raycast(
-                raycast_start,
-                raycast_start + controller.raycast_direction * max_length,
-                terrain,
-            );
-            self.raycast_left_end = rayresult.final_position;
-            if rayresult.hit {
-                // Use last_free_position for place block tools, otherwise use final_position
-                let tile_pos = if matches!(left_tool, ToolType::PlaceBlock(_)) {
-                    rayresult.last_free_position
-                } else {
-                    rayresult.final_position
-                };
-                let tile_x = tile_pos.x.floor() as i32;
-                let tile_y = tile_pos.y.floor() as i32;
+        let (left_tile, left_end) = self.calculate_hand_raycast(
+            self.left_hand,
+            raycast_start,
+            controller.raycast_direction,
+            terrain,
+        );
+        self.raycast_left_tile = left_tile;
+        self.raycast_left_end = left_end;
 
-                // For place block tools, check if the block would intersect the player
-                if matches!(left_tool, ToolType::PlaceBlock(_))
-                    && self.block_would_intersect_player(tile_x, tile_y)
-                {
-                    self.raycast_left_tile = None;
-                } else {
-                    self.raycast_left_tile = Some((tile_x as f32, tile_y as f32));
-                }
-            } else {
-                self.raycast_left_tile = None;
-            }
-        } else {
-            self.raycast_left_tile = None;
-            self.raycast_left_end = Vector2::zero();
-        }
-
-        // Right hand raycast
-        if let Some(right_tool) = self.right_hand {
-            let max_length = match right_tool {
-                ToolType::Pickaxe => MAX_RAYCAST_PICKAXE,
-                ToolType::Dash => MAX_RAYCAST_DASH,
-                ToolType::PlaceBlock(_) => MAX_RAYCAST_PLACE_BLOCK,
-            };
-            let rayresult = self.raycast(
-                raycast_start,
-                raycast_start + controller.raycast_direction * max_length,
-                terrain,
-            );
-            self.raycast_right_end = rayresult.final_position;
-            if rayresult.hit {
-                // Use last_free_position for place block tools, otherwise use final_position
-                let tile_pos = if matches!(right_tool, ToolType::PlaceBlock(_)) {
-                    rayresult.last_free_position
-                } else {
-                    rayresult.final_position
-                };
-                let tile_x = tile_pos.x.floor() as i32;
-                let tile_y = tile_pos.y.floor() as i32;
-
-                // For place block tools, check if the block would intersect the player
-                if matches!(right_tool, ToolType::PlaceBlock(_))
-                    && self.block_would_intersect_player(tile_x, tile_y)
-                {
-                    self.raycast_right_tile = None;
-                } else {
-                    self.raycast_right_tile = Some((tile_x as f32, tile_y as f32));
-                }
-            } else {
-                self.raycast_right_tile = None;
-            }
-        } else {
-            self.raycast_right_tile = None;
-            self.raycast_right_end = Vector2::zero();
-        }
+        let (right_tile, right_end) = self.calculate_hand_raycast(
+            self.right_hand,
+            raycast_start,
+            controller.raycast_direction,
+            terrain,
+        );
+        self.raycast_right_tile = right_tile;
+        self.raycast_right_end = right_end;
     }
 
     pub fn try_place_block(&mut self, terrain: &mut Terrain, block: Block, left_hand: bool) {
@@ -566,7 +550,9 @@ impl Player {
                 if input_dir.x != 0.0 {
                     self.velocity.x =
                         Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
-                    if self.velocity.x.abs() < MIN_SPEED && self.velocity.x.signum() == input_dir.x.signum() {
+                    if self.velocity.x.abs() < MIN_SPEED
+                        && self.velocity.x.signum() == input_dir.x.signum()
+                    {
                         self.velocity.x = self.velocity.x.signum() * MIN_SPEED;
                     }
                     self.facing_dir = input_dir.x.signum() as i32;
