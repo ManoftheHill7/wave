@@ -334,6 +334,16 @@ impl Player {
         self.raycast_right_end = right_end;
     }
 
+    pub fn can_place_block_at(&self, terrain: &Terrain, block: Block, x: i32, y: i32) -> bool {
+        // Restrict workbench and anvil placement to underground (y < 0)
+        if matches!(block, Block::Workbench | Block::Anvil) && y >= 0 {
+            return false;
+        }
+
+        // Check if placement is valid for multi-tile blocks
+        terrain.can_place_multi_tile(x, y, block)
+    }
+
     pub fn try_place_block(&mut self, terrain: &mut Terrain, block: Block, left_hand: bool) {
         let tile = if left_hand {
             self.raycast_left_tile
@@ -345,8 +355,7 @@ impl Player {
             let x = tile_x.floor() as i32;
             let y = tile_y.floor() as i32;
 
-            // Check if placement is valid for multi-tile blocks
-            if !terrain.can_place_multi_tile(x, y, block) {
+            if !self.can_place_block_at(terrain, block, x, y) {
                 return;
             }
 

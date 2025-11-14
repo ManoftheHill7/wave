@@ -134,7 +134,7 @@ fn render_terrain(
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
 
-            if block == Block::Air {
+            if block == Block::Air || block == Block::Tide {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
                         render_water(
@@ -236,6 +236,7 @@ fn render_terrain(
 fn render_player(
     d: &mut RaylibDrawHandle,
     player: &Player,
+    terrain: &Terrain,
     textures: &crate::TextureManager,
     shader: &mut Shader,
     shader_locs: ShaderLocs,
@@ -389,6 +390,13 @@ fn render_player(
 
                 // Draw highlight - if placing a multi-tile block, show full bounds
                 if let Some(crate::tools::ToolType::PlaceBlock(block)) = tool {
+                    // Check if placement would be valid
+                    let x = tile_x.floor() as i32;
+                    let y = tile_y.floor() as i32;
+                    if !player.can_place_block_at(terrain, block, x, y) {
+                        return;
+                    }
+
                     if block.is_multi_tile() {
                         let width = block.width();
                         let height = block.height();
@@ -409,16 +417,8 @@ fn render_player(
                             color,
                         );
                     }
-                } else {
-                    d.draw_rectangle_lines_ex(
-                        Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
-                        4.0,
-                        color,
-                    );
-                }
 
-                // Draw preview for place block tools
-                if let Some(crate::tools::ToolType::PlaceBlock(block)) = tool {
+                    // Draw preview for place block tools
                     let texture = block.get_texture(textures);
 
                     // Handle multi-tile blocks
@@ -448,6 +448,12 @@ fn render_player(
                             Color::new(255, 255, 255, 128),
                         );
                     }
+                } else {
+                    d.draw_rectangle_lines_ex(
+                        Rectangle::new(tile_x.floor() * ppw, tile_y.floor() * ppw, ppw, ppw),
+                        4.0,
+                        color,
+                    );
                 }
             }
         };
@@ -620,6 +626,7 @@ impl Screen for GameScreen {
             render_player(
                 &mut d2,
                 &ctx.world_state.player,
+                &ctx.world_state.terrain,
                 &ctx.textures,
                 &mut shader,
                 ctx.render_state.shader_locs,
