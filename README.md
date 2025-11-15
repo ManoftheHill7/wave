@@ -51,30 +51,37 @@ Things required for the games core concept
 
 Things that I would really like to have
 
+#### Lighting
+- [ ] Dynamic lighting
+- [ ] Tool - Lamp
+
+#### Additional movement options
+- [ ] Tool - Grappling Hook
+- [ ] Tool - Glider
+- [ ] Boots
+
+#### Food
+- [ ] Tool - Fishing rod
+- [ ] Forageable foods
+- [ ] Fishing. Maybe like Stardew Valley?
+
+#### Artistic improvements
+- [ ] Animated tiles (furnace, anvil, eg)
+- [ ] Parallax backgrounds
+- [ ] Multiple tile layers, allow placing blocks in foreground/background
+    - Few opening in tunnels, more in caverns
+    - Ore can generate in background layers
+    - Maybe replace tideblocks with places water flows in from
+
+#### Misc
+- [ ] Improved hitbox/collision handling
+- [ ] Tide clears building items
+
+#### Combat
 - [ ] Bat enemies
 - [ ] Mole enemies
 - [ ] Tool - Spear
 - [ ] Crouching
-- [ ] Tool - Grappling Hook
-- [ ] Dynamic lighting
-- [ ] Tool - Lamp
-- [ ] Bat enemies
-- [ ] Mole enemies
-- [ ] Tool - Spear
-- [ ] Parallax backgrounds
-- [ ] Hop over 1 block while walking
-- [ ] Improved hitbox/collision handling
-- [ ] Multiple tile layers, allow placing blocks in foreground/background
-- [ ] Tide clears building items
-- [ ] Multiple cave biomes as you get deeper
-- [ ] Forageable foods
-- [ ] Tool - Fishing rod
-- [ ] Fishing. Maybe like Stardew Valley?
-- [ ] Tool - Glider
-- [ ] Multiple cave generation types
-- [ ] Multiple enemy types
-- [ ] Boots
-- [ ] Boss battles
 
 ### Tier 3 Tasks
 
@@ -89,6 +96,9 @@ Things I will get to if there is time
 - [ ] Improve water simulation to support natural waves
 - [ ] Dungeons. Sets of connected handmade rooms to find important items
 - [ ] Day night cycle
+- [ ] Multiple cave biomes as you get deeper
+- [ ] Multiple cave generation types
+- [ ] Boss battles
 
 ## Links
 

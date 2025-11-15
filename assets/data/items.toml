@@ -301,6 +301,7 @@ image = "items.etherealite_bar"
 
 [items.lumostone]
 name = "Lumostone"
+image = "items.lumostone1"
 
 [items.glass]
 name = "Glass"
