@@ -768,8 +768,13 @@ impl Terrain {
             if block.is_multi_tile() {
                 (x, y, block)
             } else {
-                // Not a multi-tile block
-                return None;
+                // Single-tile block - break it directly
+                if block != Block::Air {
+                    self.set(x, y, Block::Air);
+                    return Some((block, x, y));
+                } else {
+                    return None;
+                }
             }
         };
 
