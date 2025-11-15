@@ -46,7 +46,6 @@ image = "items.sand"
 [items.coal]
 name = "Coal"
 weight = 3.0
-type = "block"
 image = "items.coal"
 
 [items.copper]
