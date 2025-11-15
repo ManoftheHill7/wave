@@ -143,49 +143,41 @@ image = "tiles.furnace"
 [items.amethyst]
 name = "Amethyst"
 weight = 1.0
-type = "non-block"
 image = "items.amethyst"
 
 [items.diamond]
 name = "Diamond"
 weight = 1.0
-type = "non-block"
 image = "items.diamond"
 
 [items.emerald]
 name = "Emerald"
 weight = 1.0
-type = "non-block"
 image = "items.emerald"
 
 [items.jasper]
 name = "Jasper"
 weight = 1.0
-type = "non-block"
 image = "items.jasper"
 
 [items.ruby]
 name = "Ruby"
 weight = 1.0
-type = "non-block"
 image = "items.ruby"
 
 [items.topaz]
 name = "Topaz"
 weight = 1.0
-type = "non-block"
 image = "items.topaz"
 
 [items.white_pearl]
 name = "White pearl"
 weight = 1.0
-type = "non-block"
 image = "items.white_pearl"
 
 [items.black_pearl]
 name = "Black pearl"
 weight = 1.0
-type = "non-block"
 image = "items.black_pearl"
 
 
@@ -194,37 +186,31 @@ image = "items.black_pearl"
 [items.canola]
 name = "Canola"
 weight = 1.0
-type = "non-block"
 image = "items.canola"
 
 [items.flax]
 name = "Flax"
 weight = 1.0
-type = "non-block"
 image = "items.flax"
 
 [items.flaxseed]
 name = "Flaxseed"
 weight = 0.1
-type = "non-block"
 image = "items.flaxseed"
 
 [items.mushroom]
 name = "Mushroom"
 weight = 0.5
-type = "non-block"
 image = "items.mushroom"
 
 [items.clam]
 name = "Clam"
 weight = 0.5
-type = "non-block"
 image = "items.clam"
 
 [items.conch_shell]
 name = "Conch shell"
 weight = 0.5
-type = "non-block"
 image = "items.conch_shell"
 
 
@@ -233,31 +219,26 @@ image = "items.conch_shell"
 [items.iron_shell]
 name = "Iron shell"
 weight = 0.5
-type = "non-block"
 image = "items.iron_shell"
 
 [items.mirthil_bucket]
 name = "Mirthil bucket"
 weight = 1.0
-type = "non-block"
 image = "items.mithril_bucket"
 
 [items.mirthil_lava_bucket]
 name = "Mirthil lava bucket"
 weight = 3.0
-type = "non-block"
 image = "items.mithril_lava_bucket"
 
 [items.mirthil_water_bucket]
 name = "Mirthil water bucket"
 weight = 5.0
-type = "non-block"
 image = "items.mithril_water_bucket"
 
 [items.explosive_dust]
 name = "Explosive dust"
 weight = 0.5
-type = "non-block"
 image = "items.explosive_dust"
 
 
@@ -266,74 +247,60 @@ image = "items.explosive_dust"
 [items.copper_bar]
 name = "Copper bar"
 weight = 1.0
-type = "non-block"
 image = "items.copper_bar"
 
 [items.bronze_bar]
 name = "Bronze bar"
 weight = 1.0
-type = "non-block"
 image = "items.bronze_bar"
 
 [items.iron_bar]
 name = "Iron bar"
 weight = 1.0
-type = "non-block"
 image = "items.iron_bar"
 
 [items.steel_bar]
 name = "Steel bar"
 weight = 1.0
-type = "non-block"
 image = "items.steel_bar"
 
 [items.silver_bar]
 name = "Silver bar"
 weight = 1.0
-type = "non-block"
 image = "items.silver_bar"
 
 [items.gold_bar]
 name = "Gold bar"
 weight = 1.0
-type = "non-block"
 image = "items.gold_bar"
 
 [items.platinum_bar]
 name = "Platinum bar"
 weight = 1.0
-type = "non-block"
 image = "items.platinum_bar"
 
 [items.mithril_bar]
 name = "Mithril bar"
 weight = 1.0
-type = "non-block"
 image = "items.mithril_bar"
 
 [items.ozathinum_bar]
 name = "Ozathinum bar"
 weight = 1.0
-type = "non-block"
 image = "items.ozathinum_bar"
 
 [items.torzite_bar]
 name = "Torzite bar"
 weight = 1.0
-type = "non-block"
 image = "items.torzite_bar"
 
 [items.etherealite_bar]
 name = "Etherealite bar"
 weight = 1.0
-type = "non-block"
 image = "items.etherealite_bar"
 
 [items.lumostone]
 name = "Lumostone"
-weight = 1.0
-type = "non-block"
-image = "items.lumostone1"
 
 [items.glass]
 name = "Glass"
