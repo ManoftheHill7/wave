@@ -44,7 +44,7 @@ Things required for the games core concept
 - [x] Crafting system
 - [ ] Crafting recipes
 - [ ] Physics Overhaul
-- [ ] Crafting only when near crafting table items
+- [x] Crafting only when near crafting table items
 - [x] Save/load/new game
 
 ### Tier 2 Tasks

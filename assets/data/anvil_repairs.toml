@@ -1,0 +1,111 @@
+# anvil tool repair recipes 
+
+[repair.stone_pickaxe]
+type = "anvil"
+output = "stone pickaxe"
+amount = 1
+[[repair.stone_pickaxe.inputs]]
+type = "stone pickaxe"
+amount = 1
+[[repair.stone_pickaxe.inputs]]
+type = "stone"
+amount = 5
+
+[repair.copper_pickaxe]
+type = "anvil"
+output = "copper pickaxe"
+amount = 1
+[[repair.copper_pickaxe.inputs]]
+type = "copper pickaxe"
+amount = 1
+[[repair.copper_pickaxe.inputs]]
+type = "copper bar"
+amount = 5
+
+[repair.bronze_pickaxe]
+type = "anvil"
+output = "bronze pickaxe"
+amount = 1
+[[repair.bronze_pickaxe.inputs]]
+type = "bronze pickaxe"
+amount = 1
+[[repair.bronze_pickaxe.inputs]]
+type = "bronze bar"
+amount = 5
+
+[repair.iron_pickaxe]
+type = "anvil"
+output = "iron pickaxe"
+amount = 1
+[[repair.iron_pickaxe.inputs]]
+type = "iron pickaxe"
+amount = 1
+[[repair.iron_pickaxe.inputs]]
+type = "iron bar"
+amount = 5
+
+[repair.steel_pickaxe]
+type = "anvil"
+output = "steel pickaxe"
+amount = 1
+[[repair.steel_pickaxe.inputs]]
+type = "steel pickaxe"
+amount = 1
+[[repair.steel_pickaxe.inputs]]
+type = "steel bar"
+amount = 5
+
+[repair.platinum_pickaxe]
+type = "anvil"
+output = "platinum pickaxe"
+amount = 1
+[[repair.platinum_pickaxe.inputs]]
+type = "platinum pickaxe"
+amount = 1
+[[repair.platinum_pickaxe.inputs]]
+type = "platinum bar"
+amount = 5
+
+[repair.mithril_pickaxe]
+type = "anvil"
+output = "mithril pickaxe"
+amount = 1
+[[repair.mithril_pickaxe.inputs]]
+type = "mithril pickaxe"
+amount = 1
+[[repair.mithril_pickaxe.inputs]]
+type = "mithril bar"
+amount = 5
+
+[repair.ozathinum_pickaxe]
+type = "anvil"
+output = "ozathinum pickaxe"
+amount = 1
+[[repair.ozathinum_pickaxe.inputs]]
+type = "ozathinum pickaxe"
+amount = 1
+[[repair.ozathimum_pickaxe.inputs]]
+type = "ozathinum bar"
+amount = 5
+
+[repair.torzite_pickaxe]
+type = "anvil"
+output = "torzite pickaxe"
+amount = 1
+[[repair.torzite_pickaxe.inputs]]
+type = "torzite pickaxe"
+amount = 1
+[[repair.torzite_pickaxe.inputs]]
+type = "torzite bar"
+amount = 5
+
+[repair.etherealite_pickaxe]
+type = "anvil"
+output = "etherealite pickaxe"
+amount = 1
+[[repair.etherealite_pickaxe.inputs]]
+type = "etherealite pickaxe"
+amount = 1
+[[repair.etherealite_pickaxe.inputs]]
+type = "etherealite bar"
+amount = 5

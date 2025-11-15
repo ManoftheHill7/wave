@@ -1,13 +1,18 @@
 # This file is for things that go in the inventory
+
+# basic blocks
+
 [items.stone]
 name = "Stone"
 weight = 5.0
 type = "block"
+image = "items.stone"
 
 [items.dirt]
 name = "Dirt"
 weight = 2.0
 type = "block"
+image = "items.dirt"
 
 [items.stick]
 name = "Stick"
@@ -21,28 +26,28 @@ weight = 1.0
 name = "Log"
 weight = 4.0
 type = "block"
-image = "tiles.log"
+image = "items.log"
 
 [items.leaf]
 name = "Leaf"
 weight = 0.5
 type = "block"
-image = "tiles.leaves"
+image = "items.leaves"
 
 [items.sand]
 name = "Sand"
 weight = 2.5
 type = "block"
+image = "items.sand"
 
-[items.glass]
-name = "Glass"
-type = "block"
-weight = 0.5
+
+# ores
 
 [items.coal]
 name = "Coal"
 weight = 3.0
 type = "block"
+image = "items.coal"
 
 [items.copper]
 name = "Copper"
@@ -133,3 +138,215 @@ name = "Furnace"
 weight = 50.0
 type = "block"
 image = "tiles.furnace"
+
+# precious stones
+
+[items.amethyst]
+name = "Amethyst"
+weight = 1.0
+type = "non-block"
+image = "items.amethyst"
+
+[items.diamond]
+name = "Diamond"
+weight = 1.0
+type = "non-block"
+image = "items.diamond"
+
+[items.emerald]
+name = "Emerald"
+weight = 1.0
+type = "non-block"
+image = "items.emerald"
+
+[items.jasper]
+name = "Jasper"
+weight = 1.0
+type = "non-block"
+image = "items.jasper"
+
+[items.ruby]
+name = "Ruby"
+weight = 1.0
+type = "non-block"
+image = "items.ruby"
+
+[items.topaz]
+name = "Topaz"
+weight = 1.0
+type = "non-block"
+image = "items.topaz"
+
+[items.white_pearl]
+name = "White pearl"
+weight = 1.0
+type = "non-block"
+image = "items.white_pearl"
+
+[items.black_pearl]
+name = "Black pearl"
+weight = 1.0
+type = "non-block"
+image = "items.black_pearl"
+
+
+# foraged items
+
+[items.canola]
+name = "Canola"
+weight = 1.0
+type = "non-block"
+image = "items.canola"
+
+[items.flax]
+name = "Flax"
+weight = 1.0
+type = "non-block"
+image = "items.flax"
+
+[items.flaxseed]
+name = "Flaxseed"
+weight = 0.1
+type = "non-block"
+image = "items.flaxseed"
+
+[items.mushroom]
+name = "Mushroom"
+weight = 0.5
+type = "non-block"
+image = "items.mushroom"
+
+[items.clam]
+name = "Clam"
+weight = 0.5
+type = "non-block"
+image = "items.clam"
+
+[items.conch_shell]
+name = "Conch shell"
+weight = 0.5
+type = "non-block"
+image = "items.conch_shell"
+
+
+# anviled items
+
+[items.iron_shell]
+name = "Iron shell"
+weight = 0.5
+type = "non-block"
+image = "items.iron_shell"
+
+[items.mirthil_bucket]
+name = "Mirthil bucket"
+weight = 1.0
+type = "non-block"
+image = "items.mithril_bucket"
+
+[items.mirthil_lava_bucket]
+name = "Mirthil lava bucket"
+weight = 3.0
+type = "non-block"
+image = "items.mithril_lava_bucket"
+
+[items.mirthil_water_bucket]
+name = "Mirthil water bucket"
+weight = 5.0
+type = "non-block"
+image = "items.mithril_water_bucket"
+
+[items.explosive_dust]
+name = "Explosive dust"
+weight = 0.5
+type = "non-block"
+image = "items.explosive_dust"
+
+
+# furnaced items
+
+[items.copper_bar]
+name = "Copper bar"
+weight = 1.0
+type = "non-block"
+image = "items.copper_bar"
+
+[items.bronze_bar]
+name = "Bronze bar"
+weight = 1.0
+type = "non-block"
+image = "items.bronze_bar"
+
+[items.iron_bar]
+name = "Iron bar"
+weight = 1.0
+type = "non-block"
+image = "items.iron_bar"
+
+[items.steel_bar]
+name = "Steel bar"
+weight = 1.0
+type = "non-block"
+image = "items.steel_bar"
+
+[items.silver_bar]
+name = "Silver bar"
+weight = 1.0
+type = "non-block"
+image = "items.silver_bar"
+
+[items.gold_bar]
+name = "Gold bar"
+weight = 1.0
+type = "non-block"
+image = "items.gold_bar"
+
+[items.platinum_bar]
+name = "Platinum bar"
+weight = 1.0
+type = "non-block"
+image = "items.platinum_bar"
+
+[items.mithril_bar]
+name = "Mithril bar"
+weight = 1.0
+type = "non-block"
+image = "items.mithril_bar"
+
+[items.ozathinum_bar]
+name = "Ozathinum bar"
+weight = 1.0
+type = "non-block"
+image = "items.ozathinum_bar"
+
+[items.torzite_bar]
+name = "Torzite bar"
+weight = 1.0
+type = "non-block"
+image = "items.torzite_bar"
+
+[items.etherealite_bar]
+name = "Etherealite bar"
+weight = 1.0
+type = "non-block"
+image = "items.etherealite_bar"
+
+[items.lumostone]
+name = "Lumostone"
+weight = 1.0
+type = "non-block"
+image = "items.lumostone1"
+
+[items.glass]
+name = "Glass"
+weight = 2.5
+type = "block"
+image = "items.glass"
+
+
+# workbenched items
+
+[items.copper_ladder]
+name = "Copper ladder"
+weight = 2.5
+type = "block"
+image = "items.copper_ladder"
