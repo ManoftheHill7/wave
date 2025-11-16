@@ -8,10 +8,10 @@ use screen_manager::{Screen, ScreenCommand};
 // Maps to uniforms (original_0, replace_0)
 const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0];
 const COLOR_PALETTES: &[[f32; 4]] = &[
-    [0.0, 0.5, 1.0, 1.0],                             // Blue scarf
-    [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // Red scarf
-    [1.0, 0.0, 1.0, 1.0],                             // Pink scarf
-    [0.6, 0.9, 0.3, 1.0],                             // Green scarf
+    [99.0 / 255.0, 155.0 / 255.0, 1.0, 1.0],            // Blue scarf
+    [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],   // Red scarf
+    [215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0], // Pink scarf
+    [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0],  // Green scarf
 ];
 
 fn smooth_axis(
@@ -255,7 +255,9 @@ fn render_player(
     }
 
     const WALK_FRAME_LENGTH: f32 = 0.1;
-    const FALLING_FRAME_LENGTH: f32 = 0.2;
+    const CLIMBING_FRAME_LENGTH: f32 = 0.2;
+    const FALLING_FRAME_LENGTH: f32 = 0.15;
+    const SLIDING_FRAME_LENGTH: f32 = 0.2;
     const IDLE_FRAME_LENGTH: f32 = 0.25;
     const SWIMMING_FRAME_LENGTH: f32 = 0.18;
     const MINING_FRAME_LENGTH: f32 = 0.1;
@@ -270,14 +272,14 @@ fn render_player(
         animate_from!(pt.mining, MINING_FRAME_LENGTH, player.started_mining_at)
     } else if player.is_climbing {
         if player.velocity.y != 0.0 {
-            animate!(pt.climb, WALK_FRAME_LENGTH)
+            animate!(pt.climb, CLIMBING_FRAME_LENGTH)
         } else {
             &pt.climb[0]
         }
     } else if player.is_swimming {
         animate!(pt.swimming, SWIMMING_FRAME_LENGTH)
     } else if player.is_sliding {
-        &pt.sliding
+         animate!(pt.sliding, SLIDING_FRAME_LENGTH)
     } else if player.on_ground {
         if player.velocity.x != 0.0 {
             animate!(pt.walk, WALK_FRAME_LENGTH)

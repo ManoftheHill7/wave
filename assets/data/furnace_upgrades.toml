@@ -1,0 +1,203 @@
+# furnace tool upgrades
+
+# pickaxes
+
+[upgrades.copper_pickaxe]
+type = "furnace"
+output = "copper_pickaxe"
+amount = 1
+[[upgrades.copper_pickaxe.inputs]]
+type = "stone pickaxe"
+amount = 1
+[[upgrades.copper_pickaxe.inputs]]
+type = "copper bar"
+amount = 4
+
+[upgrades.bronze_pickaxe]
+type = "furnace"
+output = "bronze_pickaxe"
+amount = 1
+[[upgrades.bronze_pickaxe.inputs]]
+type = "copper pickaxe"
+amount = 1
+[[upgrades.bronze_pickaxe.inputs]]
+type = "bronze bar"
+amount = 4
+
+[upgrades.iron_pickaxe]
+type = "furnace"
+output = "iron_pickaxe"
+amount = 1
+[[upgrades.iron_pickaxe.inputs]]
+type = "bronze pickaxe"
+amount = 1
+[[upgrades.iron_pickaxe.inputs]]
+type = "iron bar"
+amount = 4
+
+[upgrades.steel_pickaxe]
+type = "furnace"
+output = "steel_pickaxe"
+amount = 1
+[[upgrades.steel_pickaxe.inputs]]
+type = "iron pickaxe"
+amount = 1
+[[upgrades.steel_pickaxe.inputs]]
+type = "steel bar"
+amount = 4
+
+[upgrades.platinum_pickaxe]
+type = "furnace"
+output = "platinum_pickaxe"
+amount = 1
+[[upgrades.platinum_pickaxe.inputs]]
+type = "steel pickaxe"
+amount = 1
+[[upgrades.platinum_pickaxe.inputs]]
+type = "platinum bar"
+amount = 4
+
+[upgrades.mithril_pickaxe]
+type = "furnace"
+output = "mithril_pickaxe"
+amount = 1
+[[upgrades.mithril_pickaxe.inputs]]
+type = "platinum pickaxe"
+amount = 1
+[[upgrades.mithril_pickaxe.inputs]]
+type = "mithril bar"
+amount = 4
+
+[upgrades.ozathinum_pickaxe]
+type = "furnace"
+output = "ozathinum_pickaxe"
+amount = 1
+[[upgrades.ozathinum_pickaxe.inputs]]
+type = "mithril pickaxe"
+amount = 1
+[[upgrades.ozathinum_pickaxe.inputs]]
+type = "ozathinum bar"
+amount = 3
+
+[upgrades.torzite_pickaxe]
+type = "furnace"
+output = "torzite_pickaxe"
+amount = 1
+[[upgrades.torzite_pickaxe.inputs]]
+type = "ozathinum pickaxe"
+amount = 1
+[[upgrades.torzite_pickaxe.inputs]]
+type = "torzite bar"
+amount = 2
+
+[upgrades.etherealite_pickaxe]
+type = "furnace"
+output = "etherealite_pickaxe"
+amount = 1
+[[upgrades.etherealite_pickaxe.inputs]]
+type = "torzite pickaxe"
+amount = 1
+[[upgrades.etherealite_pickaxe.inputs]]
+type = "etherealite bar"
+amount = 1
+
+
+# dash amulets
+
+[upgrades.amethyst_amulet]
+type = "furnace"
+output = "amethyst_amulet"
+amount = 1
+[[upgrades.amethyst_amulet.inputs]]
+type = "white pearl amulet"
+amount = 1
+[[upgrades.amethyst_amulet.inputs]]
+type = "amethyst"
+amount = 2
+[[upgrades.amethyst_amulet.inputs]]
+type = "gold bar"
+amount = 2
+
+[upgrades.jasper_amulet]
+type = "furnace"
+output = "jasper_amulet"
+amount = 1
+[[upgrades.jasper_amulet.inputs]]
+type = "jasper amulet"
+amount = 1
+[[upgrades.jasper_amulet.inputs]]
+type = "jasper"
+amount = 2
+[[upgrades.jasper_amulet.inputs]]
+type = "gold bar"
+amount = 2
+
+[upgrades.emerald_amulet]
+type = "furnace"
+output = "emerald_amulet"
+amount = 1
+[[upgrades.emerald_amulet.inputs]]
+type = "emerald amulet"
+amount = 1
+[[upgrades.emerald_amulet.inputs]]
+type = "emerald"
+amount = 2
+[[upgrades.emerald_amulet.inputs]]
+type = "gold bar"
+amount = 2
+
+[upgrades.black_pearl_amulet]
+type = "furnace"
+output = "black_pearl_amulet"
+amount = 1
+[[upgrades.black_pearl_amulet.inputs]]
+type = "black pearl amulet"
+amount = 1
+[[upgrades.black_pearl_amulet.inputs]]
+type = "black pearl"
+amount = 2
+[[upgrades.black_pearl_amulet.inputs]]
+type = "gold bar"
+amount = 2
+
+[upgrades.topaz_amulet]
+type = "furnace"
+output = "topaz_amulet"
+amount = 1
+[[upgrades.topaz_amulet.inputs]]
+type = "topaz amulet"
+amount = 1
+[[upgrades.topaz_amulet.inputs]]
+type = "topaz"
+amount = 2
+[[upgrades.topaz_amulet.inputs]]
+type = "gold bar"
+amount = 2
+
+[upgrades.ruby_amulet]
+type = "furnace"
+output = "ruby_amulet"
+amount = 1
+[[upgrades.ruby_amulet.inputs]]
+type = "ruby amulet"
+amount = 1
+[[upgrades.ruby_amulet.inputs]]
+type = "ruby"
+amount = 2
+[[upgrades.ruby_amulet.inputs]]
+type = "gold bar"
+amount = 2
+
+[upgrades.diamond_amulet]
+type = "furnace"
+output = "diamond_amulet"
+amount = 1
+[[upgrades.diamond_amulet.inputs]]
+type = "diamond amulet"
+amount = 1
+[[upgrades.diamond_amulet.inputs]]
+type = "diamond"
+amount = 2
+[[upgrades.diamond_amulet.inputs]]
+type = "gold bar"
+amount = 2

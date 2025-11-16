@@ -1,21 +1,21 @@
 # Early Game Ores (Depth 0-300)
-[ore.coal]
+[ore.coal_ore]
 spawns_from = 0
-spawns_peak = 0
-spawns_to = 1000
+spawns_peak = 50
+spawns_to = 500
 spawns_pap = 2.5
 max_vein_size = 8
 min_vein_size = 3
 
-[ore.tin]
+[ore.tin_ore]
 spawns_from = 10
 spawns_peak = 80
 spawns_to = 250
 spawns_pap = 1.5
-max_vein_size = 8
-min_vein_size = 3
+max_vein_size = 3
+min_vein_size = 2
 
-[ore.copper]
+[ore.copper_ore]
 spawns_from = 10
 spawns_peak = 100
 spawns_to = 300
@@ -23,8 +23,16 @@ spawns_pap = 2.0
 max_vein_size = 8
 min_vein_size = 3
 
+[ore.amethyst_ore]
+spawns_from = 100
+spawns_peak = 200
+spawns_to = 300
+spawns_pap = 0.8
+max_vein_size = 2
+min_vein_size = 1
+
 # Mid Game Ores (Depth 150-600)
-[ore.iron]
+[ore.iron_ore]
 spawns_from = 150
 spawns_peak = 300
 spawns_to = 600
@@ -32,7 +40,7 @@ spawns_pap = 2.5
 max_vein_size = 8
 min_vein_size = 3
 
-[ore.pure_iron]
+[ore.pure_iron_ore]
 spawns_from = 200
 spawns_peak = 350
 spawns_to = 650
@@ -40,7 +48,7 @@ spawns_pap = 1.8
 max_vein_size = 6
 min_vein_size = 2
 
-[ore.silver]
+[ore.silver_ore]
 spawns_from = 250
 spawns_peak = 450
 spawns_to = 700
@@ -48,7 +56,7 @@ spawns_pap = 1.5
 max_vein_size = 6
 min_vein_size = 2
 
-[ore.gold]
+[ore.gold_ore]
 spawns_from = 300
 spawns_peak = 500
 spawns_to = 750
@@ -56,8 +64,24 @@ spawns_pap = 1.2
 max_vein_size = 6
 min_vein_size = 2
 
+[ore.jasper_ore]
+spawns_from = 200
+spawns_peak = 250
+spawns_to = 300
+spawns_pap = 0.6
+max_vein_size = 2
+min_vein_size = 1
+
+[ore.emerald_ore]
+spawns_from = 350
+spawns_peak = 400
+spawns_to = 500
+spawns_pap = 0.5
+max_vein_size = 2
+min_vein_size = 1
+
 # Late Game Ores (Depth 400-900)
-[ore.platinum]
+[ore.platinum_ore]
 spawns_from = 400
 spawns_peak = 600
 spawns_to = 850
@@ -65,43 +89,67 @@ spawns_pap = 1.0
 max_vein_size = 6
 min_vein_size = 2
 
-[ore.mithril]
+[ore.mithril_ore]
 spawns_from = 500
 spawns_peak = 700
 spawns_to = 900
-spawns_pap = 1.2
-max_vein_size = 5
+spawns_pap = 1.5
+max_vein_size = 6
 min_vein_size = 2
 
-[ore.lumosite]
-spawns_from = 200
+[ore.lumosite_ore]
+spawns_from = 400
 spawns_peak = 600
 spawns_to = 950
-spawns_pap = 1.5
-max_vein_size = 5
-min_vein_size = 2
+spawns_pap = 2.0
+max_vein_size = 9
+min_vein_size = 4
+
+[ore.topaz_ore]
+spawns_from = 500
+spawns_peak = 600
+spawns_to = 750
+spawns_pap = 0.6
+max_vein_size = 2
+min_vein_size = 1
+
+[ore.ruby_ore]
+spawns_from = 700
+spawns_peak = 800
+spawns_to = 900
+spawns_pap = 0.5
+max_vein_size = 2
+min_vein_size = 1
 
 # End Game Ores (Depth 600-1000)
-[ore.ozathinum]
+[ore.ozathinum_ore]
 spawns_from = 650
 spawns_peak = 800
 spawns_to = 950
-spawns_pap = 0.8
-max_vein_size = 4
-min_vein_size = 1
+spawns_pap = 1.0
+max_vein_size = 15
+min_vein_size = 4
 
-[ore.torzite]
+[ore.torzite_ore]
 spawns_from = 750
 spawns_peak = 875
 spawns_to = 980
-spawns_pap = 0.6
-max_vein_size = 4
-min_vein_size = 1
+spawns_pap = 0.8
+max_vein_size = 12
+min_vein_size = 3
 
-[ore.etherealite]
+[ore.etherealite_ore]
 spawns_from = 850
 spawns_peak = 925
 spawns_to = 1000
+spawns_pap = 0.7
+max_vein_size = 5
+min_vein_size = 2
+
+[ore.diamond_ore]
+spawns_from = 850
+spawns_peak = 950
+spawns_to = 1000
 spawns_pap = 0.4
-max_vein_size = 4
+max_vein_size = 2
 min_vein_size = 1
