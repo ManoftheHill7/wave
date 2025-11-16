@@ -299,6 +299,7 @@ type = "block"
 [items.wooden_ladder]
 name = "Wooden Ladder"
 weight = 0.5
+type = "block"
 
 [items.torch]
 name = "Torch"
