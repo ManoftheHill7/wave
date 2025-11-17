@@ -218,7 +218,7 @@ impl Player {
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
 
             left_hand: Some(ToolType::Pickaxe),
-            right_hand: Some(ToolType::Lamp), // Testing: Changed from Dash to Lamp
+            right_hand: Some(ToolType::Dash),
 
             tool_dash: initial_dash,
             tool_pickaxe: initial_pick,

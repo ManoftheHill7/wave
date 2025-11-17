@@ -117,6 +117,22 @@ impl InventoryScreen {
                 return;
             }
         }
+
+        // Check lamp tool slot (column 4)
+        let tool_x = tool_start_x + (4.0 * (slot_size + slot_padding));
+        if mouse_x >= tool_x
+            && mouse_x <= tool_x + slot_size
+            && mouse_y >= tool_y
+            && mouse_y <= tool_y + slot_size
+        {
+            Self::set_hand_with_swap(
+                &mut ctx.world_state.player.left_hand,
+                &mut ctx.world_state.player.right_hand,
+                Some(ToolType::Lamp),
+                is_left_click,
+            );
+            return;
+        }
     }
 
     /// Helper function to set a hand with swap logic
@@ -408,7 +424,11 @@ impl Screen for InventoryScreen {
             );
             draw_tool_slot(2, None, None); // Grappling hook
             draw_tool_slot(3, None, None); // Spear
-            draw_tool_slot(4, None, None); // Lamp
+            draw_tool_slot(
+                4,
+                Some(&ctx.textures.tools.lamp_coal1),
+                Some(ToolType::Lamp),
+            ); // Lamp
             draw_tool_slot(5, None, None); // Fishing rod
             draw_tool_slot(6, None, None); // Glider
         }
