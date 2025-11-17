@@ -8,6 +8,11 @@ const LIQUID_UPDATE_TIMER: f32 = 0.04;
 #[cfg(not(debug_assertions))]
 const LIQUID_UPDATE_TIMER: f32 = 0.01;
 
+#[cfg(debug_assertions)]
+const LIGHTING_UPDATE_TIMER: f32 = 1.0 / 24.0;
+#[cfg(not(debug_assertions))]
+const LIGHTING_UPDATE_TIMER: f32 = 1.0 / 48.0;
+
 const MAX_TIDE_DEPTH: f32 = 1000.0;
 const TIDE_FREQUENCY: f32 = 1.0 / 120.0;
 
@@ -18,6 +23,7 @@ pub struct WorldState {
     pub ghost_mode: bool,
     flow_timer: f32,
     tide_timer: f32,
+    illuminate_timer: f32,
 }
 
 impl WorldState {
@@ -29,6 +35,7 @@ impl WorldState {
             lighting_system: LightingSystem::new(),
             ghost_mode: false,
             flow_timer: 0.0,
+            illuminate_timer: 0.0,
             tide_timer: 0.0,
         }
     }
@@ -121,65 +128,82 @@ impl WorldState {
             self.player.update(dt, &mut self.terrain, controller);
         }
 
-        // Update ambient darkness based on player depth
-        self.lighting_system
-            .update_ambient_darkness(self.player.position.y);
+        while self.illuminate_timer > LIGHTING_UPDATE_TIMER {
+            self.illuminate_timer = 0.0;
+            // Do update lighting
+            // Update ambient darkness based on player depth
+            self.lighting_system
+                .update_ambient_darkness(self.player.position.y);
 
-        // Update lights (clear and re-add each frame)
-        self.lighting_system.clear_lights();
+            // Update lights (clear and re-add each frame)
+            self.lighting_system.clear_lights();
 
-        // Add player's lamp if equipped
-        use crate::lighting::{Light, LightType};
-        use crate::terrain::Block;
-        use crate::tools::ToolType;
-        use raylib::prelude::Vector2;
+            // Add player's lamp if equipped
+            use crate::lighting::{Light, LightType};
+            use crate::terrain::Block;
+            use crate::tools::ToolType;
+            use raylib::prelude::Vector2;
 
-        let px = self.player.position.x as i32;
-        let py = self.player.position.y as i32;
+            let px = self.player.position.x as i32;
+            let py = self.player.position.y as i32;
 
-        let player_has_lamp = self.player.left_hand == Some(ToolType::Lamp)
-            || self.player.right_hand == Some(ToolType::Lamp);
+            let player_has_lamp = self.player.left_hand == Some(ToolType::Lamp)
+                || self.player.right_hand == Some(ToolType::Lamp);
 
-        if player_has_lamp {
-            let lamp_pos = Vector2::new(
-                self.player.position.x + self.player.width / 2.0,
-                self.player.position.y + self.player.height / 2.0,
-            );
-            let lamp_light = Light::new(lamp_pos, LightType::Lamp).with_flicker(self.player.time);
-            self.lighting_system.add_light(lamp_light);
-        }
+            if player_has_lamp {
+                let lamp_pos = Vector2::new(
+                    self.player.position.x + self.player.width / 2.0,
+                    self.player.position.y + self.player.height / 2.0,
+                );
+                let lamp_light = Light::new(lamp_pos, LightType::Lamp).with_flicker(self.player.time);
+                self.lighting_system.add_light(lamp_light);
+            }
 
-        // Add lights from placed torches in the world
-        let search_radius = 30; // tiles around player
-        for dx in -search_radius..=search_radius {
-            for dy in -search_radius..=search_radius {
-                let tx = px + dx;
-                let ty = py + dy;
-                let block = self.terrain.at(tx, ty);
+            // Add lights from placed torches in the world
+            let search_radius = 30; // tiles around player
+            for dx in -search_radius..=search_radius {
+                for dy in -search_radius..=search_radius {
+                    let tx = px + dx;
+                    let ty = py + dy;
+                    let block = self.terrain.at(tx, ty);
 
-                let light_type = match block {
-                    Block::Torch => Some(LightType::CoalTorch),
-                    Block::Lumostorch => Some(LightType::LumostoneTorch),
-                    _ => None,
-                };
+                    let light_type = match block {
+                        Block::Torch => Some(LightType::CoalTorch),
+                        Block::Lumostorch => Some(LightType::LumostoneTorch),
+                        _ => None,
+                    };
 
-                if let Some(lt) = light_type {
-                    let torch_pos = Vector2::new(tx as f32 + 0.5, ty as f32 + 0.5);
-                    let torch_light = Light::new(torch_pos, lt).with_flicker(self.player.time);
-                    self.lighting_system.add_light(torch_light);
+                    if let Some(lt) = light_type {
+                        let torch_pos = Vector2::new(tx as f32 + 0.5, ty as f32 + 0.5);
+                        let torch_light = Light::new(torch_pos, lt).with_flicker(self.player.time);
+                        self.lighting_system.add_light(torch_light);
+                    }
                 }
             }
+
+            // Calculate shadows for all lights
+            let render_distance = 50; // tiles
+            self.lighting_system.calculate_shadows(
+                &self.terrain,
+                self.player.position.x as i32,
+                self.player.position.y as i32,
+                render_distance,
+            );
+
+            // Calculate solid block lighting (moved from render to update for performance)
+            let lighting_range = 20; // Should match game_screen.rs LIGHTING_RANGE
+            self.lighting_system.calculate_solid_lighting(
+                &self.terrain,
+                self.player.position.x as i32,
+                self.player.position.y as i32,
+                lighting_range,
+            );
+
+
+            // End update lighting
         }
 
-        // Calculate shadows for all lights
-        let render_distance = 50; // tiles
-        self.lighting_system.calculate_shadows(
-            &self.terrain,
-            self.player.position.x as i32,
-            self.player.position.y as i32,
-            render_distance,
-        );
-
+        self.illuminate_timer += dt;
         self.tide_timer += dt;
         self.flow_timer += dt;
         while self.flow_timer > LIQUID_UPDATE_TIMER {

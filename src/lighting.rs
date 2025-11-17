@@ -79,6 +79,8 @@ impl ShadowMap {
 pub struct LightingSystem {
     lights: Vec<Light>,
     shadow_map: ShadowMap,
+    solid_light_cache: HashMap<(i32, i32), f32>,
+    air_light_cache: HashMap<(i32, i32), f32>,
     pub ambient_darkness: f32,
 }
 
@@ -87,6 +89,8 @@ impl LightingSystem {
         LightingSystem {
             lights: Vec::new(),
             shadow_map: ShadowMap::new(),
+            solid_light_cache: HashMap::new(),
+            air_light_cache: HashMap::new(),
             ambient_darkness: 0.0,
         }
     }
@@ -215,5 +219,121 @@ impl LightingSystem {
         }
 
         total_light.min(1.0)
+    }
+
+    /// Calculate lighting for solid blocks based on nearby air tiles
+    /// This should be called after calculate_shadows() during update, not render
+    pub fn calculate_solid_lighting(
+        &mut self,
+        terrain: &Terrain,
+        center_x: i32,
+        center_y: i32,
+        range: i32,
+    ) {
+        self.air_light_cache.clear();
+        self.solid_light_cache.clear();
+
+        // First pass: Cache air tile brightness
+        for ty in (center_y - range - 2)..(center_y + range + 2) {
+            for tx in (center_x - range - 2)..(center_x + range + 2) {
+                // Skip tiles far from all lights
+                let mut near_light = false;
+                for light in &self.lights {
+                    let dx = tx as f32 - light.position.x;
+                    let dy = ty as f32 - light.position.y;
+                    let dist_sq = dx * dx + dy * dy;
+                    let check_radius = (light.radius + 3.0) * (light.radius + 3.0);
+                    if dist_sq <= check_radius {
+                        near_light = true;
+                        break;
+                    }
+                }
+
+                if !near_light {
+                    continue;
+                }
+
+                if !terrain.solid_terrain_at(tx, ty) {
+                    let tile_x = tx as f32 + 0.5;
+                    let tile_y = ty as f32 + 0.5;
+                    let light = self.get_light_at(tile_x, tile_y);
+                    if light > 0.01 {
+                        self.air_light_cache.insert((tx, ty), light);
+                    }
+                }
+            }
+        }
+
+        // Second pass: Calculate solid block lighting from nearby air
+        for ty in (center_y - range)..(center_y + range) {
+            for tx in (center_x - range)..(center_x + range) {
+                if !terrain.solid_terrain_at(tx, ty) {
+                    continue;
+                }
+
+                let mut max_nearby_light: f32 = 0.0;
+
+                // Check immediate neighbors (distance 1)
+                if let Some(&light) = self.air_light_cache.get(&(tx - 1, ty)) {
+                    max_nearby_light = max_nearby_light.max(light);
+                }
+                if let Some(&light) = self.air_light_cache.get(&(tx + 1, ty)) {
+                    max_nearby_light = max_nearby_light.max(light);
+                }
+                if let Some(&light) = self.air_light_cache.get(&(tx, ty - 1)) {
+                    max_nearby_light = max_nearby_light.max(light);
+                }
+                if let Some(&light) = self.air_light_cache.get(&(tx, ty + 1)) {
+                    max_nearby_light = max_nearby_light.max(light);
+                }
+
+                // Early exit if we found bright light
+                if max_nearby_light < 0.95 {
+                    // Check diagonal neighbors (distance ~1.4)
+                    if let Some(&light) = self.air_light_cache.get(&(tx - 1, ty - 1)) {
+                        max_nearby_light = max_nearby_light.max(light);
+                    }
+                    if let Some(&light) = self.air_light_cache.get(&(tx + 1, ty - 1)) {
+                        max_nearby_light = max_nearby_light.max(light);
+                    }
+                    if let Some(&light) = self.air_light_cache.get(&(tx - 1, ty + 1)) {
+                        max_nearby_light = max_nearby_light.max(light);
+                    }
+                    if let Some(&light) = self.air_light_cache.get(&(tx + 1, ty + 1)) {
+                        max_nearby_light = max_nearby_light.max(light);
+                    }
+
+                    // Only check 2-tile distance if still not well lit
+                    if max_nearby_light < 0.7 {
+                        // Check 2-tile cardinal directions with 50% falloff
+                        if let Some(&light) = self.air_light_cache.get(&(tx - 2, ty)) {
+                            max_nearby_light = max_nearby_light.max(light * 0.5);
+                        }
+                        if let Some(&light) = self.air_light_cache.get(&(tx + 2, ty)) {
+                            max_nearby_light = max_nearby_light.max(light * 0.5);
+                        }
+                        if let Some(&light) = self.air_light_cache.get(&(tx, ty - 2)) {
+                            max_nearby_light = max_nearby_light.max(light * 0.5);
+                        }
+                        if let Some(&light) = self.air_light_cache.get(&(tx, ty + 2)) {
+                            max_nearby_light = max_nearby_light.max(light * 0.5);
+                        }
+                    }
+                }
+
+                if max_nearby_light > 0.01 {
+                    self.solid_light_cache.insert((tx, ty), max_nearby_light);
+                }
+            }
+        }
+    }
+
+    /// Get cached light value for any tile (air or solid)
+    pub fn get_cached_light(&self, x: i32, y: i32, is_solid: bool) -> f32 {
+        if is_solid {
+            self.solid_light_cache.get(&(x, y)).copied().unwrap_or(0.0)
+        } else {
+            self.air_light_cache.get(&(x, y)).copied().unwrap_or(0.0)
+        }
     }
 }
