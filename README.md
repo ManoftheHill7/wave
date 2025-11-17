@@ -54,6 +54,7 @@ Things that I would really like to have
 #### Lighting
 - [ ] Dynamic lighting
 - [ ] Tool - Lamp
+- [ ] Torches cast light
 
 #### Additional movement options
 - [ ] Tool - Grappling Hook
@@ -66,16 +67,26 @@ Things that I would really like to have
 - [ ] Fishing. Maybe like Stardew Valley?
 
 #### Artistic improvements
-- [ ] Animated tiles (furnace, anvil, eg)
+- [ ] Animated tiles (furnace, anvil, torches, eg)
 - [ ] Parallax backgrounds
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
     - Few opening in tunnels, more in caverns
     - Ore can generate in background layers
     - Maybe replace tideblocks with places water flows in from
 
+#### Audio integration
+- [ ] Proximity sound effects for torches
+- [ ] Layering music as you go deeper
+- [ ] Flooding caverns music intensity
+- [ ] Sound effects when things happen
+- [ ] Looping sound effects for things like mining
+- [ ] Dynamic wooshing, and thuds for falling and impact
+
 #### Misc
 - [ ] Improved hitbox/collision handling
 - [ ] Tide clears building items
+- [ ] Bombs explode
+- [ ] Chests store items
 
 #### Combat
 - [ ] Bat enemies

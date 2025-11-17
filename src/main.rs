@@ -25,7 +25,6 @@ fn main() {
         // Start a new game directly
         println!("Starting new game...");
 
-
         Box::new(GameScreen::new(&ctx))
     } else if resume_mode {
         // Try to load save, if it fails, go to menu
@@ -54,6 +53,13 @@ fn main() {
     // ctx.world_state.player.inventory.add(ItemType::Workbench, 1);
     // ctx.world_state.player.inventory.add(ItemType::Furnace, 1);
     // ctx.world_state.player.inventory.add(ItemType::Anvil, 1);
+
+    // Testing: Add torches
+    ctx.world_state.player.inventory.add(ItemType::Torch, 20);
+    ctx.world_state
+        .player
+        .inventory
+        .add(ItemType::Lumostorch, 20);
 
     let mut manager = ScreenManager::new(initial_screen, &mut ctx);
 

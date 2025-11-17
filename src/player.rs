@@ -218,7 +218,7 @@ impl Player {
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
 
             left_hand: Some(ToolType::Pickaxe),
-            right_hand: Some(ToolType::Dash),
+            right_hand: Some(ToolType::Lamp), // Testing: Changed from Dash to Lamp
 
             tool_dash: initial_dash,
             tool_pickaxe: initial_pick,
@@ -279,6 +279,7 @@ impl Player {
             let max_length = match tool {
                 ToolType::Pickaxe => MAX_RAYCAST_PICKAXE,
                 ToolType::Dash => MAX_RAYCAST_DASH,
+                ToolType::Lamp => 0.0, // Lamp doesn't raycast
                 ToolType::PlaceBlock(_) => MAX_RAYCAST_PLACE_BLOCK,
             };
             let rayresult = self.raycast(
@@ -887,6 +888,10 @@ impl Player {
         match (hand, held, pressed) {
             (Some(ToolType::Dash), _, true) => self.manage_dash(controller.raycast_direction),
             (Some(ToolType::Pickaxe), true, _) => self.manage_pickaxe(terrain, left_hand),
+            (Some(ToolType::Lamp), _, _) => {
+                // Lamp is passive, no action needed
+                return false;
+            }
             (Some(ToolType::PlaceBlock(blk)), _, true) => {
                 self.try_place_block(terrain, blk, left_hand)
             }

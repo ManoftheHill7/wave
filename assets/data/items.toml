@@ -21,6 +21,14 @@ weight = 0.5
 [items.torch]
 name = "Torch"
 weight = 1.0
+type = "block"
+image = "items.torch"
+
+[items.lumostorch]
+name = "Lumostorch"
+weight = 1.0
+type = "block"
+image = "items.lumostorch1"
 
 [items.log]
 name = "Log"

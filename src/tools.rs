@@ -10,6 +10,7 @@ use crate::TextureManager;
 pub enum ToolType {
     Dash,
     Pickaxe,
+    Lamp,
     PlaceBlock(Block),
 }
 
@@ -18,6 +19,7 @@ impl ToolType {
         match self {
             ToolType::Dash => Some(&textures.tools.emerald_amulet),
             ToolType::Pickaxe => Some(&textures.tools.steel_pickaxe),
+            ToolType::Lamp => Some(&textures.tools.lamp_coal1),
             ToolType::PlaceBlock(blk) => blk.to_item_type().map(|item| item.get_texture(textures)),
         }
     }

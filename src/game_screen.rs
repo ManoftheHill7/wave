@@ -92,6 +92,60 @@ fn render_tile(
     );
 }
 
+fn render_lighting(
+    d: &mut RaylibDrawHandle,
+    lighting: &crate::lighting::LightingSystem,
+    px: i32,
+    py: i32,
+) {
+    let ppw = pixels_per_world_unit();
+    let darkness = lighting.ambient_darkness;
+
+    // Draw darkness with light cutouts
+    // We'll draw darkness everywhere, but reduce it where lights are
+    let range = 50; // tiles
+    for ty in (py - range)..(py + range) {
+        for tx in (px - range)..(px + range) {
+            // Calculate total light at this tile
+            let tile_x = tx as f32 + 0.5;
+            let tile_y = ty as f32 + 0.5;
+
+            let mut total_light = 0.0;
+
+            // Check if tile is lit by any light
+            for light in lighting.lights() {
+                let dx = light.position.x - tile_x;
+                let dy = light.position.y - tile_y;
+                let dist_sq = dx * dx + dy * dy;
+                let radius_sq = light.radius * light.radius;
+
+                if dist_sq < radius_sq && lighting.is_tile_lit(tx, ty) {
+                    // Inverse square falloff
+                    let dist = dist_sq.sqrt();
+                    let attenuation = (1.0 - (dist / light.radius)).max(0.0);
+                    total_light += attenuation * attenuation * light.intensity;
+                }
+            }
+
+            total_light = total_light.min(1.0);
+
+            // Calculate final darkness (ambient - light)
+            let final_darkness = (darkness - total_light).max(0.0);
+
+            if final_darkness > 0.01 {
+                let alpha = (final_darkness * 255.0) as u8;
+                d.draw_rectangle(
+                    (tx as f32 * ppw) as i32,
+                    (ty as f32 * ppw) as i32,
+                    ppw as i32,
+                    ppw as i32,
+                    Color::new(0, 0, 0, alpha),
+                );
+            }
+        }
+    }
+}
+
 fn render_water(d: &mut RaylibDrawHandle, terrain: &Terrain, x: f32, y: f32) {
     let ld = terrain.liquid_at(x, y);
     let amount = ld.volume;
@@ -586,6 +640,10 @@ impl Screen for GameScreen {
         let mut d = rl.begin_drawing(thread);
         d.clear_background(Color::RAYWHITE);
 
+        // Update lighting system (this is a workaround since we can't mutate in render)
+        // In the future, this should be in update()
+        let lighting_system = &ctx.world_state.lighting_system;
+
         {
             let mut d2 = d.begin_mode2D(self.camera);
             let mut shader = ctx.render_state.player_shader.borrow_mut();
@@ -647,6 +705,9 @@ impl Screen for GameScreen {
                 ctx.render_state.shader_locs,
                 ctx.debug_enabled,
             );
+
+            // Draw lighting system
+            render_lighting(&mut d2, &ctx.world_state.lighting_system, px, py);
         }
         // Draw HUD
         let heart_size = 32.0;
@@ -812,6 +873,10 @@ impl Screen for GameScreen {
                             (0.0, 100.0)
                         }
                     }
+                    crate::tools::ToolType::Lamp => {
+                        // Lamp doesn't have durability (yet)
+                        (1.0, 1.0)
+                    }
                     crate::tools::ToolType::PlaceBlock(blk) => {
                         let count = blk
                             .to_item_type()
@@ -923,6 +988,16 @@ impl Screen for GameScreen {
                 &format!("Tide: {}", ctx.world_state.tide_level()),
                 10,
                 85,
+                20,
+                Color::DARKGRAY,
+            );
+            d.draw_text(
+                &format!(
+                    "Darkness: {:.2}",
+                    ctx.world_state.lighting_system.ambient_darkness
+                ),
+                10,
+                110,
                 20,
                 Color::DARKGRAY,
             );

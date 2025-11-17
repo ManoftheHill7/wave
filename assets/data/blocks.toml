@@ -279,3 +279,19 @@ amount = 1
 image = "tiles.furnace1"
 width = 4
 height = 5
+
+[blocks.torch]
+name = "Torch"
+type = "air"
+durability = 1.0
+drops = "torch"
+amount = 1
+image = "tiles.torch1"
+
+[blocks.lumostorch]
+name = "Lumostorch"
+type = "air"
+durability = 1.0
+drops = "lumostorch"
+amount = 1
+image = "tiles.lumostorch1"

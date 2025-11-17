@@ -20,6 +20,7 @@ pub mod crafting_screen;
 pub mod game_screen;
 pub mod inventory;
 pub mod inventory_screen;
+pub mod lighting;
 pub mod maps;
 pub mod menu_screen;
 pub mod player;
