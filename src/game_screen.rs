@@ -1,6 +1,7 @@
 use crate::inventory_screen::InventoryScreen;
 use crate::player::{Player, SPIKE_IMMUNITY_COOLDOWN};
 use crate::terrain::{Block, Terrain, CELL_RESOLUTION, CHUNK_SIZE, NO_LIQUID_THRESHOLD};
+use crate::world::{LIGHTING_RANGE, RENDER_RANGE};
 use crate::{pixels_per_world_unit, GameContext, Neighbors, ShaderLocs};
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
@@ -14,8 +15,7 @@ const COLOR_PALETTES: &[[f32; 4]] = &[
     [0.6, 0.9, 0.3, 1.0],                             // Green scarf
 ];
 
-const LIGHTING_RANGE: i32 = 35;
-const RENDER_RANGE: i32 = 35;
+// LIGHTING_RANGE and RENDER_RANGE now imported from world.rs
 
 fn smooth_axis(
     current: f32,

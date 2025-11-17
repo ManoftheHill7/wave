@@ -21,7 +21,7 @@ pub struct Light {
 impl Light {
     pub fn new(position: Vector2, light_type: LightType) -> Self {
         let (radius, color) = match light_type {
-            LightType::Lamp => (32.0, Color::new(255, 200, 150, 255)), // Warm orange
+            LightType::Lamp => (24.0, Color::new(255, 200, 150, 255)), // Warm orange
             LightType::CoalTorch => (16.0, Color::new(255, 200, 150, 255)), // Warm orange
             LightType::LumostoneTorch => (16.0, Color::new(200, 220, 255, 255)), // Cool blue-white
         };
