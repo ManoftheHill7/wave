@@ -95,6 +95,7 @@ fn render_tile(
 fn render_lighting(
     d: &mut RaylibDrawHandle,
     lighting: &crate::lighting::LightingSystem,
+    terrain: &crate::terrain::Terrain,
     px: i32,
     py: i32,
 ) {
@@ -102,32 +103,59 @@ fn render_lighting(
     let darkness = lighting.ambient_darkness;
 
     // Draw darkness with light cutouts
-    // We'll draw darkness everywhere, but reduce it where lights are
     let range = 50; // tiles
     for ty in (py - range)..(py + range) {
         for tx in (px - range)..(px + range) {
-            // Calculate total light at this tile
             let tile_x = tx as f32 + 0.5;
             let tile_y = ty as f32 + 0.5;
 
             let mut total_light = 0.0;
 
-            // Check if tile is lit by any light
-            for light in lighting.lights() {
-                let dx = light.position.x - tile_x;
-                let dy = light.position.y - tile_y;
-                let dist_sq = dx * dx + dy * dy;
-                let radius_sq = light.radius * light.radius;
+            // Check if this tile is solid
+            let is_solid = terrain.solid_terrain_at(tx, ty);
 
-                if dist_sq < radius_sq && lighting.is_tile_lit(tx, ty) {
-                    // Inverse square falloff
-                    let dist = dist_sq.sqrt();
-                    let attenuation = (1.0 - (dist / light.radius)).max(0.0);
-                    total_light += attenuation * attenuation * light.intensity;
+            if is_solid {
+                // For solid blocks, search nearby air tiles (within 2 tiles)
+                let mut max_nearby_light: f32 = 0.0;
+
+                for dy in -2..=2 {
+                    for dx in -2..=2 {
+                        let check_x = tx + dx;
+                        let check_y = ty + dy;
+
+                        // Skip if this is the current tile
+                        if dx == 0 && dy == 0 {
+                            continue;
+                        }
+
+                        // Only check air tiles
+                        if !terrain.solid_terrain_at(check_x, check_y) {
+                            let air_x = check_x as f32 + 0.5;
+                            let air_y = check_y as f32 + 0.5;
+                            let air_light = lighting.get_light_at(air_x, air_y);
+
+                            if air_light > 0.0 {
+                                // Calculate distance from solid tile to air tile
+                                let distance = ((dx * dx + dy * dy) as f32).sqrt();
+
+                                // Distance-based falloff
+                                // Adjacent (distance ~1): 100% of air light
+                                // Distance ~1.4 (diagonal): 70% of air light
+                                // Distance 2: 50% of air light
+                                let distance_factor = if distance <= 1.5 { 1.0 } else { 0.5 };
+
+                                let dimmed_light = air_light * distance_factor;
+                                max_nearby_light = max_nearby_light.max(dimmed_light);
+                            }
+                        }
+                    }
                 }
-            }
 
-            total_light = total_light.min(1.0);
+                total_light = max_nearby_light;
+            } else {
+                // For air tiles, use normal lighting calculation
+                total_light = lighting.get_light_at(tile_x, tile_y);
+            }
 
             // Calculate final darkness (ambient - light)
             let final_darkness = (darkness - total_light).max(0.0);
@@ -707,7 +735,13 @@ impl Screen for GameScreen {
             );
 
             // Draw lighting system
-            render_lighting(&mut d2, &ctx.world_state.lighting_system, px, py);
+            render_lighting(
+                &mut d2,
+                &ctx.world_state.lighting_system,
+                &ctx.world_state.terrain,
+                px,
+                py,
+            );
         }
         // Draw HUD
         let heart_size = 32.0;

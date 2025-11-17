@@ -21,15 +21,15 @@ pub struct Light {
 impl Light {
     pub fn new(position: Vector2, light_type: LightType) -> Self {
         let (radius, color) = match light_type {
-            LightType::Lamp => (8.0, Color::new(255, 200, 150, 255)), // Warm orange
-            LightType::CoalTorch => (6.0, Color::new(255, 200, 150, 255)), // Warm orange
-            LightType::LumostoneTorch => (10.0, Color::new(200, 220, 255, 255)), // Cool blue-white
+            LightType::Lamp => (32.0, Color::new(255, 200, 150, 255)), // Warm orange
+            LightType::CoalTorch => (16.0, Color::new(255, 200, 150, 255)), // Warm orange
+            LightType::LumostoneTorch => (16.0, Color::new(200, 220, 255, 255)), // Cool blue-white
         };
 
         Light {
             position,
             radius,
-            intensity: 1.0,
+            intensity: radius / 2.0,
             color,
             light_type,
         }
@@ -192,7 +192,8 @@ impl LightingSystem {
         self.shadow_map.get(x, y)
     }
 
-    /// Get light intensity at a specific world position (for shader-less rendering)
+    /// Get light intensity at a specific world position
+    /// This is used for calculating light in AIR tiles
     pub fn get_light_at(&self, x: f32, y: f32) -> f32 {
         let mut total_light = 0.0;
 
