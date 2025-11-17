@@ -14,6 +14,9 @@ const COLOR_PALETTES: &[[f32; 4]] = &[
     [0.6, 0.9, 0.3, 1.0],                             // Green scarf
 ];
 
+const LIGHTING_RANGE: i32 = 35;
+const RENDER_RANGE: i32 = 35;
+
 fn smooth_axis(
     current: f32,
     velocity: &mut f32,
@@ -99,50 +102,71 @@ fn render_lighting(
     px: i32,
     py: i32,
 ) {
+    use std::collections::HashMap;
+
     let ppw = pixels_per_world_unit();
     let darkness = lighting.ambient_darkness;
 
+    let range = LIGHTING_RANGE;
+
+    let mut air_light_cache: HashMap<(i32, i32), f32> = HashMap::new();
+
+    // Pre-calculate air tile brightness in the range
+    for ty in (py - range - 2)..(py + range + 2) {
+        for tx in (px - range - 2)..(px + range + 2) {
+            if !terrain.solid_terrain_at(tx, ty) {
+                let tile_x = tx as f32 + 0.5;
+                let tile_y = ty as f32 + 0.5;
+                let light = lighting.get_light_at(tile_x, tile_y);
+                if light > 0.01 {
+                    air_light_cache.insert((tx, ty), light);
+                }
+            }
+        }
+    }
+
     // Draw darkness with light cutouts
-    let range = 50; // tiles
     for ty in (py - range)..(py + range) {
         for tx in (px - range)..(px + range) {
-            let tile_x = tx as f32 + 0.5;
-            let tile_y = ty as f32 + 0.5;
-
             let mut total_light = 0.0;
 
             // Check if this tile is solid
             let is_solid = terrain.solid_terrain_at(tx, ty);
 
             if is_solid {
-                // For solid blocks, search nearby air tiles (within 2 tiles)
                 let mut max_nearby_light: f32 = 0.0;
 
-                for dy in -2..=2 {
-                    for dx in -2..=2 {
-                        let check_x = tx + dx;
-                        let check_y = ty + dy;
+                // Check immediate neighbors first (most common)
+                let immediate_neighbors = [(tx - 1, ty), (tx + 1, ty), (tx, ty - 1), (tx, ty + 1)];
 
-                        // Skip if this is the current tile
-                        if dx == 0 && dy == 0 {
-                            continue;
-                        }
+                for &(check_x, check_y) in &immediate_neighbors {
+                    if let Some(&air_light) = air_light_cache.get(&(check_x, check_y)) {
+                        max_nearby_light = max_nearby_light.max(air_light);
+                    }
+                }
 
-                        // Only check air tiles
-                        if !terrain.solid_terrain_at(check_x, check_y) {
-                            let air_x = check_x as f32 + 0.5;
-                            let air_y = check_y as f32 + 0.5;
-                            let air_light = lighting.get_light_at(air_x, air_y);
+                // If we found enough light from immediate neighbors, skip diagonal/far checks
+                if max_nearby_light < 0.8 {
+                    // Check diagonal and 2-tile distance
+                    for dy in -2..=2 {
+                        for dx in -2..=2 {
+                            // Skip already checked
+                            if (dx == 0 && (dy == -1 || dy == 1))
+                                || (dy == 0 && (dx == -1 || dx == 1))
+                            {
+                                continue;
+                            }
+                            if dx == 0 && dy == 0 {
+                                continue;
+                            }
 
-                            if air_light > 0.0 {
-                                // Calculate distance from solid tile to air tile
-                                let distance = ((dx * dx + dy * dy) as f32).sqrt();
+                            let check_x = tx + dx;
+                            let check_y = ty + dy;
 
-                                // Distance-based falloff
-                                // Adjacent (distance ~1): 100% of air light
-                                // Distance ~1.4 (diagonal): 70% of air light
-                                // Distance 2: 50% of air light
-                                let distance_factor = if distance <= 1.5 { 1.0 } else { 0.5 };
+                            if let Some(&air_light) = air_light_cache.get(&(check_x, check_y)) {
+                                // Distance-based falloff (precomputed for common cases)
+                                let dist_sq = dx * dx + dy * dy;
+                                let distance_factor = if dist_sq <= 2 { 1.0 } else { 0.5 };
 
                                 let dimmed_light = air_light * distance_factor;
                                 max_nearby_light = max_nearby_light.max(dimmed_light);
@@ -153,8 +177,8 @@ fn render_lighting(
 
                 total_light = max_nearby_light;
             } else {
-                // For air tiles, use normal lighting calculation
-                total_light = lighting.get_light_at(tile_x, tile_y);
+                // For air tiles, use cached value
+                total_light = air_light_cache.get(&(tx, ty)).copied().unwrap_or(0.0);
             }
 
             // Calculate final darkness (ambient - light)
@@ -211,7 +235,7 @@ fn render_terrain(
     py: i32,
     textures: &crate::TextureManager,
 ) {
-    let range = 900 / pixels_per_world_unit() as i32;
+    let range = RENDER_RANGE;
     for x in (px - range)..(px + range) {
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
