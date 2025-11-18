@@ -16,6 +16,9 @@ fn main() {
 
     let (mut rl, thread) = raylib::init().size(1600, 900).title("JGame").build();
 
+    unsafe {
+        raylib::ffi::SetTraceLogLevel(raylib::ffi::TraceLogLevel::LOG_WARNING as i32);
+    }
     rl.set_target_fps(60);
 
     let mut ctx = GameContext::new(&mut rl, &thread, map_path);

@@ -650,15 +650,8 @@ impl Screen for GameScreen {
             let texture_size = crate::lighting::LightingSystem::get_texture_size(range);
             let pixel_data =
                 lighting_system.create_lighting_texture(&ctx.world_state.terrain, px, py, range);
-            
-            // Debug: Check some pixel values
-            if pixel_data.len() > 0 {
-                let center_idx = (texture_size / 2 * texture_size + texture_size / 2) as usize;
-                println!("DEBUG: texture_size={}, lights={}, ambient={:.2}, center_brightness={}", 
-                    texture_size, lighting_system.lights().len(), lighting_system.ambient_darkness,
-                    if center_idx < pixel_data.len() { pixel_data[center_idx] } else { 0 });
-            }
 
+            // Create RG texture (R=brightness, G=solid flag)
             let mut image = Image::gen_image_color(texture_size, texture_size, Color::BLACK);
 
             unsafe {
@@ -668,11 +661,12 @@ impl Screen for GameScreen {
                 );
 
                 for i in 0..(texture_size * texture_size) as usize {
-                    let brightness = pixel_data[i];
-                    pixels[i * 4] = brightness;
-                    pixels[i * 4 + 1] = brightness;
-                    pixels[i * 4 + 2] = brightness;
-                    pixels[i * 4 + 3] = 255;
+                    let brightness = pixel_data[i * 2];
+                    let is_solid = pixel_data[i * 2 + 1];
+                    pixels[i * 4] = brightness;     // R = brightness
+                    pixels[i * 4 + 1] = is_solid;   // G = solid flag
+                    pixels[i * 4 + 2] = 0;          // B = unused
+                    pixels[i * 4 + 3] = 255;        // A = opaque
                 }
             }
 
@@ -686,7 +680,7 @@ impl Screen for GameScreen {
                 );
             }
 
-            // Set shader uniform for ambient darkness
+            // Set shader uniforms
             let lighting_shader = ctx.render_state.lighting_shader.borrow();
             unsafe {
                 raylib::ffi::SetShaderValue(
@@ -694,6 +688,12 @@ impl Screen for GameScreen {
                     ctx.render_state.lighting_shader_locs.ambient_darkness,
                     &lighting_system.ambient_darkness as *const f32 as *const _,
                     raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_FLOAT as i32,
+                );
+                raylib::ffi::SetShaderValue(
+                    *lighting_shader.as_ref(),
+                    ctx.render_state.lighting_shader_locs.texture_size,
+                    &[texture_size as f32, texture_size as f32] as *const f32 as *const _,
+                    raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC2 as i32,
                 );
             }
 

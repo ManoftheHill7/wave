@@ -2,6 +2,8 @@ use crate::terrain::Terrain;
 use raylib::prelude::*;
 use std::collections::HashMap;
 
+const MAX_DARKNESS: f32 = 0.99;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum LightType {
     Lamp,
@@ -29,7 +31,7 @@ impl Light {
         Light {
             position,
             radius,
-            intensity: radius / 2.0,
+            intensity: radius / 4.0,
             color,
             light_type,
         }
@@ -112,7 +114,7 @@ impl LightingSystem {
     pub fn update_ambient_darkness(&mut self, player_y: f32) {
         // At y=0 or above (surface): 0% darkness
         // At y=100 or below (deep): 95% darkness
-        self.ambient_darkness = (player_y / 100.0).clamp(0.0, 0.95);
+        self.ambient_darkness = (player_y / 100.0).clamp(0.0, MAX_DARKNESS);
     }
 
     /// Calculate shadows for all lights using raycasting
@@ -290,17 +292,34 @@ impl LightingSystem {
                 // Early exit if we found bright light
                 if max_nearby_light < 0.95 {
                     // Check diagonal neighbors (distance ~1.4)
+                    // Only allow diagonal light if at least one adjacent cardinal is also lit
                     if let Some(&light) = self.air_light_cache.get(&(tx - 1, ty - 1)) {
-                        max_nearby_light = max_nearby_light.max(light);
+                        if self.air_light_cache.contains_key(&(tx - 1, ty))
+                            || self.air_light_cache.contains_key(&(tx, ty - 1))
+                        {
+                            max_nearby_light = max_nearby_light.max(light);
+                        }
                     }
                     if let Some(&light) = self.air_light_cache.get(&(tx + 1, ty - 1)) {
-                        max_nearby_light = max_nearby_light.max(light);
+                        if self.air_light_cache.contains_key(&(tx + 1, ty))
+                            || self.air_light_cache.contains_key(&(tx, ty - 1))
+                        {
+                            max_nearby_light = max_nearby_light.max(light);
+                        }
                     }
                     if let Some(&light) = self.air_light_cache.get(&(tx - 1, ty + 1)) {
-                        max_nearby_light = max_nearby_light.max(light);
+                        if self.air_light_cache.contains_key(&(tx - 1, ty))
+                            || self.air_light_cache.contains_key(&(tx, ty + 1))
+                        {
+                            max_nearby_light = max_nearby_light.max(light);
+                        }
                     }
                     if let Some(&light) = self.air_light_cache.get(&(tx + 1, ty + 1)) {
-                        max_nearby_light = max_nearby_light.max(light);
+                        if self.air_light_cache.contains_key(&(tx + 1, ty))
+                            || self.air_light_cache.contains_key(&(tx, ty + 1))
+                        {
+                            max_nearby_light = max_nearby_light.max(light);
+                        }
                     }
 
                     // Only check 2-tile distance if still not well lit
@@ -337,8 +356,9 @@ impl LightingSystem {
         }
     }
 
-    /// Create a lighting texture for GPU rendering
-    /// Returns grayscale pixel data (brightness values 0-255)
+    /// Create a dual-channel lighting texture for GPU rendering
+    /// Returns RG pixel data: R=brightness (0-255), G=is_solid flag (0 or 255)
+    /// Uses 1 texel per tile; shader does sub-tile interpolation
     pub fn create_lighting_texture(
         &self,
         terrain: &Terrain,
@@ -347,7 +367,7 @@ impl LightingSystem {
         range: i32,
     ) -> Vec<u8> {
         let size = range * 2;
-        let mut pixels = vec![0u8; (size * size) as usize];
+        let mut pixels = vec![0u8; (size * size * 2) as usize]; // 2 channels: RG
 
         for y in 0..size {
             for x in 0..size {
@@ -358,8 +378,9 @@ impl LightingSystem {
                 // Use cached lighting values (from CPU calculations)
                 let brightness = self.get_cached_light(wx, wy, is_solid);
 
-                // Convert to 0-255 grayscale
-                pixels[(y * size + x) as usize] = (brightness * 255.0) as u8;
+                let idx = ((y * size + x) * 2) as usize;
+                pixels[idx] = (brightness * 255.0) as u8; // R channel = brightness
+                pixels[idx + 1] = if is_solid { 255 } else { 0 }; // G channel = is_solid flag
             }
         }
 

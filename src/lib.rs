@@ -65,6 +65,7 @@ pub type ShaderLocs = (i32, i32, i32, i32);
 
 pub struct LightingShaderLocs {
     pub ambient_darkness: i32,
+    pub texture_size: i32,
 }
 
 impl GameContext {
@@ -90,6 +91,7 @@ impl GameContext {
 
         let lighting_locs = LightingShaderLocs {
             ambient_darkness: lighting_shader.get_shader_location("ambientDarkness"),
+            texture_size: lighting_shader.get_shader_location("textureSize"),
         };
 
         let mut world_state = WorldState::new();
