@@ -96,43 +96,50 @@ fn render_tile(
 }
 
 fn render_lighting(
-    d: &mut RaylibDrawHandle,
+    d: &mut RaylibMode2D<RaylibDrawHandle>,
     lighting: &crate::lighting::LightingSystem,
-    terrain: &crate::terrain::Terrain,
+    lighting_texture: &Texture2D,
+    lighting_shader: &mut Shader,
     px: i32,
     py: i32,
 ) {
     let ppw = pixels_per_world_unit();
-    let darkness = lighting.ambient_darkness;
     let range = LIGHTING_RANGE;
 
     // Early exit if no lights and no darkness
-    if lighting.lights().is_empty() && darkness < 0.01 {
+    if lighting.lights().is_empty() && lighting.ambient_darkness < 0.01 {
         return;
     }
 
-    // Draw darkness with light cutouts
-    for ty in (py - range)..(py + range) {
-        for tx in (px - range)..(px + range) {
-            let is_solid = terrain.solid_terrain_at(tx, ty);
+    // Draw fullscreen quad with lighting shader and texture
+    let world_size = (range * 2) as f32;
+    let min_x = (px - range) as f32;
+    let min_y = (py - range) as f32;
 
-            // Use pre-calculated cached lighting values
-            let total_light = lighting.get_cached_light(tx, ty, is_solid);
-
-            // Calculate final darkness (ambient - light)
-            let final_darkness = (darkness - total_light).max(0.0);
-
-            // Skip rendering if too dark or too light (optimization)
-            if final_darkness > 0.02 && final_darkness < 0.98 {
-                let alpha = (final_darkness * 255.0) as u8;
-                d.draw_rectangle(
-                    (tx as f32 * ppw) as i32,
-                    (ty as f32 * ppw) as i32,
-                    ppw as i32,
-                    ppw as i32,
-                    Color::new(0, 0, 0, alpha),
-                );
-            }
+    {
+        let mut shader_mode = d.begin_shader_mode(lighting_shader);
+        
+        // Enable alpha blending for darkness overlay
+        unsafe {
+            raylib::ffi::BeginBlendMode(raylib::ffi::BlendMode::BLEND_ALPHA as i32);
+        }
+        
+        shader_mode.draw_texture_pro(
+            lighting_texture,
+            Rectangle::new(
+                0.0,
+                0.0,
+                lighting_texture.width as f32,
+                lighting_texture.height as f32,
+            ),
+            Rectangle::new(min_x * ppw, min_y * ppw, world_size * ppw, world_size * ppw),
+            Vector2::zero(),
+            0.0,
+            Color::WHITE,
+        );
+        
+        unsafe {
+            raylib::ffi::EndBlendMode();
         }
     }
 }
@@ -628,12 +635,75 @@ impl Screen for GameScreen {
         self.screen_width = rl.get_screen_width() as f32;
         self.screen_height = rl.get_screen_height() as f32;
 
-        let mut d = rl.begin_drawing(thread);
-        d.clear_background(Color::RAYWHITE);
-
         // Update lighting system (this is a workaround since we can't mutate in render)
         // In the future, this should be in update()
         let lighting_system = &ctx.world_state.lighting_system;
+
+        let px = ctx.world_state.player.position.x as i32;
+        let py = ctx.world_state.player.position.y as i32;
+
+        // Create lighting texture BEFORE begin_drawing to avoid borrow conflicts
+        let lighting_texture = if !lighting_system.lights().is_empty()
+            || lighting_system.ambient_darkness >= 0.01
+        {
+            let range = LIGHTING_RANGE;
+            let texture_size = crate::lighting::LightingSystem::get_texture_size(range);
+            let pixel_data =
+                lighting_system.create_lighting_texture(&ctx.world_state.terrain, px, py, range);
+            
+            // Debug: Check some pixel values
+            if pixel_data.len() > 0 {
+                let center_idx = (texture_size / 2 * texture_size + texture_size / 2) as usize;
+                println!("DEBUG: texture_size={}, lights={}, ambient={:.2}, center_brightness={}", 
+                    texture_size, lighting_system.lights().len(), lighting_system.ambient_darkness,
+                    if center_idx < pixel_data.len() { pixel_data[center_idx] } else { 0 });
+            }
+
+            let mut image = Image::gen_image_color(texture_size, texture_size, Color::BLACK);
+
+            unsafe {
+                let pixels = std::slice::from_raw_parts_mut(
+                    (*image.as_mut()).data as *mut u8,
+                    (texture_size * texture_size * 4) as usize,
+                );
+
+                for i in 0..(texture_size * texture_size) as usize {
+                    let brightness = pixel_data[i];
+                    pixels[i * 4] = brightness;
+                    pixels[i * 4 + 1] = brightness;
+                    pixels[i * 4 + 2] = brightness;
+                    pixels[i * 4 + 3] = 255;
+                }
+            }
+
+            let mut texture = rl.load_texture_from_image(thread, &image).unwrap();
+            
+            // Enable bilinear filtering for smooth lighting
+            unsafe {
+                raylib::ffi::SetTextureFilter(
+                    *texture.as_ref(),
+                    raylib::ffi::TextureFilter::TEXTURE_FILTER_BILINEAR as i32,
+                );
+            }
+
+            // Set shader uniform for ambient darkness
+            let lighting_shader = ctx.render_state.lighting_shader.borrow();
+            unsafe {
+                raylib::ffi::SetShaderValue(
+                    *lighting_shader.as_ref(),
+                    ctx.render_state.lighting_shader_locs.ambient_darkness,
+                    &lighting_system.ambient_darkness as *const f32 as *const _,
+                    raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_FLOAT as i32,
+                );
+            }
+
+            Some(texture)
+        } else {
+            None
+        };
+
+        let mut d = rl.begin_drawing(thread);
+        d.clear_background(Color::RAYWHITE);
 
         {
             let mut d2 = d.begin_mode2D(self.camera);
@@ -698,13 +768,17 @@ impl Screen for GameScreen {
             );
 
             // Draw lighting system
-            render_lighting(
-                &mut d2,
-                &ctx.world_state.lighting_system,
-                &ctx.world_state.terrain,
-                px,
-                py,
-            );
+            if let Some(ref texture) = lighting_texture {
+                let mut lighting_shader = ctx.render_state.lighting_shader.borrow_mut();
+                render_lighting(
+                    &mut d2,
+                    &ctx.world_state.lighting_system,
+                    texture,
+                    &mut lighting_shader,
+                    px,
+                    py,
+                );
+            }
         }
         // Draw HUD
         let heart_size = 32.0;

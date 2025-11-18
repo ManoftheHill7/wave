@@ -57,9 +57,15 @@ pub struct GameContext {
 pub struct GameRenderState {
     pub player_shader: RefCell<Shader>,
     pub shader_locs: ShaderLocs,
+    pub lighting_shader: RefCell<Shader>,
+    pub lighting_shader_locs: LightingShaderLocs,
 }
 
 pub type ShaderLocs = (i32, i32, i32, i32);
+
+pub struct LightingShaderLocs {
+    pub ambient_darkness: i32,
+}
 
 impl GameContext {
     pub fn new(rl: &mut RaylibHandle, thread: &RaylibThread, map_path: Option<String>) -> Self {
@@ -75,6 +81,16 @@ impl GameContext {
         let loc_replace_0 = player_shader.get_shader_location("replace_0");
         let loc_exhustion = player_shader.get_shader_location("exhustion");
         let loc_whiteout = player_shader.get_shader_location("whiteout");
+
+        let lighting_shader = rl.load_shader(
+            thread,
+            Some("shaders/lighting.vert"),
+            Some("shaders/lighting.frag"),
+        );
+
+        let lighting_locs = LightingShaderLocs {
+            ambient_darkness: lighting_shader.get_shader_location("ambientDarkness"),
+        };
 
         let mut world_state = WorldState::new();
 
@@ -100,6 +116,8 @@ impl GameContext {
             render_state: GameRenderState {
                 player_shader: RefCell::new(player_shader),
                 shader_locs: (loc_original_0, loc_replace_0, loc_exhustion, loc_whiteout),
+                lighting_shader: RefCell::new(lighting_shader),
+                lighting_shader_locs: lighting_locs,
             },
             controller: Controller::new(),
             world_state,

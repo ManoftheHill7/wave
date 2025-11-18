@@ -336,4 +336,38 @@ impl LightingSystem {
             self.air_light_cache.get(&(x, y)).copied().unwrap_or(0.0)
         }
     }
+
+    /// Create a lighting texture for GPU rendering
+    /// Returns grayscale pixel data (brightness values 0-255)
+    pub fn create_lighting_texture(
+        &self,
+        terrain: &Terrain,
+        center_x: i32,
+        center_y: i32,
+        range: i32,
+    ) -> Vec<u8> {
+        let size = range * 2;
+        let mut pixels = vec![0u8; (size * size) as usize];
+
+        for y in 0..size {
+            for x in 0..size {
+                let wx = center_x - range + x;
+                let wy = center_y - range + y;
+                let is_solid = terrain.solid_terrain_at(wx, wy);
+
+                // Use cached lighting values (from CPU calculations)
+                let brightness = self.get_cached_light(wx, wy, is_solid);
+
+                // Convert to 0-255 grayscale
+                pixels[(y * size + x) as usize] = (brightness * 255.0) as u8;
+            }
+        }
+
+        pixels
+    }
+
+    /// Get the size of the lighting texture
+    pub fn get_texture_size(range: i32) -> i32 {
+        range * 2
+    }
 }
