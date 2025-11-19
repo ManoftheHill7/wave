@@ -1,0 +1,3 @@
+INPUT=$1
+OUTPUT="${INPUT%.*}.ogg"
+ffmpeg -i "$INPUT" -c:a libvorbis -q:a 5 "$OUTPUT"
