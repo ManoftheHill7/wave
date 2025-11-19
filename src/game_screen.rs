@@ -651,17 +651,27 @@ impl Screen for GameScreen {
             );
         }
         // Draw HUD
-        let heart_size = 32.0;
-        let heart_spacing = 4.0;
-        let hearts_x = self.screen_width - 150.0;
-        let hearts_y = 10.0;
+        let heart_texture = &ctx.textures.ui.hearts[4];
+        let heart_size = heart_texture.width as f32 / 2.0;
+        let heart_spacing = 9.0;
         let max_health = 12;
         let health_frames = 4;
+        let hearts_x = self.screen_width - 19.5 - (heart_size * heart_spacing) * max_health as f32 / health_frames as f32;
+        let hearts_y = 24.0;
         let health = ctx.world_state.player.health.max(0).min(max_health);
         let mut remaining_health = health;
-        for i in 0..(max_health / health_frames) {
-            let heart_x = hearts_x + (heart_size + heart_spacing) * i as f32;
 
+        for i in 0..(max_health / health_frames) {
+            let heart_x = hearts_x + (heart_size * heart_spacing) * i as f32;
+
+            d.draw_texture_ex(
+                heart_texture,
+                Vector2::new(heart_x, hearts_y),
+                0.0,
+                heart_size,
+                Color::WHITE,
+            );
+            
             let heart_texture = if remaining_health > health_frames {
                 &ctx.textures.ui.hearts[0]
             } else if remaining_health > 0 {
@@ -669,12 +679,12 @@ impl Screen for GameScreen {
             } else {
                 continue;
             };
-
+            
             d.draw_texture_ex(
                 heart_texture,
                 Vector2::new(heart_x, hearts_y),
                 0.0,
-                heart_size / heart_texture.width as f32,
+                heart_size,
                 Color::WHITE,
             );
 
@@ -768,33 +778,22 @@ impl Screen for GameScreen {
             }
         }
 
-        // Draw HUD boxes for current tool and block type in bottom right
-        let hud_box_size = 40.0;
-        let mut hud_x = self.screen_width - hud_box_size - 70.0;
-        let hud_y = self.screen_height - hud_box_size - 20.0;
+        // Draw HUD boxes for current tool and block type in bottom centre
+        let hud_box_texture = &ctx.textures.ui.inventory_slot;
+        let hud_box_size = hud_box_texture.width as f32;
+        let scale = 4.0;
+        let right_offset = hud_box_size * (scale + 1.0);
+        let hud_x = (self.screen_width) / 2.0 - hud_box_size * scale;
+        let hud_y = self.screen_height - hud_box_size * scale - hud_box_size / 2.0;
+        
+        d.draw_texture_ex(hud_box_texture, Vector2{x: hud_x, y: hud_y}, 0.0, scale, Color::WHITE);
+        d.draw_texture_ex(hud_box_texture, Vector2{x: hud_x + right_offset, y: hud_y}, 0.0, scale, Color::WHITE); 
 
         // Helper closure to draw a hand slot
         let mut draw_hand_slot = |hand: Option<crate::tools::ToolType>, x: f32, label: &str| {
-            // Draw tool slot background
-            d.draw_rectangle(
-                x as i32,
-                hud_y as i32,
-                hud_box_size as i32,
-                hud_box_size as i32,
-                Color::new(50, 50, 50, 200),
-            );
-            d.draw_rectangle_lines(
-                x as i32,
-                hud_y as i32,
-                hud_box_size as i32,
-                hud_box_size as i32,
-                Color::WHITE,
-            );
-
             // Draw selected tool icon if present
             if let Some(selected_tool) = hand {
                 if let Some(texture) = selected_tool.get_texture(&ctx.textures) {
-                    let scale = hud_box_size / texture.width as f32;
                     d.draw_texture_ex(texture, Vector2::new(x, hud_y), 0.0, scale, Color::WHITE);
                 }
 
@@ -823,9 +822,9 @@ impl Screen for GameScreen {
                     }
                 };
 
-                let durability_bar_y = hud_y + hud_box_size + 2.0;
-                let durability_bar_width = hud_box_size;
-                let durability_bar_height = 4.0;
+                let durability_bar_y = hud_y + hud_box_size * scale + 2.0;
+                let durability_bar_width = hud_box_size * scale;
+                let durability_bar_height = 6.0;
 
                 // Background (dark)
                 d.draw_rectangle(
@@ -873,8 +872,7 @@ impl Screen for GameScreen {
         draw_hand_slot(ctx.world_state.player.left_hand, hud_x, "L");
 
         // Draw right hand slot (right click tool)
-        hud_x += 50.0;
-        draw_hand_slot(ctx.world_state.player.right_hand, hud_x, "R");
+        draw_hand_slot(ctx.world_state.player.right_hand, hud_x + right_offset, "R");
 
         if ctx.debug_enabled {
             let player_x = ctx.world_state.player.position.x;
