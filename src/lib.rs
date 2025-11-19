@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 use texture_manager_macro::generate_texture_manager;
 
-generate_texture_manager!("assets");
+generate_texture_manager!("assets/art");
 
 static PIXELS_PER_WORLD_UNIT: OnceLock<f32> = OnceLock::new();
 
