@@ -1,11 +1,28 @@
-# Hand recipes
+# hand recipes
+
 [recipes.workbench]
 type = "always"
 output = "workbench"
 amount = 1
 [[recipes.workbench.inputs]]
 type = "stick"
-amount = 50
+amount = 0 # 100
+
+[recipes.anvil]
+type = "always"
+output = "anvil"
+amount = 1
+[[recipes.anvil.inputs]]
+type = "stick"
+amount = 0
+
+[recipes.furnace]
+type = "always"
+output = "furnace"
+amount = 1
+[[recipes.furnace.inputs]]
+type = "stick"
+amount = 0
 
 [recipes.torch]
 type = "always"
@@ -28,18 +45,18 @@ amount = 1
 
 # workbench recipes
 
-[recipes.chest]
+[recipes.wooden_chest]
 type = "workbench"
-output = "chest"
+output = "wooden_chest"
 amount = 1
-[[recipes.chest.inputs]]
+[[recipes.wooden_chest.inputs]]
 type = "log"
 amount = 2
 
 [recipes.lumostorch]
 type = "workbench"
 output = "lumostorch"
-amount = 1
+amount = 2
 [[recipes.lumostorch.inputs]]
 type = "stick"
 amount = 1
@@ -50,7 +67,7 @@ amount = 1
 [recipes.wooden_ladder]
 type = "workbench"
 output = "wooden_ladder"
-amount = 6
+amount = 2
 [[recipes.wooden_ladder.inputs]]
 type = "stick"
 amount = 5
@@ -81,6 +98,9 @@ amount = 1
 [[recipes.bomb.inputs]]
 type = "iron shell"
 amount = 1
+[[recipes.bomb.inputs]]
+type = "rope"
+amount = 1
 
 [recipes.tidalcave_clock]
 type = "workbench"
@@ -93,7 +113,7 @@ amount = 2
 type = "conch shell"
 amount = 1
 [[recipes.tidalcave_clock.inputs]]
-type = "pearl"
+type = "white pearl"
 amount = 2
 [[recipes.tidalcave_clock.inputs]]
 type = "glass"

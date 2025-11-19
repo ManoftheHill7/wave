@@ -1,69 +1,92 @@
-# furnace tool repair recipes
+# furnace tool repairs
+
 
 # dash amulets
 
+[repairs.white_pearl_amulet]
+type = "furnace"
+output = "white_pearl_amulet"
+amount = 1
+[[repairs.white_pearl_amulet.inputs]]
+type = "white pearl amulet"
+amount = 1
+[[repairs.white_pearl_amulet.inputs]]
+type = "white pearl"
+amount = 1
+
 [repairs.amethyst_amulet]
 type = "furnace"
-output = "amethyst amulet"
+output = "amethyst_amulet"
 amount = 1
 [[repairs.amethyst_amulet.inputs]]
 type = "amethyst amulet"
 amount = 1
 [[repairs.amethyst_amulet.inputs]]
 type = "amethyst"
-amount = 5
-
-[repairs.diamond_amulet]
-type = "furnace"
-output = "diamond amulet"
 amount = 1
-[[repairs.diamond_amulet.inputs]]
-type = "diamond amulet"
-amount = 1
-[[repairs.diamond_amulet.inputs]]
-type = "diamond"
-amount = 5
-
-[repairs.emerald_amulet]
-type = "furnace"
-output = "emerald amulet"
-amount = 1
-[[repairs.emerald_amulet.inputs]]
-type = "emerald amulet"
-amount = 1
-[[repairs.emerald_amulet.inputs]]
-type = "emerald"
-amount = 5
 
 [repairs.jasper_amulet]
 type = "furnace"
-output = "jasper amulet"
+output = "jasper_amulet"
 amount = 1
 [[repairs.jasper_amulet.inputs]]
 type = "jasper amulet"
 amount = 1
 [[repairs.jasper_amulet.inputs]]
 type = "jasper"
-amount = 5
+amount = 1
 
-[repairs.ruby_amulet]
+[repairs.emerald_amulet]
 type = "furnace"
-output = "ruby amulet"
+output = "emerald_amulet"
 amount = 1
-[[repairs.ruby_amulet.inputs]]
-type = "ruby amulet"
+[[repairs.emerald_amulet.inputs]]
+type = "emerald amulet"
 amount = 1
-[[repairs.ruby_amulet.inputs]]
-type = "ruby"
-amount = 5
+[[repairs.emerald_amulet.inputs]]
+type = "emerald"
+amount = 1
+
+[repairs.black_pearl_amulet]
+type = "furnace"
+output = "black_pearl_amulet"
+amount = 1
+[[repairs.black_pearl_amulet.inputs]]
+type = "black pearl amulet"
+amount = 1
+[[repairs.black_pearl_amulet.inputs]]
+type = "black pearl"
+amount = 1
 
 [repairs.topaz_amulet]
 type = "furnace"
-output = "topaz amulet"
+output = "topaz_amulet"
 amount = 1
 [[repairs.topaz_amulet.inputs]]
 type = "topaz amulet"
 amount = 1
 [[repairs.topaz_amulet.inputs]]
 type = "topaz"
-amount = 5
+amount = 1
+
+[repairs.ruby_amulet]
+type = "furnace"
+output = "ruby_amulet"
+amount = 1
+[[repairs.ruby_amulet.inputs]]
+type = "ruby amulet"
+amount = 1
+[[repairs.ruby_amulet.inputs]]
+type = "ruby"
+amount = 1
+
+[repairs.diamond_amulet]
+type = "furnace"
+output = "diamond_amulet"
+amount = 1
+[[repairs.diamond_amulet.inputs]]
+type = "diamond amulet"
+amount = 1
+[[repairs.diamond_amulet.inputs]]
+type = "diamond"
+amount = 1

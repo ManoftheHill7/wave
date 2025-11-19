@@ -994,11 +994,11 @@ impl TerrainGenerator {
             let half_width = layer_width / 2;
 
             for dx in -half_width..=half_width {
-                let leaf_x = x + dx;
+                let leaves_x = x + dx;
 
-                if self.is_in_chunk(leaf_x, canopy_y, chunk_coord) {
-                    let (lx, ly) = self.world_to_local(leaf_x, canopy_y, chunk_coord);
-                    chunk.set(lx, ly, Block::Leaf);
+                if self.is_in_chunk(leaves_x, canopy_y, chunk_coord) {
+                    let (lx, ly) = self.world_to_local(leaves_x, canopy_y, chunk_coord);
+                    chunk.set(lx, ly, Block::Leaves);
                 }
             }
         }

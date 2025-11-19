@@ -4,25 +4,18 @@
 
 [items.stone]
 name = "Stone"
-weight = 5.0
+weight = 3.0
 type = "block"
-image = "items.stone"
 
 [items.dirt]
 name = "Dirt"
 weight = 2.0
 type = "block"
-image = "items.dirt"
-
-[items.stick]
-name = "Stick"
-weight = 0.5
 
 [items.torch]
 name = "Torch"
 weight = 1.0
 type = "block"
-image = "items.torch"
 
 [items.lumostorch]
 name = "Lumostorch"
@@ -32,296 +25,307 @@ image = "items.lumostorch1"
 
 [items.log]
 name = "Log"
-weight = 4.0
+weight = 2.0
 type = "block"
-image = "items.log"
 
-[items.leaf]
-name = "Leaf"
-weight = 0.5
+[items.leaves]
+name = "Leaves"
+weight = 0.1
 type = "block"
-image = "items.leaves"
 
 [items.sand]
 name = "Sand"
 weight = 2.5
 type = "block"
-image = "items.sand"
+
+[items.obsidian]
+name = "Sand"
+weight = 4.0
+type = "block"
 
 
 # ores
 
 [items.coal]
 name = "Coal"
-weight = 3.0
-image = "items.coal"
+weight = 0.5
 
-[items.copper]
-name = "Copper"
+[items.copper_ore]
+name = "Copper Ore"
+weight = 2.0
+type = "block"
+
+[items.tin_ore]
+name = "Tin Ore"
+weight = 2.0
+type = "block"
+
+[items.iron_ore]
+name = "Iron Ore"
 weight = 3.0
 type = "block"
-image = "items.copper_ore"
 
-[items.tin]
-name = "Tin"
-weight = 3.0
-type = "block"
-image = "items.tin_ore"
-
-[items.iron]
-name = "Iron"
+[items.pure_iron_ore]
+name = "Pure Iron Ore"
 weight = 4.0
 type = "block"
-image = "items.iron_ore"
 
-[items.pure_iron]
-name = "Pure Iron"
-weight = 4.5
-type = "block"
-image = "items.pure_iron_ore"
-
-[items.silver]
-name = "Silver"
+[items.silver_ore]
+name = "Silver Ore"
 weight = 5.0
 type = "block"
-image = "items.silver_ore"
 
-[items.gold]
-name = "Gold"
+[items.gold_ore]
+name = "Gold Ore"
 weight = 6.0
 type = "block"
-image = "items.gold_ore"
 
-[items.platinum]
-name = "Platinum"
+[items.platinum_ore]
+name = "Platinum Ore"
 weight = 7.0
 type = "block"
-image = "items.platinum_ore"
 
-[items.mithril]
-name = "Mithril"
+[items.mithril_ore]
+name = "Mithril Ore"
 weight = 8.0
 type = "block"
-image = "items.mithril_ore"
 
-[items.lumosite]
-name = "Lumosite"
+[items.lumosite_ore]
+name = "Lumosite Ore"
 weight = 5.0
 type = "block"
 image = "items.lumosite_ore1"
 
-[items.ozathinum]
-name = "Ozathinum"
+[items.ozathinum_ore]
+name = "Ozathinum Ore"
 weight = 9.0
 type = "block"
-image = "items.ozathinum_ore"
 
-[items.torzite]
-name = "Torzite"
+[items.torzite_ore]
+name = "Torzite Ore"
 weight = 10.0
 type = "block"
-image = "items.torzite_ore"
 
-[items.etherealite]
-name = "Etherealite"
+[items.etherealite_ore]
+name = "Etherealite Ore"
 weight = 12.0
 type = "block"
-image = "items.etherealite_ore"
 
 [items.anvil]
 name = "Anvil"
-weight = 50.0
+weight = 0 #50.0
 type = "block"
-image = "tiles.anvil1"
 
 [items.workbench]
 name = "Workbench"
-weight = 50.0
+weight = 0 #20.0
 type = "block"
-image = "tiles.workbench"
 
 [items.furnace]
 name = "Furnace"
-weight = 50.0
+weight = 0 #75.0
 type = "block"
-image = "tiles.furnace"
 
 # precious stones
+
+[items.white_pearl]
+name = "White Pearl"
+weight = 0.5
 
 [items.amethyst]
 name = "Amethyst"
 weight = 1.0
-image = "items.amethyst"
-
-[items.diamond]
-name = "Diamond"
-weight = 1.0
-image = "items.diamond"
-
-[items.emerald]
-name = "Emerald"
-weight = 1.0
-image = "items.emerald"
 
 [items.jasper]
 name = "Jasper"
-weight = 1.0
-image = "items.jasper"
+weight = 1.1
 
-[items.ruby]
-name = "Ruby"
-weight = 1.0
-image = "items.ruby"
+[items.emerald]
+name = "Emerald"
+weight = 1.2
+
+[items.black_pearl]
+name = "Black Pearl"
+weight = 0.6
 
 [items.topaz]
 name = "Topaz"
-weight = 1.0
-image = "items.topaz"
+weight = 1.3
 
-[items.white_pearl]
-name = "White pearl"
-weight = 1.0
-image = "items.white_pearl"
+[items.ruby]
+name = "Ruby"
+weight = 1.4
 
-[items.black_pearl]
-name = "Black pearl"
-weight = 1.0
-image = "items.black_pearl"
+[items.diamond]
+name = "Diamond"
+weight = 1.5
 
 
 # foraged items
 
 [items.canola]
 name = "Canola"
-weight = 1.0
-image = "items.canola"
+weight = 0.4
+type = "block"
 
 [items.flax]
 name = "Flax"
-weight = 1.0
-image = "items.flax"
+weight = 0.4
+type = "block"
 
 [items.flaxseed]
 name = "Flaxseed"
 weight = 0.1
-image = "items.flaxseed"
 
 [items.mushroom]
 name = "Mushroom"
-weight = 0.5
-image = "items.mushroom"
+weight = 0.25
+type = "block"
+
+[items.fish]
+name = "Fish"
+weight = 0.8
 
 [items.clam]
 name = "Clam"
-weight = 0.5
-image = "items.clam"
+weight = 0.75
 
 [items.conch_shell]
-name = "Conch shell"
+name = "Conch Shell"
 weight = 0.5
-image = "items.conch_shell"
 
 
 # anviled items
 
 [items.iron_shell]
-name = "Iron shell"
+name = "Iron Shell"
+weight = 2.0
+
+[items.copper_ladder]
+name = "Copper Ladder"
 weight = 0.5
-image = "items.iron_shell"
+type = "block"
 
-[items.mirthil_bucket]
-name = "Mirthil bucket"
+[items.steel_ladder]
+name = "Steel Ladder"
 weight = 1.0
-image = "items.mithril_bucket"
+type = "block"
 
-[items.mirthil_lava_bucket]
-name = "Mirthil lava bucket"
-weight = 3.0
-image = "items.mithril_lava_bucket"
-
-[items.mirthil_water_bucket]
-name = "Mirthil water bucket"
+[items.mithril_bucket]
+name = "Mithril Bucket"
 weight = 5.0
-image = "items.mithril_water_bucket"
+
+[items.mithril_lava_bucket]
+name = "Mithril Lava Bucket"
+weight = 10.0
+
+[items.mithril_water_bucket]
+name = "Mithril Water Bucket"
+weight = 8.0
 
 [items.explosive_dust]
-name = "Explosive dust"
-weight = 0.5
-image = "items.explosive_dust"
+name = "Explosive Dust"
+weight = 1.0
 
 
 # furnaced items
 
 [items.copper_bar]
-name = "Copper bar"
-weight = 1.0
+name = "Copper Bar"
+weight = 2.0
 image = "items.copper_bar"
 
 [items.bronze_bar]
-name = "Bronze bar"
-weight = 1.0
+name = "Bronze Bar"
+weight = 2.5
 image = "items.bronze_bar"
 
 [items.iron_bar]
-name = "Iron bar"
-weight = 1.0
+name = "Iron Bar"
+weight = 3.0
 image = "items.iron_bar"
 
 [items.steel_bar]
-name = "Steel bar"
-weight = 1.0
+name = "Steel Bar"
+weight = 4.0
 image = "items.steel_bar"
 
 [items.silver_bar]
-name = "Silver bar"
-weight = 1.0
+name = "Silver Bar"
+weight = 4.0
 image = "items.silver_bar"
 
 [items.gold_bar]
-name = "Gold bar"
-weight = 1.0
+name = "Gold Bar"
+weight = 5.0
 image = "items.gold_bar"
 
 [items.platinum_bar]
-name = "Platinum bar"
-weight = 1.0
+name = "Platinum Bar"
+weight = 6.0
 image = "items.platinum_bar"
 
 [items.mithril_bar]
-name = "Mithril bar"
-weight = 1.0
+name = "Mithril Bar"
+weight = 7.0
 image = "items.mithril_bar"
 
 [items.ozathinum_bar]
-name = "Ozathinum bar"
-weight = 1.0
+name = "Ozathinum Bar"
+weight = 8.0
 image = "items.ozathinum_bar"
 
 [items.torzite_bar]
-name = "Torzite bar"
-weight = 1.0
+name = "Torzite Bar"
+weight = 9.0
 image = "items.torzite_bar"
 
 [items.etherealite_bar]
-name = "Etherealite bar"
-weight = 1.0
+name = "Etherealite Bar"
+weight = 10.0
 image = "items.etherealite_bar"
 
 [items.lumostone]
 name = "Lumostone"
+weight = 1.0
 image = "items.lumostone1"
 
 [items.glass]
 name = "Glass"
 weight = 2.5
 type = "block"
-image = "items.glass"
 
 
 # workbenched items
 
-[items.copper_ladder]
-name = "Copper ladder"
-weight = 2.5
+[items.stick]
+name = "Stick"
+weight = 0.2
+
+[items.wooden_chest]
+name = "Wooden Chest"
+weight = 3.0
 type = "block"
-image = "items.copper_ladder"
+
+[items.wooden_ladder]
+name = "Wooden Ladder"
+weight = 0.5
+type = "block"
+
+[items.rope]
+name = "Rope"
+weight = 0.2
+type = "block"
+
+[items.linen]
+name = "Linen"
+weight = 1.5
+
+[items.bomb]
+name = "Bomb"
+weight = 3.0
+type = "block"
+
+[items.tidalcave_clock]
+name = "Tidalcave Clock"
+weight = 10.0
