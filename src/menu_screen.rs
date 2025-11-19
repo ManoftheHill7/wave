@@ -6,6 +6,7 @@ use screen_manager::{Screen, ScreenCommand};
 pub struct MenuScreen {
     new_game_button: Rectangle,
     load_game_button: Rectangle,
+    mute_button: Rectangle,
     hovered_button: Option<ButtonType>,
 }
 
@@ -13,6 +14,7 @@ pub struct MenuScreen {
 enum ButtonType {
     NewGame,
     LoadGame,
+    Mute,
 }
 
 impl MenuScreen {
@@ -23,6 +25,10 @@ impl MenuScreen {
         let button_width = 300.0;
         let button_height = 60.0;
         let button_x = (screen_width - button_width) / 2.0;
+
+        // Mute button in top-right corner
+        let mute_size = 48.0;
+        let mute_margin = 20.0;
 
         MenuScreen {
             new_game_button: Rectangle::new(
@@ -36,6 +42,12 @@ impl MenuScreen {
                 screen_height / 2.0 + 40.0,
                 button_width,
                 button_height,
+            ),
+            mute_button: Rectangle::new(
+                screen_width - mute_size - mute_margin,
+                mute_margin,
+                mute_size,
+                mute_size,
             ),
             hovered_button: None,
         }
@@ -65,6 +77,8 @@ impl Screen for MenuScreen {
             self.hovered_button = Some(ButtonType::NewGame);
         } else if self.load_game_button.check_collision_point_rec(mouse_pos) {
             self.hovered_button = Some(ButtonType::LoadGame);
+        } else if self.mute_button.check_collision_point_rec(mouse_pos) {
+            self.hovered_button = Some(ButtonType::Mute);
         }
 
         // Check button clicks
@@ -86,13 +100,15 @@ impl Screen for MenuScreen {
                 } else {
                     println!("✗ No save file found!");
                 }
+            } else if self.hovered_button == Some(ButtonType::Mute) {
+                ctx.music.toggle_mute();
             }
         }
 
         ScreenCommand::None
     }
 
-    fn render(&mut self, rl: &mut RaylibHandle, thread: &RaylibThread, _ctx: &Self::Context) {
+    fn render(&mut self, rl: &mut RaylibHandle, thread: &RaylibThread, ctx: &Self::Context) {
         let mut d = rl.begin_drawing(thread);
 
         // White background
@@ -161,5 +177,32 @@ impl Screen for MenuScreen {
             30,
             text_color,
         );
+
+        // Mute button
+        let mute_color = if ctx.music.is_muted() {
+            Color::new(255, 100, 100, 255) // Red when muted
+        } else {
+            Color::new(100, 255, 100, 255) // Green when not muted
+        };
+
+        // Draw the music icon with tint
+        d.draw_texture_pro(
+            &ctx.textures.ui.music,
+            Rectangle::new(
+                0.0,
+                0.0,
+                ctx.textures.ui.music.width as f32,
+                ctx.textures.ui.music.height as f32,
+            ),
+            self.mute_button,
+            Vector2::zero(),
+            0.0,
+            mute_color,
+        );
+
+        // Draw border if hovered
+        if self.hovered_button == Some(ButtonType::Mute) {
+            d.draw_rectangle_lines_ex(self.mute_button, 3.0, Color::BLACK);
+        }
     }
 }

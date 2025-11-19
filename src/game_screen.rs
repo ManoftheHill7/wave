@@ -605,7 +605,6 @@ impl Screen for GameScreen {
         // Update music streams
         ctx.music.update_streams();
 
-
         // Update music layers based on player depth
         if ctx.updating {
             ctx.music

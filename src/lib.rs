@@ -15,6 +15,7 @@ pub fn pixels_per_world_unit() -> f32 {
 }
 
 // Export public modules that can be used by other binaries
+pub mod config;
 pub mod controller;
 pub mod crafting_screen;
 pub mod game_screen;

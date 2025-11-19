@@ -11,12 +11,23 @@ const RENDER_HEIGHT: u32 = 225;
 
 pub struct InventoryScreen {
     render_target: Option<RenderTexture2D>,
+    mute_button: Rectangle,
 }
 
 impl InventoryScreen {
     pub fn new() -> Self {
+        // Mute button in top-right corner (in render texture space)
+        let mute_size = 24.0;
+        let mute_margin = 8.0;
+
         InventoryScreen {
             render_target: None,
+            mute_button: Rectangle::new(
+                RENDER_WIDTH as f32 - mute_size - mute_margin,
+                mute_margin,
+                mute_size,
+                mute_size,
+            ),
         }
     }
 
@@ -27,6 +38,18 @@ impl InventoryScreen {
         // Convert normalized coordinates to render texture space (0-400, 0-225)
         let mouse_x = mouse_pos.x * RENDER_WIDTH as f32;
         let mouse_y = mouse_pos.y * RENDER_HEIGHT as f32;
+
+        // Check if mute button is clicked (only on left click)
+        if is_left_click {
+            if mouse_x >= self.mute_button.x
+                && mouse_x <= self.mute_button.x + self.mute_button.width
+                && mouse_y >= self.mute_button.y
+                && mouse_y <= self.mute_button.y + self.mute_button.height
+            {
+                ctx.music.toggle_mute();
+                return;
+            }
+        }
 
         // Check if click is in inventory grid
         let slot_size = 24.0;
@@ -433,6 +456,39 @@ impl Screen for InventoryScreen {
             ); // Lamp
             draw_tool_slot(5, None, None); // Fishing rod
             draw_tool_slot(6, None, None); // Glider
+
+            // Draw mute button
+            let mute_color = if ctx.music.is_muted() {
+                Color::new(255, 100, 100, 255) // Red when muted
+            } else {
+                Color::new(100, 255, 100, 255) // Green when not muted
+            };
+
+            d.draw_texture_pro(
+                &ctx.textures.ui.music,
+                Rectangle::new(
+                    0.0,
+                    0.0,
+                    ctx.textures.ui.music.width as f32,
+                    ctx.textures.ui.music.height as f32,
+                ),
+                self.mute_button,
+                Vector2::zero(),
+                0.0,
+                mute_color,
+            );
+
+            // Check if mouse is hovering over mute button
+            let mouse_pos = ctx.controller.mouse_position;
+            let mouse_x = mouse_pos.x * RENDER_WIDTH as f32;
+            let mouse_y = mouse_pos.y * RENDER_HEIGHT as f32;
+            if mouse_x >= self.mute_button.x
+                && mouse_x <= self.mute_button.x + self.mute_button.width
+                && mouse_y >= self.mute_button.y
+                && mouse_y <= self.mute_button.y + self.mute_button.height
+            {
+                d.draw_rectangle_lines_ex(self.mute_button, 2.0, Color::BLACK);
+            }
         }
 
         {

@@ -1,3 +1,4 @@
+use crate::config;
 use raylib::ffi;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -105,6 +106,9 @@ pub struct MusicManager {
 
     // Global volume multiplier (for pause, etc.)
     volume_multiplier: f32,
+
+    // Mute state
+    muted: bool,
 }
 
 impl MusicManager {
@@ -134,14 +138,23 @@ impl MusicManager {
             });
         }
 
-        Ok(MusicManager {
+        // Load config to get saved mute state
+        let config = config::load_config();
+
+        let mut manager = MusicManager {
             static_music,
             game_layers,
             active_music: ActiveMusic::None,
             current_static_track: None,
             volume_smooth_time: 0.15, // 150ms smooth time for volume changes
             volume_multiplier: 1.0,
-        })
+            muted: config.audio.muted,
+        };
+
+        // Apply initial volume state (in case we're starting muted)
+        manager.apply_volume();
+
+        Ok(manager)
     }
 
     /// Play a static music track (menu, crafting, etc.)
@@ -163,6 +176,13 @@ impl MusicManager {
         if let Some(music) = self.static_music.get(name) {
             unsafe {
                 ffi::PlayMusicStream(*music);
+                // Apply mute state immediately
+                let volume = if self.muted {
+                    0.0
+                } else {
+                    self.volume_multiplier
+                };
+                ffi::SetMusicVolume(*music, volume);
             }
             self.active_music = ActiveMusic::Static;
             self.current_static_track = Some(name.to_string());
@@ -172,7 +192,7 @@ impl MusicManager {
     }
 
     /// Start the game layer system
-    /// All layers start playing at zero volume
+    /// All layers start playing at zero volume (or muted if mute is enabled)
     pub fn play_game_layers(&mut self) {
         if self.active_music == ActiveMusic::GameLayers {
             return; // Already playing
@@ -182,6 +202,7 @@ impl MusicManager {
         self.stop_all();
 
         // Start all game layers at zero volume
+        // Note: They start at 0 regardless of mute state, volume will be updated by update_game_depth
         for layer in &mut self.game_layers {
             unsafe {
                 ffi::PlayMusicStream(layer.music);
@@ -216,9 +237,14 @@ impl MusicManager {
                 layer.current_volume += diff.signum() * max_change;
             }
 
-            // Apply volume to music stream (multiplied by global volume multiplier)
+            // Apply volume to music stream (multiplied by global volume multiplier and mute)
+            let final_volume = if self.muted {
+                0.0
+            } else {
+                layer.current_volume * self.volume_multiplier
+            };
             unsafe {
-                ffi::SetMusicVolume(layer.music, layer.current_volume * self.volume_multiplier);
+                ffi::SetMusicVolume(layer.music, final_volume);
             }
         }
     }
@@ -273,8 +299,13 @@ impl MusicManager {
         // Immediately apply to game layers if active
         if self.active_music == ActiveMusic::GameLayers {
             for layer in &self.game_layers {
+                let final_volume = if self.muted {
+                    0.0
+                } else {
+                    layer.current_volume * self.volume_multiplier
+                };
                 unsafe {
-                    ffi::SetMusicVolume(layer.music, layer.current_volume * self.volume_multiplier);
+                    ffi::SetMusicVolume(layer.music, final_volume);
                 }
             }
         }
@@ -283,8 +314,62 @@ impl MusicManager {
         if self.active_music == ActiveMusic::Static {
             if let Some(ref track_name) = self.current_static_track {
                 if let Some(music) = self.static_music.get(track_name) {
+                    let final_volume = if self.muted {
+                        0.0
+                    } else {
+                        self.volume_multiplier
+                    };
                     unsafe {
-                        ffi::SetMusicVolume(*music, self.volume_multiplier);
+                        ffi::SetMusicVolume(*music, final_volume);
+                    }
+                }
+            }
+        }
+    }
+
+    /// Toggle mute state
+    pub fn toggle_mute(&mut self) {
+        self.muted = !self.muted;
+        self.apply_volume();
+
+        // Save mute state to config
+        let mut config = config::load_config();
+        config.audio.muted = self.muted;
+        if let Err(e) = config::save_config(&config) {
+            eprintln!("Failed to save config: {}", e);
+        }
+    }
+
+    /// Check if music is muted
+    pub fn is_muted(&self) -> bool {
+        self.muted
+    }
+
+    /// Apply current volume settings to all active music
+    fn apply_volume(&mut self) {
+        if self.active_music == ActiveMusic::GameLayers {
+            for layer in &self.game_layers {
+                let final_volume = if self.muted {
+                    0.0
+                } else {
+                    layer.current_volume * self.volume_multiplier
+                };
+                unsafe {
+                    ffi::SetMusicVolume(layer.music, final_volume);
+                }
+            }
+        }
+
+        if self.active_music == ActiveMusic::Static {
+            if let Some(ref track_name) = self.current_static_track {
+                if let Some(music) = self.static_music.get(track_name) {
+                    let final_volume = if self.muted {
+                        0.0
+                    } else {
+                        self.volume_multiplier
+                    };
+                    unsafe {
+                        ffi::SetMusicVolume(*music, final_volume);
                     }
                 }
             }
