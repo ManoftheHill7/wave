@@ -1,11 +1,11 @@
 # furnace recipes
 
 
-# metal bar recipes
+# metal bars
 
 [recipes.copper_bar]
 type = "furnace"
-output = "copper bar"
+output = "copper_bar"
 amount = 1
 [[recipes.copper_bar.inputs]]
 type = "copper ore"
@@ -13,10 +13,10 @@ amount = 10
 
 [recipes.bronze_bar]
 type = "furnace"
-output = "bronze bar"
+output = "bronze_bar"
 amount = 1
 [[recipes.bronze_bar.inputs]]
-type = "bronze ore"
+type = "copper ore"
 amount = 9
 [[recipes.bronze_bar.inputs]]
 type = "tin ore"
@@ -24,7 +24,7 @@ amount = 1
 
 [recipes.iron_bar]
 type = "furnace"
-output = "iron bar"
+output = "iron_bar"
 amount = 1
 [[recipes.iron_bar.inputs]]
 type = "iron ore"
@@ -32,18 +32,18 @@ amount = 15
 
 [recipes.steel_bar]
 type = "furnace"
-output = "steel bar"
+output = "steel_bar"
 amount = 1
 [[recipes.steel_bar.inputs]]
 type = "pure iron ore"
 amount = 12
-[[recipes.bronze_bar.inputs]]
+[[recipes.steel_bar.inputs]]
 type = "coal"
 amount = 3
 
 [recipes.silver_bar]
 type = "furnace"
-output = "silver bar"
+output = "silver_bar"
 amount = 1
 [[recipes.silver_bar.inputs]]
 type = "silver ore"
@@ -51,7 +51,7 @@ amount = 20
 
 [recipes.gold_bar]
 type = "furnace"
-output = "gold bar"
+output = "gold_bar"
 amount = 1
 [[recipes.gold_bar.inputs]]
 type = "gold ore"
@@ -59,7 +59,7 @@ amount = 30
 
 [recipes.platinum_bar]
 type = "furnace"
-output = "platinum bar"
+output = "platinum_bar"
 amount = 1
 [[recipes.platinum_bar.inputs]]
 type = "platinum ore"
@@ -67,7 +67,7 @@ amount = 50
 
 [recipes.mithril_bar]
 type = "furnace"
-output = "mithril bar"
+output = "mithril_bar"
 amount = 1
 [[recipes.mithril_bar.inputs]]
 type = "mithril ore"
@@ -78,7 +78,7 @@ amount = 20
 
 [recipes.ozathinum_bar]
 type = "furnace"
-output = "ozathinum bar"
+output = "ozathinum_bar"
 amount = 1
 [[recipes.ozathinum_bar.inputs]]
 type = "ozathinum ore"
@@ -87,12 +87,12 @@ amount = 60
 type = "lumosite ore"
 amount = 30
 [[recipes.ozathinum_bar.inputs]]
-type = "mithril_lava_bucket"
+type = "mithril lava bucket"
 amount = 1
 
 [recipes.torzite_bar]
 type = "furnace"
-output = "torzite bar"
+output = "torzite_bar"
 amount = 1
 [[recipes.torzite_bar.inputs]]
 type = "torzite ore"
@@ -104,12 +104,12 @@ amount = 30
 type = "ozathinum bar"
 amount = 4
 [[recipes.torzite_bar.inputs]]
-type = "mithril_lava_bucket"
+type = "mithril lava bucket"
 amount = 1
 
 [recipes.etherealite_bar]
 type = "furnace"
-output = "etherealite bar"
+output = "etherealite_bar"
 amount = 1
 [[recipes.etherealite_bar.inputs]]
 type = "etherealite ore"
@@ -130,113 +130,28 @@ amount = 20
 type = "silver bar"
 amount = 30
 [[recipes.etherealite_bar.inputs]]
-type = "mithril_lava_bucket"
+type = "mithril lava bucket"
 amount = 1
 
 
-# pickaxe upgrade recipes
+# tools
 
-[recipes.copper_pickaxe]
+[recipes.amethyst_amulet]
 type = "furnace"
-output = "copper_pickaxe"
+output = "amethyst_amulet"
 amount = 1
-[[recipes.copper_pickaxe.inputs]]
-type = "stone pickaxe"
+[[recipes.amethyst_amulet.inputs]]
+type = "white pearl amulet"
 amount = 1
-[[recipes.copper_pickaxe.inputs]]
-type = "copper bar"
-amount = 1
-
-[recipes.bronze_pickaxe]
-type = "furnace"
-output = "bronze_pickaxe"
-amount = 1
-[[recipes.bronze_pickaxe.inputs]]
-type = "copper pickaxe"
-amount = 1
-[[recipes.bronze_pickaxe.inputs]]
-type = "bronze bar"
-amount = 1
-
-[recipes.iron_pickaxe]
-type = "furnace"
-output = "iron_pickaxe"
-amount = 1
-[[recipes.iron_pickaxe.inputs]]
-type = "bronze pickaxe"
-amount = 1
-[[recipes.iron_pickaxe.inputs]]
-type = "iron bar"
-amount = 1
-
-[recipes.steel_pickaxe]
-type = "furnace"
-output = "steel_pickaxe"
-amount = 1
-[[recipes.steel_pickaxe.inputs]]
-type = "iron pickaxe"
-amount = 1
-[[recipes.steel_pickaxe.inputs]]
-type = "steel bar"
-amount = 1
-
-[recipes.platinum_pickaxe]
-type = "furnace"
-output = "platinum_pickaxe"
-amount = 1
-[[recipes.platinum_pickaxe.inputs]]
-type = "steel pickaxe"
-amount = 1
-[[recipes.platinum_pickaxe.inputs]]
-type = "platinum bar"
-amount = 1
-
-[recipes.mithril_pickaxe]
-type = "furnace"
-output = "mithril_pickaxe"
-amount = 1
-[[recipes.mithril_pickaxe.inputs]]
-type = "platinum pickaxe"
-amount = 1
-[[recipes.mithril_pickaxe.inputs]]
-type = "mithril bar"
-amount = 1
-
-[recipes.ozathinum_pickaxe]
-type = "furnace"
-output = "ozathinum_pickaxe"
-amount = 1
-[[recipes.ozathinum_pickaxe.inputs]]
-type = "mithril pickaxe"
-amount = 1
-[[recipes.ozathinum_pickaxe.inputs]]
-type = "ozathinum bar"
-amount = 1
-
-[recipes.torzite_pickaxe]
-type = "furnace"
-output = "torzite_pickaxe"
-amount = 1
-[[recipes.torzite_pickaxe.inputs]]
-type = "ozathinum pickaxe"
-amount = 1
-[[recipes.torzite_pickaxe.inputs]]
-type = "torzite bar"
-amount = 1
-
-[recipes.etherealite_pickaxe]
-type = "furnace"
-output = "etherealite_pickaxe"
-amount = 1
-[[recipes.etherealite_pickaxe.inputs]]
-type = "torzite pickaxe"
-amount = 1
-[[recipes.etherealite_pickaxe.inputs]]
-type = "etherealite bar"
-amount = 1
+[[recipes.amethyst_amulet.inputs]]
+type = "amethyst"
+amount = 2
+[[recipes.amethyst_amulet.inputs]]
+type = "gold bar"
+amount = 2
 
 
-# misc furnace recipes
+# misc
 
 [recipes.lumostone]
 type = "furnace"
@@ -244,7 +159,7 @@ output = "lumostone"
 amount = 1
 [[recipes.lumostone.inputs]]
 type = "lumosite ore"
-amount = 10
+amount = 3
 
 [recipes.glass]
 type = "furnace"

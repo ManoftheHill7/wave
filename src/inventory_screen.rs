@@ -386,7 +386,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_dash
                     .as_ref()
-                    .map(|_| &ctx.textures.tools.emerald_amulet),
+                    .map(|_| &ctx.textures.tools.white_pearl_amulet),
                 ctx.world_state
                     .player
                     .tool_dash
@@ -399,7 +399,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_pickaxe
                     .as_ref()
-                    .map(|_| &ctx.textures.tools.steel_pickaxe), // TODO: change to pickaxe texture
+                    .map(|_| &ctx.textures.tools.stone_pickaxe),
                 ctx.world_state
                     .player
                     .tool_pickaxe

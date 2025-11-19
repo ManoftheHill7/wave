@@ -1,6 +1,9 @@
 # This file is for blocks in the world (tiles)
 # type can be: "solid", "liquid", "spike", or "air"
 
+
+# natural blocks
+
 [blocks.air]
 name = "Air"
 type = "air"
@@ -13,7 +16,6 @@ type = "solid"
 durability = 5.0
 drops = "stone"
 amount = 1
-image = "tiles.stone"
 
 [blocks.dirt]
 name = "Dirt"
@@ -21,7 +23,6 @@ type = "solid"
 durability = 2.0
 drops = "dirt"
 amount = 1
-image = "tiles.dirt"
 
 [blocks.grass]
 name = "Grass"
@@ -29,7 +30,6 @@ type = "solid"
 durability = 2.0
 drops = "dirt"
 amount = 1
-image = "tiles.grass"
 
 [blocks.sand]
 name = "Sand"
@@ -37,15 +37,13 @@ type = "solid"
 durability = 1.5
 drops = "sand"
 amount = 1
-image = "tiles.sand"
 
-[blocks.glass]
-name = "Glass"
+[blocks.obsidian]
+name = "Obsidian"
 type = "solid"
-durability = 0.5
-drops = "glass"
-amount = 0
-image = "tiles.glass"
+durability = 6.0
+drops = "obsidian"
+amount = 1
 
 [blocks.log]
 name = "Log"
@@ -53,175 +51,34 @@ type = "solid"
 durability = 3.0
 drops = "log"
 amount = 1
-image = "tiles.log"
 
-[blocks.leaf]
-name = "Leaf"
+[blocks.leaves]
+name = "Leaves"
 type = "solid"
 durability = 0.5
-drops = "leaf"
+drops = "leaves"
 amount = 1
-image = "tiles.leaves"
 
-[blocks.coal]
-name = "Coal"
-type = "solid"
-durability = 3.5
-drops = "coal"
-amount = 1
-image = "tiles.coal_ore"
+[blocks.mushroom]
+name = "Mushroom"
+type = "air"
+durability = 0.25
+drops = "mushroom"
+amount = 2
 
-[blocks.copper]
-name = "Copper"
-type = "solid"
-durability = 3.5
-drops = "copper"
+[blocks.canola]
+name = "Canola"
+type = "air"
+durability = 0.25
+drops = "canola"
 amount = 1
-image = "tiles.copper_ore"
 
-[blocks.tin]
-name = "Tin"
-type = "solid"
-durability = 3.5
-drops = "tin"
+[blocks.flax]
+name = "Flax"
+type = "air"
+durability = 0.25
+drops = "flax"
 amount = 1
-image = "tiles.tin_ore"
-
-[blocks.iron]
-name = "Iron"
-type = "solid"
-durability = 4.5
-drops = "iron"
-amount = 1
-image = "tiles.iron_ore"
-
-[blocks.pure_iron]
-name = "Pure Iron"
-type = "solid"
-durability = 5.0
-drops = "pure_iron"
-amount = 1
-image = "tiles.pure_iron_ore"
-
-[blocks.silver]
-name = "Silver"
-type = "solid"
-durability = 5.5
-drops = "silver"
-amount = 1
-image = "tiles.silver_ore"
-
-[blocks.gold]
-name = "Gold"
-type = "solid"
-durability = 6.0
-drops = "gold"
-amount = 1
-image = "tiles.gold_ore"
-
-[blocks.platinum]
-name = "Platinum"
-type = "solid"
-durability = 7.0
-drops = "platinum"
-amount = 1
-image = "tiles.platinum_ore"
-
-[blocks.mithril]
-name = "Mithril"
-type = "solid"
-durability = 8.0
-drops = "mithril"
-amount = 1
-image = "tiles.mithril_ore"
-
-[blocks.lumosite]
-name = "Lumosite"
-type = "solid"
-durability = 6.5
-drops = "lumosite"
-amount = 1
-image = "tiles.lumosite_ore1"
-
-[blocks.ozathinum]
-name = "Ozathinum"
-type = "solid"
-durability = 9.0
-drops = "ozathinum"
-amount = 1
-image = "tiles.ozathinum_ore"
-
-[blocks.torzite]
-name = "Torzite"
-type = "solid"
-durability = 10.0
-drops = "torzite"
-amount = 1
-image = "tiles.torzite_ore"
-
-[blocks.etherealite]
-name = "Etherealite"
-type = "solid"
-durability = 12.0
-drops = "etherealite"
-amount = 1
-image = "tiles.etherealite_ore"
-
-[blocks.amethyst]
-name = "Amethyst"
-type = "solid"
-durability = 4.0
-drops = "amethyst"
-amount = 1
-image = "tiles.amethyst_ore"
-
-[blocks.diamond]
-name = "Diamond"
-type = "solid"
-durability = 12.0
-drops = "diamond"
-amount = 1
-image = "tiles.diamond_ore"
-
-[blocks.emerald]
-name = "Emerald"
-type = "solid"
-durability = 5.0
-drops = "emerald"
-amount = 1
-image = "tiles.emerald_ore"
-
-[blocks.jasper]
-name = "Jasper"
-type = "solid"
-durability = 8.0
-drops = "jasper"
-amount = 1
-image = "tiles.jasper_ore"
-
-[blocks.ruby]
-name = "Ruby"
-type = "solid"
-durability = 10.0
-drops = "ruby"
-amount = 1
-image = "tiles.ruby_ore"
-
-[blocks.topaz]
-name = "Topaz"
-type = "solid"
-durability = 7.0
-drops = "topaz"
-amount = 1
-image = "tiles.topaz_ore"
-
-[blocks.copper_ladder]
-name = "Copper ladder"
-type = "solid"
-durability = 2.0
-drops = "copper ladder"
-amount = 1
-image = "tiles.copper_ladder"
 
 [blocks.water]
 name = "Water"
@@ -251,6 +108,146 @@ type = "spike"
 durability = 0.0
 image = "fallback"
 
+
+# ores
+
+[blocks.coal_ore]
+name = "Coal Ore"
+type = "solid"
+durability = 3.0
+drops = "coal"
+amount = 1
+
+[blocks.copper_ore]
+name = "Copper Ore"
+type = "solid"
+durability = 3.5
+drops = "copper_ore"
+amount = 1
+
+[blocks.tin_ore]
+name = "Tin Ore"
+type = "solid"
+durability = 3.5
+drops = "tin_ore"
+amount = 1
+
+[blocks.iron_ore]
+name = "Iron Ore"
+type = "solid"
+durability = 4.0
+drops = "iron_ore"
+amount = 1
+
+[blocks.pure_iron_ore]
+name = "Pure Iron Ore"
+type = "solid"
+durability = 5.0
+drops = "pure_iron_ore"
+amount = 1
+
+[blocks.silver_ore]
+name = "Silver Ore"
+type = "solid"
+durability = 5.5
+drops = "silver_ore"
+amount = 1
+
+[blocks.gold_ore]
+name = "Gold Ore"
+type = "solid"
+durability = 6.0
+drops = "gold_ore"
+amount = 1
+
+[blocks.platinum_ore]
+name = "Platinum Ore"
+type = "solid"
+durability = 7.0
+drops = "platinum_ore"
+amount = 1
+
+[blocks.mithril_ore]
+name = "Mithril Ore"
+type = "solid"
+durability = 8.0
+drops = "mithril_ore"
+amount = 1
+
+[blocks.lumosite_ore]
+name = "Lumosite Ore"
+type = "solid"
+durability = 6.5
+drops = "lumosite_ore"
+amount = 1
+image = "tiles.lumosite_ore1"
+
+[blocks.ozathinum_ore]
+name = "Ozathinum Ore"
+type = "solid"
+durability = 9.0
+drops = "ozathinum_ore"
+amount = 1
+
+[blocks.torzite_ore]
+name = "Torzite Ore"
+type = "solid"
+durability = 10.0
+drops = "torzite_ore"
+amount = 1
+
+[blocks.etherealite_ore]
+name = "Etherealite Ore"
+type = "solid"
+durability = 12.0
+drops = "etherealite_ore"
+amount = 1
+
+[blocks.amethyst_ore]
+name = "Amethyst Ore"
+type = "solid"
+durability = 4.0
+drops = "amethyst"
+amount = 1
+
+[blocks.jasper_ore]
+name = "Jasper Ore"
+type = "solid"
+durability = 5.0
+drops = "jasper"
+amount = 1
+
+[blocks.emerald_ore]
+name = "Emerald Ore"
+type = "solid"
+durability = 6.0
+drops = "emerald"
+amount = 1
+
+[blocks.topaz_ore]
+name = "Topaz Ore"
+type = "solid"
+durability = 8.0
+drops = "topaz"
+amount = 1
+
+[blocks.ruby_ore]
+name = "Ruby Ore"
+type = "solid"
+durability = 10.0
+drops = "ruby"
+amount = 1
+
+[blocks.diamond_ore]
+name = "Diamond Ore"
+type = "solid"
+durability = 12.0
+drops = "diamond"
+amount = 1
+
+
+# workstations
+
 [blocks.workbench]
 name = "Workbench"
 type = "air"
@@ -263,7 +260,7 @@ height = 3
 [blocks.anvil]
 name = "Anvil"
 type = "air"
-durability = 5.0
+durability = 10.0
 drops = "anvil"
 amount = 1
 image = "tiles.anvil1"
@@ -273,9 +270,84 @@ height = 2
 [blocks.furnace]
 name = "Furnace"
 type = "air"
-durability = 5.0
+durability = 15.0
 drops = "furnace"
 amount = 1
 image = "tiles.furnace1"
 width = 4
 height = 5
+
+
+# anviled bocks
+
+[blocks.copper_ladder]
+name = "Copper ladder"
+type = "air"
+durability = 1.5
+drops = "copper ladder"
+amount = 1
+
+[blocks.steel_ladder]
+name = "Steel ladder"
+type = "air"
+durability = 2.5
+drops = "steel ladder"
+amount = 1
+
+
+# furnaced blocks
+
+[blocks.glass]
+name = "Glass"
+type = "solid"
+durability = 0.5
+drops = "glass"
+amount = 0
+
+
+# workbenched blocks
+
+[blocks.wooden_chest]
+name = "Wooden chest"
+type = "air"
+durability = 2.5
+drops = "wooden chest"
+amount = 1
+image = "tiles.wooden_chest1"
+width = 2
+height = 2
+
+[blocks.wooden_ladder]
+name = "Wooden ladder"
+type = "air"
+durability = 0.5
+drops = "wooden ladder"
+amount = 1
+
+[blocks.torch]
+name = "Torch"
+type = "air"
+durability = 0.5
+drops = "torch"
+amount = 1
+image = "tiles.torch1"
+
+[blocks.lumostorch]
+name = "Lumostorch"
+type = "air"
+durability = 0.5
+drops = "lumostorch"
+amount = 1
+image = "tiles.lumostorch1"
+
+[blocks.rope]
+name = "Rope"
+type = "air"
+durability = 0.5
+drops = "rope"
+amount = 1
+
+[blocks.bomb]
+name = "Bomb"
+type = "air"
+image = "tiles.bomb1"

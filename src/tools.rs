@@ -16,8 +16,8 @@ pub enum ToolType {
 impl ToolType {
     pub fn get_texture<'a>(&self, textures: &'a TextureManager) -> Option<&'a Texture2D> {
         match self {
-            ToolType::Dash => Some(&textures.tools.emerald_amulet),
-            ToolType::Pickaxe => Some(&textures.tools.steel_pickaxe),
+            ToolType::Dash => Some(&textures.tools.white_pearl_amulet),
+            ToolType::Pickaxe => Some(&textures.tools.stone_pickaxe),
             ToolType::PlaceBlock(blk) => blk.to_item_type().map(|item| item.get_texture(textures)),
         }
     }
