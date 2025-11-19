@@ -102,6 +102,9 @@ pub struct MusicManager {
 
     // Volume smoothing (avoids pops/clicks)
     volume_smooth_time: f32,
+
+    // Global volume multiplier (for pause, etc.)
+    volume_multiplier: f32,
 }
 
 impl MusicManager {
@@ -137,6 +140,7 @@ impl MusicManager {
             active_music: ActiveMusic::None,
             current_static_track: None,
             volume_smooth_time: 0.15, // 150ms smooth time for volume changes
+            volume_multiplier: 1.0,
         })
     }
 
@@ -212,9 +216,9 @@ impl MusicManager {
                 layer.current_volume += diff.signum() * max_change;
             }
 
-            // Apply volume to music stream
+            // Apply volume to music stream (multiplied by global volume multiplier)
             unsafe {
-                ffi::SetMusicVolume(layer.music, layer.current_volume);
+                ffi::SetMusicVolume(layer.music, layer.current_volume * self.volume_multiplier);
             }
         }
     }
@@ -260,6 +264,31 @@ impl MusicManager {
     /// Check if any music is currently playing
     pub fn is_playing(&self) -> bool {
         self.active_music != ActiveMusic::None
+    }
+
+    /// Set global volume multiplier (e.g., 0.5 for half volume when paused)
+    pub fn set_volume_multiplier(&mut self, multiplier: f32) {
+        self.volume_multiplier = multiplier.clamp(0.0, 1.0);
+
+        // Immediately apply to game layers if active
+        if self.active_music == ActiveMusic::GameLayers {
+            for layer in &self.game_layers {
+                unsafe {
+                    ffi::SetMusicVolume(layer.music, layer.current_volume * self.volume_multiplier);
+                }
+            }
+        }
+
+        // Apply to static music if active
+        if self.active_music == ActiveMusic::Static {
+            if let Some(ref track_name) = self.current_static_track {
+                if let Some(music) = self.static_music.get(track_name) {
+                    unsafe {
+                        ffi::SetMusicVolume(*music, self.volume_multiplier);
+                    }
+                }
+            }
+        }
     }
 }
 

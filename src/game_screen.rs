@@ -592,11 +592,19 @@ impl Screen for GameScreen {
     fn on_resume(&mut self, ctx: &mut Self::Context) {
         // Start layered game music when entering game
         ctx.music.play_game_layers();
+        // Restore full volume when resuming
+        ctx.music.set_volume_multiplier(1.0);
+    }
+
+    fn on_pause(&mut self, ctx: &mut Self::Context) {
+        // Half the music volume when paused
+        ctx.music.set_volume_multiplier(0.3);
     }
 
     fn update(&mut self, dt: f32, ctx: &mut Self::Context) -> ScreenCommand<Self::Context> {
         // Update music streams
         ctx.music.update_streams();
+
 
         // Update music layers based on player depth
         if ctx.updating {
