@@ -783,7 +783,7 @@ impl Screen for GameScreen {
         let hud_box_size = hud_box_texture.width as f32;
         let scale = 4.0;
         let right_offset = hud_box_size * (scale + 1.0);
-        let hud_x = (self.screen_width) / 2.0 - hud_box_size * scale;
+        let hud_x = (self.screen_width - hud_box_size) / 2.0 - hud_box_size * scale;
         let hud_y = self.screen_height - hud_box_size * scale - hud_box_size / 2.0;
         
         d.draw_texture_ex(hud_box_texture, Vector2{x: hud_x, y: hud_y}, 0.0, scale, Color::WHITE);
