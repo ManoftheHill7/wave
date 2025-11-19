@@ -52,9 +52,10 @@ Things required for the games core concept
 Things that I would really like to have
 
 #### Lighting
-- [ ] Dynamic lighting
-- [ ] Tool - Lamp
-- [ ] Torches cast light
+- [x] Dynamic lighting
+- [x] Tool - Lamp
+- [x] Torches cast light
+- [ ] Colored lighting
 
 #### Additional movement options
 - [ ] Tool - Grappling Hook
