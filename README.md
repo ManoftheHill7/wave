@@ -77,7 +77,7 @@ Things that I would really like to have
 
 #### Audio integration
 - [ ] Proximity sound effects for torches
-- [ ] Layering music as you go deeper
+- [x] Layering music as you go deeper
 - [ ] Flooding caverns music intensity
 - [ ] Sound effects when things happen
 - [ ] Looping sound effects for things like mining
