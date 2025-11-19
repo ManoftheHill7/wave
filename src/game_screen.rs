@@ -605,10 +605,13 @@ impl Screen for GameScreen {
         // Update music streams
         ctx.music.update_streams();
 
-        // Update music layers based on player depth
+        // Update music layers based on player depth and tide level
         if ctx.updating {
-            ctx.music
-                .update_game_depth(dt, ctx.world_state.player.position.y);
+            ctx.music.update_game_depth(
+                dt,
+                ctx.world_state.player.position.y,
+                ctx.world_state.tide_level() as f32,
+            );
         }
 
         self.camera.offset = Vector2::new(self.screen_width / 2.0, self.screen_height / 2.0);

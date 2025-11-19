@@ -19,7 +19,12 @@ pub struct StaticMusicConfig {
 pub struct GameLayerConfig {
     pub name: String,
     pub file: String,
-    pub depth_curve: [DepthPoint; 4], // Trapezoid: 4 points
+    #[serde(default)]
+    pub depth_curve: Option<[DepthPoint; 4]>, // Trapezoid: 4 points
+    #[serde(default)]
+    pub tide_relative: bool, // If true, depth is relative to tide level
+    #[serde(default)]
+    pub tide_range: Option<f32>, // Play within this range of tide level
 }
 
 #[derive(Debug, Deserialize, Clone, Copy)]
@@ -29,45 +34,70 @@ pub struct DepthPoint {
 }
 
 impl GameLayerConfig {
-    /// Calculate volume for this layer at a given depth using trapezoid curve
-    pub fn volume_at_depth(&self, depth: f32) -> f32 {
-        let [p0, p1, p2, p3] = self.depth_curve;
-
-        // Trapezoid shape:
-        // p0 = start fade in (volume 0)
-        // p1 = full volume start (volume 1)
-        // p2 = full volume end (volume 1)
-        // p3 = end fade out (volume 0)
-
-        if depth <= p0.depth {
-            // Before fade-in (above the trapezoid)
-            p0.volume
-        } else if depth <= p1.depth {
-            // Fade-in region (linear interpolation)
-            let range = p0.depth - p1.depth;
-            if range.abs() < 0.01 {
-                // Points too close, just use p1 volume
-                p1.volume
-            } else {
-                let t = (p0.depth - depth) / range;
-                lerp(p0.volume, p1.volume, t)
+    /// Calculate volume for this layer at a given depth using trapezoid curve or tide-relative range
+    pub fn volume_at_depth(&self, depth: f32, tide_level: f32) -> f32 {
+        // Handle tide-relative layers
+        if self.tide_relative {
+            if let Some(range) = self.tide_range {
+                let distance_from_tide = (depth - tide_level).abs();
+                if distance_from_tide <= range {
+                    // Within range, fade in/out based on distance
+                    let fade_range = range * 0.3; // Use 30% of range for fade
+                    if distance_from_tide <= range - fade_range {
+                        // Full volume in center
+                        return 1.0;
+                    } else {
+                        // Fade out at edges
+                        let fade_progress =
+                            (distance_from_tide - (range - fade_range)) / fade_range;
+                        return lerp(1.0, 0.0, fade_progress);
+                    }
+                } else {
+                    return 0.0;
+                }
             }
-        } else if depth <= p2.depth {
-            // Full volume plateau
-            p2.volume
-        } else if depth <= p3.depth {
-            // Fade-out region (linear interpolation)
-            let range = p2.depth - p3.depth;
-            if range.abs() < 0.01 {
-                // Points too close, just use p3 volume
-                p3.volume
+        }
+
+        // Handle standard depth curve layers
+        if let Some([p0, p1, p2, p3]) = self.depth_curve {
+            // Trapezoid shape:
+            // p0 = start fade in (volume 0)
+            // p1 = full volume start (volume 1)
+            // p2 = full volume end (volume 1)
+            // p3 = end fade out (volume 0)
+
+            if depth <= p0.depth {
+                // Before fade-in (above the trapezoid)
+                p0.volume
+            } else if depth <= p1.depth {
+                // Fade-in region (linear interpolation)
+                let range = p0.depth - p1.depth;
+                if range.abs() < 0.01 {
+                    // Points too close, just use p1 volume
+                    p1.volume
+                } else {
+                    let t = (p0.depth - depth) / range;
+                    lerp(p0.volume, p1.volume, t)
+                }
+            } else if depth <= p2.depth {
+                // Full volume plateau
+                p2.volume
+            } else if depth <= p3.depth {
+                // Fade-out region (linear interpolation)
+                let range = p2.depth - p3.depth;
+                if range.abs() < 0.01 {
+                    // Points too close, just use p3 volume
+                    p3.volume
+                } else {
+                    let t = (p2.depth - depth) / range;
+                    lerp(p2.volume, p3.volume, t)
+                }
             } else {
-                let t = (p2.depth - depth) / range;
-                lerp(p2.volume, p3.volume, t)
+                // After fade-out (below the trapezoid)
+                p3.volume
             }
         } else {
-            // After fade-out (below the trapezoid)
-            p3.volume
+            0.0
         }
     }
 }
@@ -215,16 +245,16 @@ impl MusicManager {
         self.active_music = ActiveMusic::GameLayers;
     }
 
-    /// Update game layers based on player depth
+    /// Update game layers based on player depth and tide level
     /// Call this every frame when game layers are active
-    pub fn update_game_depth(&mut self, dt: f32, depth: f32) {
+    pub fn update_game_depth(&mut self, dt: f32, depth: f32, tide_level: f32) {
         if self.active_music != ActiveMusic::GameLayers {
             return;
         }
 
         for layer in &mut self.game_layers {
-            // Calculate target volume from trapezoid curve
-            layer.target_volume = layer.config.volume_at_depth(depth);
+            // Calculate target volume from trapezoid curve or tide-relative range
+            layer.target_volume = layer.config.volume_at_depth(depth, tide_level);
 
             // Smooth volume changes to avoid pops/clicks
             let volume_change_rate = 1.0 / self.volume_smooth_time;

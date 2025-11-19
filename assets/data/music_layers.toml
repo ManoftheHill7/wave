@@ -136,3 +136,10 @@ depth_curve = [
     { depth = 950.0, volume = 1.0 },
     { depth = 1000.0, volume = 0.0 },
 ]
+
+[[game_layers]]
+name = "marimba"
+file = "marimba.ogg"
+# Plays within 75 blocks of the dynamic tide level
+tide_relative = true
+tide_range = 75.0
