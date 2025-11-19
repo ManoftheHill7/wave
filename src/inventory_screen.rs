@@ -171,6 +171,8 @@ impl Screen for InventoryScreen {
     type Context = GameContext;
 
     fn update(&mut self, _dt: f32, ctx: &mut Self::Context) -> ScreenCommand<Self::Context> {
+        // Update music streams (keep game music playing)
+        ctx.music.update_streams();
         if ctx.controller.menu_pressed {
             return ScreenCommand::Pop;
         }

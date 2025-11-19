@@ -45,7 +45,14 @@ impl MenuScreen {
 impl Screen for MenuScreen {
     type Context = GameContext;
 
+    fn on_resume(&mut self, ctx: &mut Self::Context) {
+        // Start menu music when entering menu
+        ctx.music.play_static("menu");
+    }
+
     fn update(&mut self, _dt: f32, ctx: &mut Self::Context) -> ScreenCommand<Self::Context> {
+        // Update music streams
+        ctx.music.update_streams();
         // Convert normalized mouse position (0.0-1.0) to pixel coordinates
         let mouse_pos = Vector2::new(
             ctx.controller.mouse_position.x * 1600.0,

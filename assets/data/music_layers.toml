@@ -1,0 +1,138 @@
+# Music configuration for layered depth-based music system
+# Depth is measured as player.position.y
+# Negative values = above ground
+# 0 = ground level  
+# Positive values = underground (larger = deeper)
+
+# Static music for specific screens
+[static_music.menu]
+file = "menu.ogg"
+
+[static_music.crafting]
+file = "crafting.ogg"
+
+# Layered game music based on depth
+# Each layer has a trapezoid-shaped volume curve defined by 4 points:
+# [start_fade_in, full_volume_start, full_volume_end, end_fade_out]
+# The volume interpolates linearly between these points
+
+[[game_layers]]
+name = "ambient"
+file = "ambient.ogg"
+# Always playing at quiet background volume regardless of depth
+depth_curve = [
+    { depth = -100.0, volume = 0.1 },
+    { depth = -100.0, volume = 0.1 },
+    { depth = 1100.0, volume = 0.1 },
+    { depth = 1100.0, volume = 0.1 },
+]
+
+[[game_layers]]
+name = "baseline"
+file = "baseline.ogg"
+# Fades in from surface (0) to 100, then stays for the rest of the game
+depth_curve = [
+    { depth = 0.0, volume = 0.0 },
+    { depth = 100.0, volume = 1.0 },
+    { depth = 1100.0, volume = 1.0 },
+    { depth = 1100.0, volume = 1.0 },
+]
+
+[[game_layers]]
+name = "flute"
+file = "flute.ogg"
+# Full volume on surface, fades out completely by depth 100
+depth_curve = [
+    { depth = -50.0, volume = 1.0 },
+    { depth = 0.0, volume = 1.0 },
+    { depth = 0.0, volume = 1.0 },
+    { depth = 100.0, volume = 0.0 },
+]
+
+[[game_layers]]
+name = "vibraphone"
+file = "vibraphone.ogg"
+# Fades in as flute fades out - near surface companion
+depth_curve = [
+    { depth = 0.0, volume = 0.0 },
+    { depth = 50.0, volume = 1.0 },
+    { depth = 150.0, volume = 1.0 },
+    { depth = 200.0, volume = 0.0 },
+]
+
+[[game_layers]]
+name = "drums1"
+file = "drums1.ogg"
+# First drum layer - adds in around depth 150, stays rest of game
+depth_curve = [
+    { depth = 100.0, volume = 0.0 },
+    { depth = 150.0, volume = 1.0 },
+    { depth = 1100.0, volume = 1.0 },
+    { depth = 1100.0, volume = 1.0 },
+]
+
+[[game_layers]]
+name = "drums2"
+file = "drums2.ogg"
+# Second drum layer - adds in around depth 300, stays rest of game
+depth_curve = [
+    { depth = 250.0, volume = 0.0 },
+    { depth = 300.0, volume = 1.0 },
+    { depth = 1100.0, volume = 1.0 },
+    { depth = 1100.0, volume = 1.0 },
+]
+
+[[game_layers]]
+name = "drums3"
+file = "drums3.ogg"
+# Third drum layer - adds in around depth 500, stays rest of game
+depth_curve = [
+    { depth = 450.0, volume = 0.0 },
+    { depth = 500.0, volume = 1.0 },
+    { depth = 1100.0, volume = 1.0 },
+    { depth = 1100.0, volume = 1.0 },
+]
+
+[[game_layers]]
+name = "choir"
+file = "choir.ogg"
+# Lumosite depth range (400-950)
+depth_curve = [
+    { depth = 350.0, volume = 0.0 },
+    { depth = 400.0, volume = 1.0 },
+    { depth = 950.0, volume = 1.0 },
+    { depth = 1000.0, volume = 0.0 },
+]
+
+[[game_layers]]
+name = "horns"
+file = "horns.ogg"
+# Silver/Gold/Platinum depth range (250-850)
+depth_curve = [
+    { depth = 200.0, volume = 0.0 },
+    { depth = 250.0, volume = 1.0 },
+    { depth = 850.0, volume = 1.0 },
+    { depth = 900.0, volume = 0.0 },
+]
+
+[[game_layers]]
+name = "bells"
+file = "bells.ogg"
+# Mithril depth range (500-900)
+depth_curve = [
+    { depth = 450.0, volume = 0.0 },
+    { depth = 500.0, volume = 1.0 },
+    { depth = 900.0, volume = 1.0 },
+    { depth = 950.0, volume = 0.0 },
+]
+
+[[game_layers]]
+name = "saxophone"
+file = "saxophone.ogg"
+# Ozathinum depth range (650-950)
+depth_curve = [
+    { depth = 600.0, volume = 0.0 },
+    { depth = 650.0, volume = 1.0 },
+    { depth = 950.0, volume = 1.0 },
+    { depth = 1000.0, volume = 0.0 },
+]

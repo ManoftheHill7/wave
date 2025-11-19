@@ -9,10 +9,10 @@ use screen_manager::{Screen, ScreenCommand};
 // Maps to uniforms (original_0, replace_0)
 const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0];
 const COLOR_PALETTES: &[[f32; 4]] = &[
-    [99.0 / 255.0, 155.0 / 255.0, 1.0, 1.0],            // Blue scarf
-    [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],   // Red scarf
+    [99.0 / 255.0, 155.0 / 255.0, 1.0, 1.0], // Blue scarf
+    [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // Red scarf
     [215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0], // Pink scarf
-    [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0],  // Green scarf
+    [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Green scarf
 ];
 
 // LIGHTING_RANGE and RENDER_RANGE now imported from world.rs
@@ -118,12 +118,12 @@ fn render_lighting(
 
     {
         let mut shader_mode = d.begin_shader_mode(lighting_shader);
-        
+
         // Enable alpha blending for darkness overlay
         unsafe {
             raylib::ffi::BeginBlendMode(raylib::ffi::BlendMode::BLEND_ALPHA as i32);
         }
-        
+
         shader_mode.draw_texture_pro(
             lighting_texture,
             Rectangle::new(
@@ -137,7 +137,7 @@ fn render_lighting(
             0.0,
             Color::WHITE,
         );
-        
+
         unsafe {
             raylib::ffi::EndBlendMode();
         }
@@ -331,7 +331,7 @@ fn render_player(
     } else if player.is_swimming {
         animate!(pt.swimming, SWIMMING_FRAME_LENGTH)
     } else if player.is_sliding {
-         animate!(pt.sliding, SLIDING_FRAME_LENGTH)
+        animate!(pt.sliding, SLIDING_FRAME_LENGTH)
     } else if player.on_ground {
         if player.velocity.x != 0.0 {
             animate!(pt.walk, WALK_FRAME_LENGTH)
@@ -589,7 +589,21 @@ impl GameScreen {
 impl Screen for GameScreen {
     type Context = GameContext;
 
+    fn on_resume(&mut self, ctx: &mut Self::Context) {
+        // Start layered game music when entering game
+        ctx.music.play_game_layers();
+    }
+
     fn update(&mut self, dt: f32, ctx: &mut Self::Context) -> ScreenCommand<Self::Context> {
+        // Update music streams
+        ctx.music.update_streams();
+
+        // Update music layers based on player depth
+        if ctx.updating {
+            ctx.music
+                .update_game_depth(dt, ctx.world_state.player.position.y);
+        }
+
         self.camera.offset = Vector2::new(self.screen_width / 2.0, self.screen_height / 2.0);
 
         if ctx.updating {
@@ -665,15 +679,15 @@ impl Screen for GameScreen {
                 for i in 0..(texture_size * texture_size) as usize {
                     let brightness = pixel_data[i * 2];
                     let is_solid = pixel_data[i * 2 + 1];
-                    pixels[i * 4] = brightness;     // R = brightness
-                    pixels[i * 4 + 1] = is_solid;   // G = solid flag
-                    pixels[i * 4 + 2] = 0;          // B = unused
-                    pixels[i * 4 + 3] = 255;        // A = opaque
+                    pixels[i * 4] = brightness; // R = brightness
+                    pixels[i * 4 + 1] = is_solid; // G = solid flag
+                    pixels[i * 4 + 2] = 0; // B = unused
+                    pixels[i * 4 + 3] = 255; // A = opaque
                 }
             }
 
             let mut texture = rl.load_texture_from_image(thread, &image).unwrap();
-            
+
             // Enable bilinear filtering for smooth lighting
             unsafe {
                 raylib::ffi::SetTextureFilter(
@@ -788,7 +802,9 @@ impl Screen for GameScreen {
         let heart_spacing = 9.0;
         let max_health = 12;
         let health_frames = 4;
-        let hearts_x = self.screen_width - 19.5 - (heart_size * heart_spacing) * max_health as f32 / health_frames as f32;
+        let hearts_x = self.screen_width
+            - 19.5
+            - (heart_size * heart_spacing) * max_health as f32 / health_frames as f32;
         let hearts_y = 24.0;
         let health = ctx.world_state.player.health.max(0).min(max_health);
         let mut remaining_health = health;
@@ -803,7 +819,7 @@ impl Screen for GameScreen {
                 heart_size,
                 Color::WHITE,
             );
-            
+
             let heart_texture = if remaining_health > health_frames {
                 &ctx.textures.ui.hearts[0]
             } else if remaining_health > 0 {
@@ -811,7 +827,7 @@ impl Screen for GameScreen {
             } else {
                 continue;
             };
-            
+
             d.draw_texture_ex(
                 heart_texture,
                 Vector2::new(heart_x, hearts_y),
@@ -917,9 +933,24 @@ impl Screen for GameScreen {
         let right_offset = hud_box_size * (scale + 1.0);
         let hud_x = (self.screen_width - hud_box_size) / 2.0 - hud_box_size * scale;
         let hud_y = self.screen_height - hud_box_size * scale - hud_box_size / 2.0;
-        
-        d.draw_texture_ex(hud_box_texture, Vector2{x: hud_x, y: hud_y}, 0.0, scale, Color::WHITE);
-        d.draw_texture_ex(hud_box_texture, Vector2{x: hud_x + right_offset, y: hud_y}, 0.0, scale, Color::WHITE); 
+
+        d.draw_texture_ex(
+            hud_box_texture,
+            Vector2 { x: hud_x, y: hud_y },
+            0.0,
+            scale,
+            Color::WHITE,
+        );
+        d.draw_texture_ex(
+            hud_box_texture,
+            Vector2 {
+                x: hud_x + right_offset,
+                y: hud_y,
+            },
+            0.0,
+            scale,
+            Color::WHITE,
+        );
 
         // Helper closure to draw a hand slot
         let mut draw_hand_slot = |hand: Option<crate::tools::ToolType>, x: f32, label: &str| {

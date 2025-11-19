@@ -23,6 +23,7 @@ pub mod inventory_screen;
 pub mod lighting;
 pub mod maps;
 pub mod menu_screen;
+pub mod music_manager;
 pub mod player;
 pub mod save_load;
 pub mod terrain;
@@ -52,6 +53,8 @@ pub struct GameContext {
     pub world_state: WorldState,
     pub debug_enabled: bool,
     pub updating: bool,
+    pub music: music_manager::MusicManager,
+    _audio: RaylibAudio, // Keep audio device alive
 }
 
 pub struct GameRenderState {
@@ -113,6 +116,10 @@ impl GameContext {
 
         world_state.update(0.0, &Controller::new());
 
+        // Initialize audio device and load music
+        let audio = RaylibAudio::init_audio_device().expect("Failed to initialize audio device");
+        let music = music_manager::MusicManager::new().expect("Failed to load music");
+
         GameContext {
             textures,
             render_state: GameRenderState {
@@ -125,6 +132,8 @@ impl GameContext {
             world_state,
             debug_enabled: true,
             updating: true,
+            music,
+            _audio: audio,
         }
     }
 

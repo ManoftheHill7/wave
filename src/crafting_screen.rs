@@ -133,7 +133,19 @@ impl CraftingScreen {
 impl Screen for CraftingScreen {
     type Context = GameContext;
 
+    fn on_resume(&mut self, ctx: &mut Self::Context) {
+        // Start crafting music when opening crafting screen
+        ctx.music.play_static("crafting");
+    }
+
+    fn on_pause(&mut self, ctx: &mut Self::Context) {
+        // Resume game music when closing crafting screen
+        ctx.music.play_game_layers();
+    }
+
     fn update(&mut self, _dt: f32, ctx: &mut Self::Context) -> ScreenCommand<Self::Context> {
+        // Update music streams
+        ctx.music.update_streams();
         // ESC or M to close
         if ctx.controller.crafting_pressed {
             return ScreenCommand::Pop;
