@@ -21,10 +21,10 @@ name = "ambient"
 file = "ambient.ogg"
 # Always playing at quiet background volume regardless of depth
 depth_curve = [
-    { depth = -100.0, volume = 0.1 },
-    { depth = -100.0, volume = 0.1 },
-    { depth = 1100.0, volume = 0.1 },
-    { depth = 1100.0, volume = 0.1 },
+    { depth = -100.0, volume = 0.5 },
+    { depth = -100.0, volume = 0.5 },
+    { depth = 900.0, volume = 0.5 },
+    { depth = 1250.0, volume = 0.25 },
 ]
 
 [[game_layers]]
@@ -33,20 +33,20 @@ file = "baseline.ogg"
 # Fades in from surface (0) to 100, then stays for the rest of the game
 depth_curve = [
     { depth = 0.0, volume = 0.0 },
-    { depth = 100.0, volume = 1.0 },
-    { depth = 1100.0, volume = 1.0 },
-    { depth = 1100.0, volume = 1.0 },
+    { depth = 100.0, volume = 0.75 },
+    { depth = 900.0, volume = 0.75 },
+    { depth = 1250.0, volume = 0.5 },
 ]
 
 [[game_layers]]
 name = "flute"
 file = "flute.ogg"
-# Full volume on surface, fades out completely by depth 100
+# Full volume on surface, fades out completely by depth 50
 depth_curve = [
-    { depth = -50.0, volume = 1.0 },
-    { depth = 0.0, volume = 1.0 },
-    { depth = 0.0, volume = 1.0 },
-    { depth = 100.0, volume = 0.0 },
+    { depth = -50.0, volume = 0.5 },
+    { depth = 0.0, volume = 0.5 },
+    { depth = 0.0, volume = 0.5 },
+    { depth = 50.0, volume = 0.0 },
 ]
 
 [[game_layers]]
@@ -54,43 +54,43 @@ name = "vibraphone"
 file = "vibraphone.ogg"
 # Fades in as flute fades out - near surface companion
 depth_curve = [
-    { depth = 0.0, volume = 0.0 },
-    { depth = 50.0, volume = 1.0 },
-    { depth = 150.0, volume = 1.0 },
+    { depth = 50.0, volume = 0.0 },
+    { depth = 100.0, volume = 0.75 },
+    { depth = 150.0, volume = 0.75 },
     { depth = 200.0, volume = 0.0 },
 ]
 
 [[game_layers]]
 name = "drums1"
 file = "drums1.ogg"
-# First drum layer - adds in around depth 150, stays rest of game
+# First drum layer - adds in around depth 200, stays rest of game
 depth_curve = [
     { depth = 100.0, volume = 0.0 },
-    { depth = 150.0, volume = 1.0 },
-    { depth = 1100.0, volume = 1.0 },
-    { depth = 1100.0, volume = 1.0 },
+    { depth = 200.0, volume = 1.0 },
+    { depth = 900.0, volume = 1.0 },
+    { depth = 1100.0, volume = 0.0 },
 ]
 
 [[game_layers]]
 name = "drums2"
 file = "drums2.ogg"
-# Second drum layer - adds in around depth 300, stays rest of game
+# Second drum layer - adds in around depth 350, stays rest of game
 depth_curve = [
     { depth = 250.0, volume = 0.0 },
-    { depth = 300.0, volume = 1.0 },
-    { depth = 1100.0, volume = 1.0 },
-    { depth = 1100.0, volume = 1.0 },
+    { depth = 350.0, volume = 0.5 },
+    { depth = 900.0, volume = 0.5 },
+    { depth = 1100.0, volume = 0.0 },
 ]
 
 [[game_layers]]
 name = "drums3"
 file = "drums3.ogg"
-# Third drum layer - adds in around depth 500, stays rest of game
+# Third drum layer - adds in around depth 550, stays rest of game
 depth_curve = [
     { depth = 450.0, volume = 0.0 },
-    { depth = 500.0, volume = 1.0 },
-    { depth = 1100.0, volume = 1.0 },
-    { depth = 1100.0, volume = 1.0 },
+    { depth = 550.0, volume = 0.25 },
+    { depth = 900.0, volume = 0.25 },
+    { depth = 1100.0, volume = 0.0 },
 ]
 
 [[game_layers]]
@@ -99,8 +99,8 @@ file = "choir.ogg"
 # Lumosite depth range (400-950)
 depth_curve = [
     { depth = 350.0, volume = 0.0 },
-    { depth = 400.0, volume = 1.0 },
-    { depth = 950.0, volume = 1.0 },
+    { depth = 400.0, volume = 0.25 },
+    { depth = 950.0, volume = 0.25 },
     { depth = 1000.0, volume = 0.0 },
 ]
 
@@ -110,8 +110,8 @@ file = "horns.ogg"
 # Silver/Gold/Platinum depth range (250-850)
 depth_curve = [
     { depth = 200.0, volume = 0.0 },
-    { depth = 250.0, volume = 1.0 },
-    { depth = 850.0, volume = 1.0 },
+    { depth = 250.0, volume = 0.25 },
+    { depth = 850.0, volume = 0.25 },
     { depth = 900.0, volume = 0.0 },
 ]
 
@@ -121,8 +121,8 @@ file = "bells.ogg"
 # Mithril depth range (500-900)
 depth_curve = [
     { depth = 450.0, volume = 0.0 },
-    { depth = 500.0, volume = 1.0 },
-    { depth = 900.0, volume = 1.0 },
+    { depth = 550.0, volume = 0.125 },
+    { depth = 850.0, volume = 0.125 },
     { depth = 950.0, volume = 0.0 },
 ]
 
@@ -132,17 +132,10 @@ file = "saxophone.ogg"
 # Ozathinum depth range (650-950)
 depth_curve = [
     { depth = 600.0, volume = 0.0 },
-    { depth = 650.0, volume = 1.0 },
-    { depth = 950.0, volume = 1.0 },
+    { depth = 700.0, volume = 0.125 },
+    { depth = 900.0, volume = 0.125 },
     { depth = 1000.0, volume = 0.0 },
 ]
-
-[[game_layers]]
-name = "marimba"
-file = "marimba.ogg"
-# Plays within 75 blocks of the dynamic tide level
-tide_relative = true
-tide_range = 75.0
 
 [[game_layers]]
 name = "piano"
@@ -150,7 +143,14 @@ file = "piano.ogg"
 # Deep depth range (800-1200) - deepest layer
 depth_curve = [
     { depth = 750.0, volume = 0.0 },
-    { depth = 800.0, volume = 1.0 },
-    { depth = 1200.0, volume = 1.0 },
-    { depth = 1250.0, volume = 0.0 },
+    { depth = 850.0, volume = 0.75 },
+    { depth = 1150.0, volume = 0.75 },
+    { depth = 1150.0, volume = 0.75 },
 ]
+
+[[game_layers]]
+name = "marimba"
+file = "marimba.ogg"
+# Plays within 100 blocks of the dynamic tide level
+tide_relative = true
+tide_range = 100.0

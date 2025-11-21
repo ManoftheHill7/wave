@@ -78,6 +78,7 @@ Things that I would really like to have
 #### Audio integration
 - [ ] Proximity sound effects for torches
 - [x] Layering music as you go deeper
+- [ ] Normalizing music as more layers are added
 - [ ] Flooding caverns music intensity
 - [ ] Sound effects when things happen
 - [ ] Looping sound effects for things like mining
@@ -88,6 +89,12 @@ Things that I would really like to have
 - [ ] Tide clears building items
 - [ ] Bombs explode
 - [ ] Chests store items
+- [ ] Tool repairs/upgrades
+- [ ] Tool colour swapping on animations
+- [ ] Death screen/respawn
+- [ ] Tide clock ui
+- [ ] Permenatly save block placement on surface
+- [ ] Overlay block breaking animation
 
 #### Combat
 - [ ] Bat enemies

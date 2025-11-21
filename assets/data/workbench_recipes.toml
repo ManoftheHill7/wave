@@ -119,3 +119,19 @@ amount = 2
 type = "glass"
 amount = 3
 
+
+# tools
+
+[recipes.fishing_rod]
+type = "workbench"
+output = "fishing_rod"
+amount = 1
+[[recipes.fishing_rod.inputs]]
+type = "stick"
+amount = 5
+[[recipes.fishing_rod.inputs]]
+type = "iron bar"
+amount = 1
+[[recipes.fishing_rod.inputs]]
+type = "rope"
+amount = 2
