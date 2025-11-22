@@ -78,7 +78,6 @@ Things that I would really like to have
 #### Audio integration
 - [ ] Proximity sound effects for torches
 - [x] Layering music as you go deeper
-- [ ] Normalizing music as more layers are added
 - [ ] Flooding caverns music intensity
 - [ ] Sound effects when things happen
 - [ ] Looping sound effects for things like mining
@@ -95,6 +94,7 @@ Things that I would really like to have
 - [ ] Tide clock ui
 - [ ] Permenatly save block placement on surface
 - [ ] Overlay block breaking animation
+- [ ] Breath bar fills slowly out of water
 
 #### Combat
 - [ ] Bat enemies

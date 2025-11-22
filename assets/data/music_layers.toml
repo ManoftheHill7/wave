@@ -21,10 +21,10 @@ name = "ambient"
 file = "ambient.ogg"
 # Always playing at quiet background volume regardless of depth
 depth_curve = [
-    { depth = -100.0, volume = 0.5 },
-    { depth = -100.0, volume = 0.5 },
-    { depth = 900.0, volume = 0.5 },
-    { depth = 1250.0, volume = 0.25 },
+    { depth = -100.0, volume = 0.25 },
+    { depth = -100.0, volume = 0.25 },
+    { depth = 900.0, volume = 0.25 },
+    { depth = 1250.0, volume = 0.125 },
 ]
 
 [[game_layers]]
@@ -142,10 +142,10 @@ name = "piano"
 file = "piano.ogg"
 # Deep depth range (800-1200) - deepest layer
 depth_curve = [
-    { depth = 750.0, volume = 0.0 },
-    { depth = 850.0, volume = 0.75 },
-    { depth = 1150.0, volume = 0.75 },
-    { depth = 1150.0, volume = 0.75 },
+    { depth = 800.0, volume = 0.0 },
+    { depth = 900.0, volume = 0.25 },
+    { depth = 1000.0, volume = 0.25 },
+    { depth = 1250.0, volume = 0.75 },
 ]
 
 [[game_layers]]

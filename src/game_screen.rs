@@ -808,14 +808,13 @@ impl Screen for GameScreen {
         }
         // Draw HUD
         let heart_texture = &ctx.textures.ui.hearts[4];
-        let heart_size = heart_texture.width as f32 / 2.0;
-        let heart_spacing = 9.0;
+        let heart_size = heart_texture.width as f32 / 2.5;
+        let heart_spacing = 10.0;
         let max_health = 12;
         let health_frames = 4;
-        let hearts_x = self.screen_width
-            - 19.5
-            - (heart_size * heart_spacing) * max_health as f32 / health_frames as f32;
-        let hearts_y = 24.0;
+        let hearts_x = (self.screen_width
+            - (heart_size * heart_spacing) * max_health as f32 / health_frames as f32) / 2.0;
+        let hearts_y = self.screen_height - 147.0;
         let health = ctx.world_state.player.health.max(0).min(max_health);
         let mut remaining_health = health;
 
@@ -852,10 +851,10 @@ impl Screen for GameScreen {
         // Draw breath bar when swimming or breath not full
         let max_breath = crate::player::MAX_BREATH_HOLD;
         if ctx.world_state.player.is_swimming || ctx.world_state.player.breath < max_breath {
-            let breath_bar_x = hearts_x;
-            let breath_bar_y = hearts_y + heart_size + 8.0;
-            let breath_bar_width = 120.0;
-            let breath_bar_height = 8.0;
+            let breath_bar_width = 192.0;
+            let breath_bar_height = 6.0;
+            let breath_bar_x = (self.screen_width - breath_bar_width) / 2.0;
+            let breath_bar_y = self.screen_height - 110.0;
 
             // Background (dark)
             d.draw_rectangle(
@@ -896,53 +895,17 @@ impl Screen for GameScreen {
                 breath_bar_y as i32,
                 breath_bar_width as i32,
                 breath_bar_height as i32,
-                Color::WHITE,
+                Color::BLACK,
             );
-        }
-
-        // Draw vignette effect when breath is critical
-        if ctx.world_state.player.is_swimming {
-            let breath_percent = (ctx.world_state.player.breath / max_breath)
-                .max(0.0)
-                .min(1.0);
-
-            if breath_percent < 0.50 {
-                let base_alpha = ((1.0 - breath_percent * 2.0) * 255.0) as u8;
-                let color = Color::new(0, 0, 100, 0);
-                let color_alpha = Color::new(0, 0, 100, base_alpha);
-                let vin_size = 500;
-
-                let screen_w = self.screen_width as i32;
-                let screen_h = self.screen_height as i32;
-
-                d.draw_rectangle_gradient_v(0, 0, screen_w, vin_size, color_alpha, color);
-                d.draw_rectangle_gradient_v(
-                    0,
-                    screen_h - vin_size,
-                    screen_w,
-                    vin_size,
-                    color,
-                    color_alpha,
-                );
-                d.draw_rectangle_gradient_h(0, 0, vin_size, screen_h, color_alpha, color);
-                d.draw_rectangle_gradient_h(
-                    screen_w - vin_size,
-                    0,
-                    vin_size,
-                    screen_h,
-                    color,
-                    color_alpha,
-                );
-            }
         }
 
         // Draw HUD boxes for current tool and block type in bottom centre
         let hud_box_texture = &ctx.textures.ui.inventory_slot;
         let hud_box_size = hud_box_texture.width as f32;
         let scale = 4.0;
-        let right_offset = hud_box_size * (scale + 1.0);
-        let hud_x = (self.screen_width - hud_box_size) / 2.0 - hud_box_size * scale;
-        let hud_y = self.screen_height - hud_box_size * scale - hud_box_size / 2.0;
+        let right_offset = hud_box_size * (scale + 0.5);
+        let hud_x = (self.screen_width - hud_box_size / 2.0) / 2.0 - hud_box_size * scale;
+        let hud_y = self.screen_height - hud_box_size * scale - hud_box_size / 4.0;
 
         d.draw_texture_ex(
             hud_box_texture,
@@ -999,13 +962,14 @@ impl Screen for GameScreen {
                     }
                 };
 
-                let durability_bar_y = hud_y + hud_box_size * scale + 2.0;
-                let durability_bar_width = hud_box_size * scale;
-                let durability_bar_height = 6.0;
+                
+                let durability_bar_width = hud_box_size * scale / 2.0;
+                let durability_bar_height = 3.0;
+                let durability_bar_y = hud_y + hud_box_size * (scale - 1.0) + 9.0;
 
                 // Background (dark)
                 d.draw_rectangle(
-                    x as i32,
+                    x as i32 + 24,
                     durability_bar_y as i32,
                     durability_bar_width as i32,
                     durability_bar_height as i32,
@@ -1027,20 +991,11 @@ impl Screen for GameScreen {
 
                 // Draw filled portion
                 d.draw_rectangle(
-                    x as i32,
+                    x as i32 + 24,
                     durability_bar_y as i32,
                     filled_width as i32,
                     durability_bar_height as i32,
                     durability_color,
-                );
-
-                // Border
-                d.draw_rectangle_lines(
-                    x as i32,
-                    durability_bar_y as i32,
-                    durability_bar_width as i32,
-                    durability_bar_height as i32,
-                    Color::new(200, 200, 200, 255),
                 );
             }
         };
@@ -1050,6 +1005,42 @@ impl Screen for GameScreen {
 
         // Draw right hand slot (right click tool)
         draw_hand_slot(ctx.world_state.player.right_hand, hud_x + right_offset, "R");
+
+        // Draw vignette effect when breath is critical
+        if ctx.world_state.player.is_swimming {
+            let breath_percent = (ctx.world_state.player.breath / max_breath)
+                .max(0.0)
+                .min(1.0);
+
+            if breath_percent < 0.50 {
+                let base_alpha = ((1.0 - breath_percent * 2.0) * 255.0) as u8;
+                let color = Color::new(0, 0, 100, 0);
+                let color_alpha = Color::new(0, 0, 100, base_alpha);
+                let vin_size = 500;
+
+                let screen_w = self.screen_width as i32;
+                let screen_h = self.screen_height as i32;
+
+                d.draw_rectangle_gradient_v(0, 0, screen_w, vin_size, color_alpha, color);
+                d.draw_rectangle_gradient_v(
+                    0,
+                    screen_h - vin_size,
+                    screen_w,
+                    vin_size,
+                    color,
+                    color_alpha,
+                );
+                d.draw_rectangle_gradient_h(0, 0, vin_size, screen_h, color_alpha, color);
+                d.draw_rectangle_gradient_h(
+                    screen_w - vin_size,
+                    0,
+                    vin_size,
+                    screen_h,
+                    color,
+                    color_alpha,
+                );
+            }
+        }
 
         if ctx.debug_enabled {
             let player_x = ctx.world_state.player.position.x;
