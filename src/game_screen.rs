@@ -38,16 +38,22 @@ const COLOR_PALETTES: &[[f32; 4]] = &[
     //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0], // Etherealite secondary
     //[1.0, 1.0, 1.0, 1.0]; // Air boots primary
     //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Air boots secondary
-    //[75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0]; // Wall boots primary
-    //[50.0 / 255.0, 60.0 / 255.0, 57.0 / 255.0, 1.0]; // Wall boots secondary
     //[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Dash boots primary
     //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Dash boots secondary
     //[95.0 / 255.0, 205.0 / 255.0, 228.0 / 255.0, 1.0]; // Flippers primary
     //[48.0 / 255.0, 96.0 / 255.0, 130.0 / 255.0, 1.0]; // Flippers secondary
+    //[215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0]; // Floatie boots primary
+    //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Floatie boots secondary
+    //[118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0]; // Gravity boots primary
+    //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Gravity boots secondary
     //[143.0 / 255.0, 86.0 / 255.0, 59.0 / 255.0, 1.0]; // Hover boots primary
     //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Hover boots secondary
+    //[223.0 / 255.0, 113.0 / 255.0, 38.0 / 255.0, 1.0]; // Rocket boots primary
+    //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Rocket boots secondary
     //[203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0]; // Steel boots primary
     //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Steel boots secondary
+    //[75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0]; // Wall boots primary
+    //[50.0 / 255.0, 60.0 / 255.0, 57.0 / 255.0, 1.0]; // Wall boots secondary
 ];
 
 // LIGHTING_RANGE and RENDER_RANGE now imported from world.rs
