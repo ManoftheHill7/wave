@@ -70,6 +70,7 @@ Things that I would really like to have
 #### Artistic improvements
 - [ ] Animated tiles (furnace, anvil, torches, eg)
 - [ ] Parallax backgrounds
+- [ ] Overlay block breaking animation
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
     - Few opening in tunnels, more in caverns
     - Ore can generate in background layers
@@ -93,7 +94,6 @@ Things that I would really like to have
 - [ ] Death screen/respawn
 - [ ] Tide clock ui
 - [ ] Permenatly save block placement on surface
-- [ ] Overlay block breaking animation
 - [ ] Breath bar fills slowly out of water
 
 #### Combat
