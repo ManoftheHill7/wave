@@ -7,7 +7,7 @@ use std::path::Path;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EdgeType {
     Cavern,       // value: 0
-    Tunnel,       // value: 4294721535
+    Tunnel,       // values: 1073618943 or 1073680383 (tunnel template has slight variations)
     Unknown(u32), // any other bit pattern
 }
 
@@ -15,7 +15,7 @@ impl EdgeType {
     pub fn from_u32(value: u32) -> Self {
         match value {
             0 => EdgeType::Cavern,
-            4294721535 => EdgeType::Tunnel,
+            1073618943 | 1073680383 => EdgeType::Tunnel,
             v => EdgeType::Unknown(v),
         }
     }
@@ -23,7 +23,7 @@ impl EdgeType {
     pub fn to_u32(&self) -> u32 {
         match self {
             EdgeType::Cavern => 0,
-            EdgeType::Tunnel => 4294721535,
+            EdgeType::Tunnel => 1073618943, // Use the most common value
             EdgeType::Unknown(v) => *v,
         }
     }
@@ -476,8 +476,8 @@ fn edge_to_number(image: &mut Image, pixels: &[(i32, i32)]) -> u32 {
     result
 }
 
-/// Extract 6 edges from a horizontal map (64x32)
-/// Returns: [top_left, top_right, bottom_left, bottom_right, left, right]
+/// Extract 6 edges from maps, sampling only the middle 30 pixels of each edge
+/// Returns: [edge1, edge2, edge3, edge4, edge5, edge6]
 fn extract_edge_line(image: &mut Image, start: (i32, i32), end: (i32, i32)) -> u32 {
     let pixels: Vec<(i32, i32)> = if start.0 == end.0 {
         // Vertical line
@@ -494,24 +494,30 @@ fn extract_edge_line(image: &mut Image, start: (i32, i32), end: (i32, i32)) -> u
 }
 
 fn extract_horizontal_edges(image: &mut Image) -> [u32; 6] {
+    // Horizontal (64x32): only sample middle 30 pixels of each edge
+    // Top/Bottom edges: skip first and last pixel (columns 1-32 and 33-62 become 1-30 and 34-63)
+    // Left/Right edges: skip first and last row (rows 1-30)
     [
-        extract_edge_line(image, (0, 0), (31, 0)),    // Top left
-        extract_edge_line(image, (32, 0), (63, 0)),   // Top right
-        extract_edge_line(image, (0, 31), (31, 31)),  // Bottom left
-        extract_edge_line(image, (32, 31), (63, 31)), // Bottom right
-        extract_edge_line(image, (0, 0), (0, 31)),    // Left
-        extract_edge_line(image, (63, 0), (63, 31)),  // Right
+        extract_edge_line(image, (1, 0), (30, 0)),    // Top left (middle 30)
+        extract_edge_line(image, (34, 0), (63, 0)),   // Top right (middle 30)
+        extract_edge_line(image, (1, 31), (30, 31)),  // Bottom left (middle 30)
+        extract_edge_line(image, (34, 31), (63, 31)), // Bottom right (middle 30)
+        extract_edge_line(image, (0, 1), (0, 30)),    // Left (middle 30)
+        extract_edge_line(image, (63, 1), (63, 30)),  // Right (middle 30)
     ]
 }
 
 fn extract_vertical_edges(image: &mut Image) -> [u32; 6] {
+    // Vertical (32x64): only sample middle 30 pixels of each edge
+    // Left/Right edges: skip first and last row (rows 1-30 and 34-63)
+    // Top/Bottom edges: skip first and last column (columns 1-30)
     [
-        extract_edge_line(image, (0, 0), (0, 31)),    // Left top
-        extract_edge_line(image, (0, 32), (0, 63)),   // Left bottom
-        extract_edge_line(image, (31, 0), (31, 31)),  // Right top
-        extract_edge_line(image, (31, 32), (31, 63)), // Right bottom
-        extract_edge_line(image, (0, 0), (31, 0)),    // Top
-        extract_edge_line(image, (0, 63), (31, 63)),  // Bottom
+        extract_edge_line(image, (0, 1), (0, 30)),    // Left top (middle 30)
+        extract_edge_line(image, (0, 34), (0, 63)),   // Left bottom (middle 30)
+        extract_edge_line(image, (31, 1), (31, 30)),  // Right top (middle 30)
+        extract_edge_line(image, (31, 34), (31, 63)), // Right bottom (middle 30)
+        extract_edge_line(image, (1, 0), (30, 0)),    // Top (middle 30)
+        extract_edge_line(image, (1, 63), (30, 63)),  // Bottom (middle 30)
     ]
 }
 

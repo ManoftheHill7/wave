@@ -52,31 +52,36 @@ Things required for the games core concept
 Things that I would really like to have
 
 #### Lighting
+
 - [x] Dynamic lighting
 - [x] Tool - Lamp
 - [x] Torches cast light
 - [ ] Colored lighting
 
 #### Additional movement options
+
 - [ ] Tool - Grappling Hook
 - [ ] Tool - Glider
 - [ ] Boots
 
 #### Food
+
 - [ ] Tool - Fishing rod
 - [ ] Forageable foods
 - [ ] Fishing. Maybe like Stardew Valley?
 
 #### Artistic improvements
+
 - [ ] Animated tiles (furnace, anvil, torches, eg)
 - [ ] Parallax backgrounds
 - [ ] Overlay block breaking animation
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
-    - Few opening in tunnels, more in caverns
-    - Ore can generate in background layers
-    - Maybe replace tideblocks with places water flows in from
+  - Few opening in tunnels, more in caverns
+  - Ore can generate in background layers
+  - Maybe replace tideblocks with places water flows in from
 
 #### Audio integration
+
 - [ ] Proximity sound effects for torches
 - [x] Layering music as you go deeper
 - [ ] Flooding caverns music intensity
@@ -85,6 +90,7 @@ Things that I would really like to have
 - [ ] Dynamic wooshing, and thuds for falling and impact
 
 #### Misc
+
 - [ ] Improved hitbox/collision handling
 - [ ] Tide clears building items
 - [ ] Bombs explode
@@ -97,6 +103,7 @@ Things that I would really like to have
 - [ ] Breath bar fills slowly out of water
 
 #### Combat
+
 - [ ] Bat enemies
 - [ ] Mole enemies
 - [ ] Tool - Spear
@@ -118,6 +125,28 @@ Things I will get to if there is time
 - [ ] Multiple cave biomes as you get deeper
 - [ ] Multiple cave generation types
 - [ ] Boss battles
+
+## Development Tools
+
+### Map Generation Tools
+
+The project includes several binary tools for working with map tiles:
+
+- **`generate_map_variants`**: Generates 64 map variants by combining edges from two template images
+
+  - Run: `cargo run --bin generate_map_variants` for horizontal maps (64x32)
+  - Run: `cargo run --bin generate_map_variants -- --vertical` for vertical maps (32x64)
+  - Takes `template_cavern_h.png` and `template_tunnel_h.png` (or `_v` versions)
+  - Produces `gen_h_XXXXXX.png` files where each X is either C (cavern edge) or T (tunnel edge)
+  - Each map has 6 edges (left, right, top-left, top-right, bottom-left, bottom-right)
+  - Only samples the middle 30 pixels of each edge for compatibility checking
+
+- **`countmaps`**: Analyzes all maps in the `assets/maps` directory
+  - Shows statistics about horizontal and vertical maps
+  - Groups maps by their edge patterns (Cavern, Tunnel, or Unknown)
+  - Useful for verifying that generated maps have the expected edge types
+
+Generated map variants are gitignored (`gen_h_*.png` and `gen_v_*.png`). Files need to be renamed to be pushed.
 
 ## Links
 

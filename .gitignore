@@ -1,2 +1,6 @@
 target/
 .vs/
+
+# Generated map variants
+assets/maps/gen_h_*.png
+assets/maps/gen_v_*.png
