@@ -95,8 +95,8 @@ Things that I would really like to have
 - [ ] Tide clears building items
 - [ ] Bombs explode
 - [ ] Chests store items
-- [ ] Tool repairs/upgrades
-- [ ] Tool colour swapping on animations
+- [x] Tool repairs/upgrades
+- [x] Tool colour swapping on animations
 - [ ] Death screen/respawn
 - [ ] Tide clock ui
 - [ ] Permenatly save block placement on surface
