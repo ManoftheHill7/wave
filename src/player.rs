@@ -886,21 +886,24 @@ impl Player {
             )
         };
         match (hand, held, pressed) {
-            (Some(ToolType::Dash), _, true) => self.manage_dash(controller.raycast_direction),
+            (Some(ToolType::Dash), _, true) => {
+                self.manage_dash(controller.raycast_direction);
+                true
+            }
             (Some(ToolType::Pickaxe), true, _) => self.manage_pickaxe(terrain, left_hand),
             (Some(ToolType::Lamp), _, _) => {
                 // Lamp is passive, no action needed
-                return false;
+                false
             }
             (Some(ToolType::PlaceBlock(blk)), _, true) => {
-                self.try_place_block(terrain, blk, left_hand)
+                self.try_place_block(terrain, blk, left_hand);
+                true
             }
-            _ => return false,
-        };
-        return true;
+            _ => false,
+        }
     }
 
-    fn manage_pickaxe(&mut self, terrain: &mut Terrain, left_hand: bool) {
+    fn manage_pickaxe(&mut self, terrain: &mut Terrain, left_hand: bool) -> bool {
         let tile = if left_hand {
             self.raycast_left_tile
         } else {
@@ -915,7 +918,11 @@ impl Player {
 
         if let Some(bt) = tile {
             let block = terrain.at(bt.0 as i32, bt.1 as i32);
-            if !(self.is_swimming || self.is_climbing || self.is_dashing) {
+            if block == Block::Air {
+                self.is_mining = false;
+                return false;
+            }
+            if !(self.is_swimming || self.is_climbing || self.is_dashing || self.is_sliding) {
                 let block_durability = block.durability();
                 if !self.is_mining {
                     self.is_mining = true;
@@ -951,8 +958,10 @@ impl Player {
                         }
                     }
                 }
+                return true;
             }
         }
+        false
     }
 
     fn manage_dash(&mut self, dir: Vector2) {
