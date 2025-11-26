@@ -498,12 +498,12 @@ fn extract_horizontal_edges(image: &mut Image) -> [u32; 6] {
     // Top/Bottom edges: skip first and last pixel (columns 1-32 and 33-62 become 1-30 and 34-63)
     // Left/Right edges: skip first and last row (rows 1-30)
     [
-        extract_edge_line(image, (1, 0), (30, 0)),    // Top left (middle 30)
-        extract_edge_line(image, (34, 0), (63, 0)),   // Top right (middle 30)
-        extract_edge_line(image, (1, 31), (30, 31)),  // Bottom left (middle 30)
+        extract_edge_line(image, (1, 0), (30, 0)), // Top left (middle 30)
+        extract_edge_line(image, (34, 0), (63, 0)), // Top right (middle 30)
+        extract_edge_line(image, (1, 31), (30, 31)), // Bottom left (middle 30)
         extract_edge_line(image, (34, 31), (63, 31)), // Bottom right (middle 30)
-        extract_edge_line(image, (0, 1), (0, 30)),    // Left (middle 30)
-        extract_edge_line(image, (63, 1), (63, 30)),  // Right (middle 30)
+        extract_edge_line(image, (0, 1), (0, 30)), // Left (middle 30)
+        extract_edge_line(image, (63, 1), (63, 30)), // Right (middle 30)
     ]
 }
 
@@ -512,12 +512,12 @@ fn extract_vertical_edges(image: &mut Image) -> [u32; 6] {
     // Left/Right edges: skip first and last row (rows 1-30 and 34-63)
     // Top/Bottom edges: skip first and last column (columns 1-30)
     [
-        extract_edge_line(image, (0, 1), (0, 30)),    // Left top (middle 30)
-        extract_edge_line(image, (0, 34), (0, 63)),   // Left bottom (middle 30)
-        extract_edge_line(image, (31, 1), (31, 30)),  // Right top (middle 30)
+        extract_edge_line(image, (0, 1), (0, 30)), // Left top (middle 30)
+        extract_edge_line(image, (0, 34), (0, 63)), // Left bottom (middle 30)
+        extract_edge_line(image, (31, 1), (31, 30)), // Right top (middle 30)
         extract_edge_line(image, (31, 34), (31, 63)), // Right bottom (middle 30)
-        extract_edge_line(image, (1, 0), (30, 0)),    // Top (middle 30)
-        extract_edge_line(image, (1, 63), (30, 63)),  // Bottom (middle 30)
+        extract_edge_line(image, (1, 0), (30, 0)), // Top (middle 30)
+        extract_edge_line(image, (1, 63), (30, 63)), // Bottom (middle 30)
     ]
 }
 

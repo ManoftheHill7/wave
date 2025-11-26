@@ -8,47 +8,66 @@ use screen_manager::{Screen, ScreenCommand};
 
 // Maps to uniforms (original_0, replace_0)
 const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Red scarf
-    //[132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Tool primary
-    //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Tool secondary
-    //[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // No grappling hook
-    //[143.0 / 255.0, 151.0 / 255.0, 74.0 / 255.0, 1.0]; // No boots primary
-    //[82.0 / 255.0, 75.0 / 255.0, 36.0 / 255.0, 1.0]; // No boots secondary
 const COLOR_PALETTES: &[[f32; 4]] = &[
     [91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Blue scarf
-    [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // Red scarf
+    [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],  // Red scarf
     [215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0], // Pink scarf
     [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Green scarf
-    //[223.0 / 255.0, 113.0 / 255.0, 38.0 / 255.0, 1.0], // Copper primary
-    //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0], // Copper secondary
-    //[143.0 / 255.0, 86.0 / 255.0, 59.0 / 255.0, 1.0], // Bronze primary
-    //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0], // Bronze secondary
-    //[155.0 / 255.0, 173.0 / 255.0, 183.0 / 255.0, 1.0], // Iron primary
-    //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Iron secondary
-    //[203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Steel primary
-    //[155.0 / 255.0, 173.0 / 255.0, 183.0 / 255.0, 1.0], // Steel secondary
-    //[1.0, 1.0, 1.0, 1.0], // Platinum primary
-    //[203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Platinum secondary
-    //[91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Mithril primary
-    //[63.0 / 255.0, 63.0 / 255.0, 116.0 / 255.0, 1.0], // Mithril secondary
-    //[55.0 / 255.0, 148.0 / 255.0, 110.0 / 255.0, 1.0], // Ozathinum primary
-    //[50.0 / 255.0, 60.0 / 255.0, 57.0 / 255.0, 1.0], // Ozathinum secondary
-    //[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // Torzite primary
-    //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0], // Torzite secondary
-    //[118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Etherealite primary
-    //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0], // Etherealite secondary
-    //[1.0, 1.0, 1.0, 1.0]; // Air boots primary
-    //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Air boots secondary
-    //[75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0]; // Wall boots primary
-    //[50.0 / 255.0, 60.0 / 255.0, 57.0 / 255.0, 1.0]; // Wall boots secondary
-    //[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Dash boots primary
-    //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Dash boots secondary
-    //[95.0 / 255.0, 205.0 / 255.0, 228.0 / 255.0, 1.0]; // Flippers primary
-    //[48.0 / 255.0, 96.0 / 255.0, 130.0 / 255.0, 1.0]; // Flippers secondary
-    //[143.0 / 255.0, 86.0 / 255.0, 59.0 / 255.0, 1.0]; // Hover boots primary
-    //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Hover boots secondary
-    //[203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0]; // Steel boots primary
-    //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Steel boots secondary
 ];
+
+// Tool sprite original colors to swap from
+const TOOL_ORIGINAL_PRIMARY: &[f32; 4] = &[132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0];
+const TOOL_ORIGINAL_SECONDARY: &[f32; 4] = &[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0];
+
+// Tool color palettes by pickaxe level: (primary, secondary)
+fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
+    match level {
+        "stone_pickaxe" => (
+            [132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Stone primary (same as original)
+            [105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Stone secondary (same as original)
+        ),
+        "copper_pickaxe" => (
+            [223.0 / 255.0, 113.0 / 255.0, 38.0 / 255.0, 1.0], // Copper primary
+            [102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0],  // Copper secondary
+        ),
+        "bronze_pickaxe" => (
+            [143.0 / 255.0, 86.0 / 255.0, 59.0 / 255.0, 1.0], // Bronze primary
+            [102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0], // Bronze secondary
+        ),
+        "iron_pickaxe" => (
+            [155.0 / 255.0, 173.0 / 255.0, 183.0 / 255.0, 1.0], // Iron primary
+            [105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Iron secondary
+        ),
+        "steel_pickaxe" => (
+            [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Steel primary
+            [155.0 / 255.0, 173.0 / 255.0, 183.0 / 255.0, 1.0], // Steel secondary
+        ),
+        "platinum_pickaxe" => (
+            [1.0, 1.0, 1.0, 1.0],                               // Platinum primary
+            [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Platinum secondary
+        ),
+        "mithril_pickaxe" => (
+            [91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Mithril primary
+            [63.0 / 255.0, 63.0 / 255.0, 116.0 / 255.0, 1.0],  // Mithril secondary
+        ),
+        "ozathinum_pickaxe" => (
+            [55.0 / 255.0, 148.0 / 255.0, 110.0 / 255.0, 1.0], // Ozathinum primary
+            [50.0 / 255.0, 60.0 / 255.0, 57.0 / 255.0, 1.0],   // Ozathinum secondary
+        ),
+        "torzite_pickaxe" => (
+            [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // Torzite primary
+            [69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0],  // Torzite secondary
+        ),
+        "etherealite_pickaxe" => (
+            [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Etherealite primary
+            [69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0],   // Etherealite secondary
+        ),
+        _ => (
+            [132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Default (stone) primary
+            [105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Default (stone) secondary
+        ),
+    }
+}
 
 // LIGHTING_RANGE and RENDER_RANGE now imported from world.rs
 
@@ -326,7 +345,7 @@ fn render_player(
     terrain: &Terrain,
     textures: &crate::TextureManager,
     shader: &mut Shader,
-    shader_locs: ShaderLocs,
+    shader_locs: &ShaderLocs,
     debug_render: bool,
 ) {
     macro_rules! animate {
@@ -403,25 +422,23 @@ fn render_player(
         || (player.within_grace(player.spike_touched_at, SPIKE_IMMUNITY_COOLDOWN)
             && ((player.time - player.spike_touched_at) * 100.0).rem_euclid(100.0) < 10.0);
 
-    let (loc_original_0, loc_replace_0, loc_exhustion, loc_whiteout) = shader_locs;
-
     unsafe {
         raylib::ffi::SetShaderValue(
             shader.as_ref().clone(),
-            loc_original_0,
+            shader_locs.original_0,
             DEFAULT_SPRITE_PALLETTE.as_ptr() as *const std::ffi::c_void,
             raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
         );
         raylib::ffi::SetShaderValue(
             shader.as_ref().clone(),
-            loc_replace_0,
+            shader_locs.replace_0,
             palette.as_ptr() as *const std::ffi::c_void,
             raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
         );
 
         raylib::ffi::SetShaderValue(
             shader.as_ref().clone(),
-            loc_exhustion,
+            shader_locs.exhustion,
             &exhaustion_level as *const f32 as *const std::ffi::c_void,
             raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_FLOAT as i32,
         );
@@ -429,10 +446,52 @@ fn render_player(
         let whiteout = if flicker { 1.0f32 } else { 0.0f32 };
         raylib::ffi::SetShaderValue(
             shader.as_ref().clone(),
-            loc_whiteout,
+            shader_locs.whiteout,
             &whiteout as *const f32 as *const std::ffi::c_void,
             raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_FLOAT as i32,
         );
+
+        // Set tool color swap uniforms when mining
+        let tool_swap_enabled = if player.is_mining { 1.0f32 } else { 0.0f32 };
+        raylib::ffi::SetShaderValue(
+            shader.as_ref().clone(),
+            shader_locs.tool_swap_enabled,
+            &tool_swap_enabled as *const f32 as *const std::ffi::c_void,
+            raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_FLOAT as i32,
+        );
+
+        if player.is_mining {
+            let (tool_primary, tool_secondary) = player
+                .tool_pickaxe
+                .as_ref()
+                .map(|p| get_tool_colors(&p.level))
+                .unwrap_or_else(|| get_tool_colors("stone_pickaxe"));
+
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.tool_original_primary,
+                TOOL_ORIGINAL_PRIMARY.as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.tool_original_secondary,
+                TOOL_ORIGINAL_SECONDARY.as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.tool_replace_primary,
+                tool_primary.as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.tool_replace_secondary,
+                tool_secondary.as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+        }
     }
 
     {
@@ -824,7 +883,7 @@ impl Screen for GameScreen {
                 &ctx.world_state.terrain,
                 &ctx.textures,
                 &mut shader,
-                ctx.render_state.shader_locs,
+                &ctx.render_state.shader_locs,
                 ctx.debug_enabled,
             );
 
@@ -848,7 +907,8 @@ impl Screen for GameScreen {
         let max_health = 12;
         let health_frames = 4;
         let hearts_x = (self.screen_width
-            - (heart_size * heart_spacing) * max_health as f32 / health_frames as f32) / 2.0;
+            - (heart_size * heart_spacing) * max_health as f32 / health_frames as f32)
+            / 2.0;
         let hearts_y = self.screen_height - 147.0;
         let health = ctx.world_state.player.health.max(0).min(max_health);
         let mut remaining_health = health;
@@ -964,7 +1024,22 @@ impl Screen for GameScreen {
         let mut draw_hand_slot = |hand: Option<crate::tools::ToolType>, x: f32, label: &str| {
             // Draw selected tool icon if present
             if let Some(selected_tool) = hand {
-                if let Some(texture) = selected_tool.get_texture(&ctx.textures) {
+                let texture = match selected_tool {
+                    crate::tools::ToolType::Pickaxe => ctx
+                        .world_state
+                        .player
+                        .tool_pickaxe
+                        .as_ref()
+                        .map(|p| p.get_texture(&ctx.textures)),
+                    crate::tools::ToolType::Dash => ctx
+                        .world_state
+                        .player
+                        .tool_dash
+                        .as_ref()
+                        .map(|d| d.get_texture(&ctx.textures)),
+                    _ => selected_tool.get_texture(&ctx.textures),
+                };
+                if let Some(texture) = texture {
                     d.draw_texture_ex(texture, Vector2::new(x, hud_y), 0.0, scale, Color::WHITE);
                 }
 
@@ -997,7 +1072,6 @@ impl Screen for GameScreen {
                     }
                 };
 
-                
                 let durability_bar_width = hud_box_size * scale / 2.0;
                 let durability_bar_height = 3.0;
                 let durability_bar_y = hud_y + hud_box_size * (scale - 1.0) + 9.0;

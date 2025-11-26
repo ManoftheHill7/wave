@@ -5,25 +5,6 @@ use crate::tools::*;
 use raylib::prelude::*;
 use serde::{Deserialize, Serialize};
 
-// Serializable wrapper for Vector2
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-struct SerVec2 {
-    x: f32,
-    y: f32,
-}
-
-impl From<Vector2> for SerVec2 {
-    fn from(v: Vector2) -> Self {
-        SerVec2 { x: v.x, y: v.y }
-    }
-}
-
-impl From<SerVec2> for Vector2 {
-    fn from(v: SerVec2) -> Self {
-        Vector2::new(v.x, v.y)
-    }
-}
-
 pub const ACCEL: f32 = 50.0;
 pub const SPEED: f32 = 12.0;
 pub const MIN_SPEED: f32 = 2.0;
@@ -168,8 +149,6 @@ mod vector2_serde {
 
 impl Player {
     pub fn new(x: f32, y: f32) -> Self {
-        let initial_dash = Some(load_dash("basic"));
-        let initial_pick = Some(load_pick("basic"));
         Player {
             position: Vector2::new(x, y),
             velocity: Vector2::zero(),
@@ -218,10 +197,10 @@ impl Player {
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
 
             left_hand: Some(ToolType::Pickaxe),
-            right_hand: Some(ToolType::Dash),
+            right_hand: None,
 
-            tool_dash: initial_dash,
-            tool_pickaxe: initial_pick,
+            tool_dash: None,
+            tool_pickaxe: Some(load_pick("stone_pickaxe")),
         }
     }
 
@@ -866,6 +845,27 @@ impl Player {
         }
     }
 
+    /// Breaks a tool while preserving its original level for repairs
+    pub fn break_tool(&mut self, tool_type: ToolType) {
+        match tool_type {
+            ToolType::Pickaxe => {
+                if let Some(pickaxe) = &self.tool_pickaxe {
+                    let original_level = pickaxe.level.clone();
+                    self.tool_pickaxe = Some(load_pick("broken"));
+                    self.tool_pickaxe.as_mut().unwrap().level = original_level;
+                }
+            }
+            ToolType::Dash => {
+                if let Some(dash) = &self.tool_dash {
+                    let original_level = dash.level.clone();
+                    self.tool_dash = Some(load_dash("broken"));
+                    self.tool_dash.as_mut().unwrap().level = original_level;
+                }
+            }
+            _ => {}
+        }
+    }
+
     fn use_tool(
         &mut self,
         terrain: &mut Terrain,
@@ -935,6 +935,9 @@ impl Player {
                 if !self.within_grace(self.started_mining_at, block_durability) {
                     if let Some(pickaxe) = self.tool_pickaxe.as_mut() {
                         pickaxe.durability -= block_durability;
+                        if pickaxe.durability <= 0.0 {
+                            self.break_tool(ToolType::Pickaxe);
+                        }
                     }
                     self.is_mining = false;
 
@@ -954,9 +957,11 @@ impl Player {
 
     fn manage_dash(&mut self, dir: Vector2) {
         if self.dashes > 0 && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN) {
-            self.tool_dash.as_mut().unwrap().durability -= 1.0;
-            if self.tool_dash.as_mut().unwrap().durability <= 0.0 {
-                self.tool_dash = Some(load_dash("broken"));
+            if let Some(dash) = self.tool_dash.as_mut() {
+                dash.durability -= 1.0;
+                if dash.durability <= 0.0 {
+                    self.break_tool(ToolType::Dash);
+                }
             }
 
             self.last_action_at = self.time;

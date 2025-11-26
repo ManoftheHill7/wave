@@ -39,7 +39,7 @@ weight = 2.5
 type = "block"
 
 [items.obsidian]
-name = "Sand"
+name = "Obsidian"
 weight = 4.0
 type = "block"
 

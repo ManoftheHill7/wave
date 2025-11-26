@@ -65,7 +65,17 @@ pub struct GameRenderState {
     pub lighting_shader_locs: LightingShaderLocs,
 }
 
-pub type ShaderLocs = (i32, i32, i32, i32);
+pub struct ShaderLocs {
+    pub original_0: i32,
+    pub replace_0: i32,
+    pub exhustion: i32,
+    pub whiteout: i32,
+    pub tool_original_primary: i32,
+    pub tool_original_secondary: i32,
+    pub tool_replace_primary: i32,
+    pub tool_replace_secondary: i32,
+    pub tool_swap_enabled: i32,
+}
 
 pub struct LightingShaderLocs {
     pub ambient_darkness: i32,
@@ -82,10 +92,17 @@ impl GameContext {
             Some("shaders/playerShader.frag"),
         );
 
-        let loc_original_0 = player_shader.get_shader_location("original_0");
-        let loc_replace_0 = player_shader.get_shader_location("replace_0");
-        let loc_exhustion = player_shader.get_shader_location("exhustion");
-        let loc_whiteout = player_shader.get_shader_location("whiteout");
+        let shader_locs = ShaderLocs {
+            original_0: player_shader.get_shader_location("original_0"),
+            replace_0: player_shader.get_shader_location("replace_0"),
+            exhustion: player_shader.get_shader_location("exhustion"),
+            whiteout: player_shader.get_shader_location("whiteout"),
+            tool_original_primary: player_shader.get_shader_location("tool_original_primary"),
+            tool_original_secondary: player_shader.get_shader_location("tool_original_secondary"),
+            tool_replace_primary: player_shader.get_shader_location("tool_replace_primary"),
+            tool_replace_secondary: player_shader.get_shader_location("tool_replace_secondary"),
+            tool_swap_enabled: player_shader.get_shader_location("tool_swap_enabled"),
+        };
 
         let lighting_shader = rl.load_shader(
             thread,
@@ -125,7 +142,7 @@ impl GameContext {
             textures,
             render_state: GameRenderState {
                 player_shader: RefCell::new(player_shader),
-                shader_locs: (loc_original_0, loc_replace_0, loc_exhustion, loc_whiteout),
+                shader_locs,
                 lighting_shader: RefCell::new(lighting_shader),
                 lighting_shader_locs: lighting_locs,
             },

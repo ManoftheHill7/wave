@@ -7,6 +7,7 @@ fn main() {
     // Check for flags
     let resume_mode = args.iter().any(|arg| arg == "--resume");
     let new_game_mode = args.iter().any(|arg| arg == "--new");
+    let creative_mode = args.iter().any(|arg| arg == "--creative");
     let map_path = args
         .iter()
         .skip(1)
@@ -23,32 +24,41 @@ fn main() {
     let mut ctx = GameContext::new(&mut rl, &thread, map_path);
 
     // Start with menu or game screen based on flags
-    let initial_screen: Box<dyn screen_manager::Screen<Context = GameContext>> = if new_game_mode {
-        // Start a new game directly
-        println!("Starting new game...");
+    let initial_screen: Box<dyn screen_manager::Screen<Context = GameContext>> =
+        if new_game_mode || creative_mode {
+            // Start a new game directly
+            if creative_mode {
+                println!("Starting new game in creative mode...");
+                ctx.world_state.player.inventory = inventory::Inventory::new(f32::MAX);
+                for item_type in inventory::ItemType::all() {
+                    ctx.world_state.player.inventory.add(*item_type, 999);
+                }
+            } else {
+                println!("Starting new game...");
+            }
 
-        Box::new(GameScreen::new(&ctx))
-    } else if resume_mode {
-        // Try to load save, if it fails, go to menu
-        if save_load::save_exists(0) {
-            match save_load::load_game(0) {
-                Ok(save_data) => {
-                    save_load::apply_save_data(&mut ctx.world_state, save_data);
-                    println!("✓ Game loaded successfully!");
-                    Box::new(GameScreen::new(&ctx))
+            Box::new(GameScreen::new(&ctx))
+        } else if resume_mode {
+            // Try to load save, if it fails, go to menu
+            if save_load::save_exists(0) {
+                match save_load::load_game(0) {
+                    Ok(save_data) => {
+                        save_load::apply_save_data(&mut ctx.world_state, save_data);
+                        println!("✓ Game loaded successfully!");
+                        Box::new(GameScreen::new(&ctx))
+                    }
+                    Err(e) => {
+                        eprintln!("✗ Failed to load game: {}, starting menu", e);
+                        Box::new(MenuScreen::new())
+                    }
                 }
-                Err(e) => {
-                    eprintln!("✗ Failed to load game: {}, starting menu", e);
-                    Box::new(MenuScreen::new())
-                }
+            } else {
+                println!("✗ No save file found, starting menu");
+                Box::new(MenuScreen::new())
             }
         } else {
-            println!("✗ No save file found, starting menu");
             Box::new(MenuScreen::new())
-        }
-    } else {
-        Box::new(MenuScreen::new())
-    };
+        };
 
     use inventory::ItemType;
     // ctx.world_state.player.inventory.add(ItemType::Log, 5);

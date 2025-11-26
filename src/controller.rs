@@ -13,6 +13,7 @@ pub struct Controller {
     pub left_hand_held: bool,
     pub right_hand_held: bool,
     pub mouse_position: Vector2, // 0.0 to 1.0
+    pub mouse_wheel_move: f32,
 }
 
 impl Controller {
@@ -30,6 +31,7 @@ impl Controller {
             left_hand_held: false,
             right_hand_held: false,
             mouse_position: Vector2::zero(),
+            mouse_wheel_move: 0.0,
         }
     }
 
@@ -82,6 +84,7 @@ impl Controller {
         self.right_hand_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_RIGHT);
         self.left_hand_held = rl.is_mouse_button_down(MouseButton::MOUSE_BUTTON_LEFT);
         self.right_hand_held = rl.is_mouse_button_down(MouseButton::MOUSE_BUTTON_RIGHT);
+        self.mouse_wheel_move = rl.get_mouse_wheel_move();
     }
 
     pub fn set_raycast_direction(&mut self, direction: Vector2) {
