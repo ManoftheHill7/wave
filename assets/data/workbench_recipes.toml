@@ -122,6 +122,28 @@ amount = 3
 
 # tools
 
+[tool_recipes.stone_pickaxe]
+type = "workbench"
+output = "stone_pickaxe"
+amount = 1
+[[tool_recipes.stone_pickaxe.inputs]]
+type = "stone"
+amount = 5
+[[tool_recipes.stone_pickaxe.inputs]]
+type = "stick"
+amount = 3
+
+[tool_recipes.white_pearl_amulet]
+type = "workbench"
+output = "white_pearl_amulet"
+amount = 1
+[[tool_recipes.white_pearl_amulet.inputs]]
+type = "white pearl"
+amount = 3
+[[tool_recipes.white_pearl_amulet.inputs]]
+type = "copper bar"
+amount = 2
+
 [recipes.fishing_rod]
 type = "workbench"
 output = "fishing_rod"

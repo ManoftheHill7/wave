@@ -610,13 +610,142 @@ fn to_pascal_case(s: &str) -> String {
         .collect()
 }
 
+fn process_recipe(
+    key: &str,
+    value: &toml::Value,
+    available_items: &std::collections::HashSet<String>,
+    classify_io: &dyn Fn(&str) -> String,
+    recipe_definitions: &mut Vec<String>,
+    skipped_recipes: &mut Vec<String>,
+) {
+    let table = value.as_table().expect("Recipe must be a table");
+
+    let recipe_type = table
+        .get("type")
+        .and_then(|v| v.as_str())
+        .expect(&format!("Recipe {} missing 'type' field", key));
+
+    let output = table
+        .get("output")
+        .and_then(|v| v.as_str())
+        .expect(&format!("Recipe {} missing 'output' field", key));
+
+    let output_amount = table
+        .get("amount")
+        .and_then(|v| v.as_integer())
+        .unwrap_or(1) as u32;
+
+    let inputs = table
+        .get("inputs")
+        .and_then(|v| v.as_array())
+        .expect(&format!("Recipe {} missing 'inputs' field", key));
+
+    // Classify output
+    let output_classification = classify_io(output);
+    if output_classification == "unknown" {
+        skipped_recipes.push(format!("{} (output '{}' not recognized)", key, output));
+        return;
+    }
+
+    // Generate input definitions
+    let mut input_defs = Vec::new();
+    for input in inputs {
+        let input_table = input.as_table().expect("Input must be a table");
+        let input_type = input_table
+            .get("type")
+            .and_then(|v| v.as_str())
+            .expect("Input missing 'type' field");
+        let input_amount = input_table
+            .get("amount")
+            .and_then(|v| v.as_integer())
+            .unwrap_or(1) as u32;
+
+        let input_classification = classify_io(input_type);
+        if input_classification == "unknown" {
+            skipped_recipes.push(format!("{} (input '{}' not recognized)", key, input_type));
+            return;
+        }
+
+        let input_normalized = input_type.replace(" ", "_");
+
+        match input_classification.as_str() {
+            "item" => {
+                let input_item = to_pascal_case(&input_normalized);
+                input_defs.push(format!(
+                    "RecipeIOType::Item {{ item_type: ItemType::{}, amount: {} }}",
+                    input_item, input_amount
+                ));
+            }
+            "tool_pickaxe" => {
+                input_defs.push(format!(
+                    "RecipeIOType::ToolPickaxe {{ level: \"{}\" }}",
+                    input_normalized
+                ));
+            }
+            "tool_dash" => {
+                input_defs.push(format!(
+                    "RecipeIOType::ToolDash {{ level: \"{}\" }}",
+                    input_normalized
+                ));
+            }
+            _ => {}
+        }
+    }
+
+    let recipe_type_enum = match recipe_type {
+        "always" => "RecipeType::Always",
+        "workbench" => "RecipeType::Workbench",
+        "furnace" => "RecipeType::Furnace",
+        "anvil" => "RecipeType::Anvil",
+        _ => panic!("Unknown recipe type: {}", recipe_type),
+    };
+
+    // Generate output definition
+    let output_normalized = output.replace(" ", "_");
+    let output_def = match output_classification.as_str() {
+        "item" => {
+            let output_item = to_pascal_case(&output_normalized);
+            format!(
+                "RecipeIOType::Item {{ item_type: ItemType::{}, amount: {} }}",
+                output_item, output_amount
+            )
+        }
+        "tool_pickaxe" => {
+            format!(
+                "RecipeIOType::ToolPickaxe {{ level: \"{}\" }}",
+                output_normalized
+            )
+        }
+        "tool_dash" => {
+            format!(
+                "RecipeIOType::ToolDash {{ level: \"{}\" }}",
+                output_normalized
+            )
+        }
+        _ => return,
+    };
+
+    recipe_definitions.push(format!(
+        r#"    Recipe {{
+        name: "{}",
+        recipe_type: {},
+        inputs: &[{}],
+        output: {},
+    }}"#,
+        key,
+        recipe_type_enum,
+        input_defs.join(", "),
+        output_def
+    ));
+}
+
 fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
     let dest_path = Path::new(&out_dir).join("generated_recipes.rs");
 
-    let recipes = game_data
-        .get("recipes")
-        .and_then(|v| v.as_table())
-        .expect("Missing [recipes] table in game data");
+    // Get both regular recipes and tool recipes
+    let recipes = game_data.get("recipes").and_then(|v| v.as_table());
+
+    let tool_recipes = game_data.get("tool_recipes").and_then(|v| v.as_table());
 
     // Get all available items to validate recipes
     let items = game_data
@@ -625,106 +754,80 @@ fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
         .expect("Missing [items] table in game data");
     let available_items: std::collections::HashSet<String> = items.keys().cloned().collect();
 
+    // Read tool names from tools.toml
+    let tools_toml_path = Path::new("assets/data/tools.toml");
+    let tools_content = fs::read_to_string(tools_toml_path).expect("Failed to read tools.toml");
+    let tools_data: toml::Table = toml::from_str(&tools_content).expect("Failed to parse tools.toml");
+    
+    let mut tool_names = Vec::new();
+    
+    // Extract pickaxe names
+    if let Some(pick_table) = tools_data.get("pick").and_then(|v| v.as_table()) {
+        for (level, data) in pick_table.iter() {
+            if let Some(name) = data.as_table().and_then(|t| t.get("name")).and_then(|n| n.as_str()) {
+                tool_names.push(format!("            \"{}\" => \"{}\",", level, name));
+            }
+        }
+    }
+    
+    // Extract dash names
+    if let Some(dash_table) = tools_data.get("dash").and_then(|v| v.as_table()) {
+        for (level, data) in dash_table.iter() {
+            if let Some(name) = data.as_table().and_then(|t| t.get("name")).and_then(|n| n.as_str()) {
+                tool_names.push(format!("            \"{}\" => \"{}\",", level, name));
+            }
+        }
+    }
+
     let mut recipe_definitions = Vec::new();
     let mut skipped_recipes = Vec::new();
 
-    for (key, value) in recipes.iter() {
-        let table = value.as_table().expect("Recipe must be a table");
+    // Helper function to classify input/output type
+    let classify_io = |name: &str| -> String {
+        let normalized = name.replace(" ", "_");
 
-        let recipe_type = table
-            .get("type")
-            .and_then(|v| v.as_str())
-            .expect(&format!("Recipe {} missing 'type' field", key));
-
-        let output = table
-            .get("output")
-            .and_then(|v| v.as_str())
-            .expect(&format!("Recipe {} missing 'output' field", key));
-
-        let output_amount = table
-            .get("amount")
-            .and_then(|v| v.as_integer())
-            .unwrap_or(1) as u32;
-
-        let inputs = table
-            .get("inputs")
-            .and_then(|v| v.as_array())
-            .expect(&format!("Recipe {} missing 'inputs' field", key));
-
-        // Check if all inputs and output exist in items.toml
-        let output_normalized = output.replace(" ", "_");
-        if !available_items.contains(&output_normalized) {
-            skipped_recipes.push(format!("{} (output '{}' not found)", key, output));
-            continue;
+        // Check if it's a regular item
+        if available_items.contains(&normalized) {
+            return String::from("item");
         }
 
-        let mut all_inputs_exist = true;
-        for input in inputs {
-            let input_table = input.as_table().expect("Input must be a table");
-            let input_type = input_table
-                .get("type")
-                .and_then(|v| v.as_str())
-                .expect("Input missing 'type' field");
-            let input_type_normalized = input_type.replace(" ", "_");
-            if !available_items.contains(&input_type_normalized) {
-                skipped_recipes.push(format!("{} (input '{}' not found)", key, input_type));
-                all_inputs_exist = false;
-                break;
-            }
+        // Check if it's a tool by name pattern
+        if normalized.contains("pickaxe") {
+            return String::from("tool_pickaxe");
+        }
+        if normalized.contains("amulet") {
+            return String::from("tool_dash");
         }
 
-        if !all_inputs_exist {
-            continue;
+        String::from("unknown")
+    };
+
+    // Process regular recipes
+    if let Some(recipes) = recipes {
+        for (key, value) in recipes.iter() {
+            process_recipe(
+                key,
+                value,
+                &available_items,
+                &classify_io,
+                &mut recipe_definitions,
+                &mut skipped_recipes,
+            );
         }
+    }
 
-        // Generate input definitions
-        let mut input_defs = Vec::new();
-        for input in inputs {
-            let input_table = input.as_table().expect("Input must be a table");
-            let input_type = input_table
-                .get("type")
-                .and_then(|v| v.as_str())
-                .expect("Input missing 'type' field");
-            let input_amount = input_table
-                .get("amount")
-                .and_then(|v| v.as_integer())
-                .unwrap_or(1) as u32;
-
-            // Convert spaces to underscores, then to PascalCase
-            let input_type_normalized = input_type.replace(" ", "_");
-            let input_item = to_pascal_case(&input_type_normalized);
-            input_defs.push(format!(
-                "RecipeInput {{ item_type: ItemType::{}, amount: {} }}",
-                input_item, input_amount
-            ));
+    // Process tool recipes
+    if let Some(tool_recipes) = tool_recipes {
+        for (key, value) in tool_recipes.iter() {
+            process_recipe(
+                key,
+                value,
+                &available_items,
+                &classify_io,
+                &mut recipe_definitions,
+                &mut skipped_recipes,
+            );
         }
-
-        let recipe_type_enum = match recipe_type {
-            "always" => "RecipeType::Always",
-            "workbench" => "RecipeType::Workbench",
-            "furnace" => "RecipeType::Furnace",
-            "anvil" => "RecipeType::Anvil",
-            _ => panic!("Unknown recipe type: {}", recipe_type),
-        };
-
-        // Convert spaces to underscores, then to PascalCase
-        let output_normalized = output.replace(" ", "_");
-        let output_item = to_pascal_case(&output_normalized);
-
-        recipe_definitions.push(format!(
-            r#"    Recipe {{
-        name: "{}",
-        recipe_type: {},
-        output: ItemType::{},
-        output_amount: {},
-        inputs: &[{}],
-    }}"#,
-            key,
-            recipe_type_enum,
-            output_item,
-            output_amount,
-            input_defs.join(", ")
-        ));
     }
 
     if !skipped_recipes.is_empty() {
@@ -748,46 +851,143 @@ pub enum RecipeType {{
 }}
 
 #[derive(Debug, Clone, Copy)]
-pub struct RecipeInput {{
-    pub item_type: ItemType,
-    pub amount: u32,
+pub enum RecipeIOType {{
+    Item {{ item_type: ItemType, amount: u32 }},
+    ToolPickaxe {{ level: &'static str }},
+    ToolDash {{ level: &'static str }},
+}}
+
+impl RecipeIOType {{
+    /// Returns the display name for this recipe input/output
+    pub fn name(&self) -> &'static str {{
+        match self {{
+            RecipeIOType::Item {{ item_type, .. }} => item_type.name(),
+            RecipeIOType::ToolPickaxe {{ level }} | RecipeIOType::ToolDash {{ level }} => {{
+                match *level {{
+{}
+                    _ => level,
+                }}
+            }}
+        }}
+    }}
+
+    /// Returns the amount for this recipe input/output
+    pub fn amount(&self) -> u32 {{
+        match self {{
+            RecipeIOType::Item {{ amount, .. }} => *amount,
+            RecipeIOType::ToolPickaxe {{ .. }} => 1,
+            RecipeIOType::ToolDash {{ .. }} => 1,
+        }}
+    }}
+
+    /// Returns the texture for this recipe input/output
+    pub fn get_texture<'a>(&self, textures: &'a crate::TextureManager) -> &'a raylib::prelude::Texture2D {{
+        match self {{
+            RecipeIOType::Item {{ item_type, .. }} => item_type.get_texture(textures),
+            RecipeIOType::ToolPickaxe {{ level }} => {{
+                crate::tools::ToolPickaxe::texture_for_level(level, textures)
+            }}
+            RecipeIOType::ToolDash {{ level }} => {{
+                crate::tools::ToolDash::texture_for_level(level, textures)
+            }}
+        }}
+    }}
+
+    /// Check if the player has this input available
+    pub fn player_has(&self, player: &crate::player::Player) -> bool {{
+        match self {{
+            RecipeIOType::Item {{ item_type, amount }} => {{
+                player.inventory.count(*item_type) >= *amount
+            }}
+            RecipeIOType::ToolPickaxe {{ level }} => {{
+                player.tool_pickaxe.as_ref().map(|p| p.level == *level).unwrap_or(false)
+            }}
+            RecipeIOType::ToolDash {{ level }} => {{
+                player.tool_dash.as_ref().map(|d| d.level == *level).unwrap_or(false)
+            }}
+        }}
+    }}
+
+    /// Get display text with current count for UI
+    pub fn display_with_count(&self, player: &crate::player::Player) -> String {{
+        match self {{
+            RecipeIOType::Item {{ item_type, amount }} => {{
+                let count = player.inventory.count(*item_type);
+                format!("{{}}x {{}} ({{}})", amount, item_type.name(), count)
+            }}
+            RecipeIOType::ToolPickaxe {{ level }} => {{
+                format!("1x {{}} (tool)", level)
+            }}
+            RecipeIOType::ToolDash {{ level }} => {{
+                format!("1x {{}} (tool)", level)
+            }}
+        }}
+    }}
 }}
 
 #[derive(Debug, Clone)]
 pub struct Recipe {{
     pub name: &'static str,
     pub recipe_type: RecipeType,
-    pub output: ItemType,
-    pub output_amount: u32,
-    pub inputs: &'static [RecipeInput],
+    pub inputs: &'static [RecipeIOType],
+    pub output: RecipeIOType,
 }}
 
 impl Recipe {{
-    /// Check if the player has enough items in inventory to craft this recipe
-    pub fn can_craft(&self, inventory: &crate::inventory::Inventory) -> bool {{
+    /// Check if the player has the necessary items and tools to craft this recipe
+    pub fn can_craft(&self, player: &crate::player::Player) -> bool {{
         for input in self.inputs {{
-            if inventory.count(input.item_type) < input.amount {{
-                return false;
+            match input {{
+                RecipeIOType::Item {{ item_type, amount }} => {{
+                    if player.inventory.count(*item_type) < *amount {{
+                        return false;
+                    }}
+                }}
+                RecipeIOType::ToolPickaxe {{ level }} => {{
+                    match &player.tool_pickaxe {{
+                        Some(pickaxe) if pickaxe.level == *level => {{}},
+                        _ => return false,
+                    }}
+                }}
+                RecipeIOType::ToolDash {{ level }} => {{
+                    match &player.tool_dash {{
+                        Some(dash) if dash.level == *level => {{}},
+                        _ => return false,
+                    }}
+                }}
             }}
         }}
         true
     }}
 
-    /// Craft this recipe, removing ingredients and adding output to inventory
+    /// Craft this recipe, consuming ingredients and tools, producing output
     /// Returns true if successful, false if couldn't craft
-    pub fn craft(&self, inventory: &mut crate::inventory::Inventory) -> bool {{
+    pub fn craft(&self, player: &mut crate::player::Player) -> bool {{
         // Check again to be safe
-        if !self.can_craft(inventory) {{
+        if !self.can_craft(player) {{
             return false;
         }}
 
-        // Remove ingredients
+        // Remove inputs
         for input in self.inputs {{
-            inventory.take(input.item_type, input.amount);
+            if let RecipeIOType::Item {{ item_type, amount }} = input {{
+                player.inventory.take(*item_type, *amount);
+            }}
+            // Tools are consumed implicitly (replaced by output)
         }}
 
-        // Add output
-        inventory.add(self.output, self.output_amount);
+        // Add output (auto-equip tools)
+        match self.output {{
+            RecipeIOType::Item {{ item_type, amount }} => {{
+                player.inventory.add(item_type, amount);
+            }}
+            RecipeIOType::ToolPickaxe {{ level }} => {{
+                player.tool_pickaxe = Some(crate::tools::load_pick(level));
+            }}
+            RecipeIOType::ToolDash {{ level }} => {{
+                player.tool_dash = Some(crate::tools::load_dash(level));
+            }}
+        }}
 
         true
     }}
@@ -797,6 +997,7 @@ pub static ALL_RECIPES: &[Recipe] = &[
 {}
 ];
 "#,
+        tool_names.join("\n"),
         recipe_definitions.join(",\n")
     );
 

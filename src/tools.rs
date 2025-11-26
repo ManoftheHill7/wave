@@ -33,6 +33,27 @@ pub struct ToolDash {
     pub dash_time: f32,
     pub dash_extended_time: f32,
     pub dash_control_modifier: f32,
+    pub level: String,
+}
+
+impl ToolDash {
+    pub fn texture_for_level<'a>(level: &str, textures: &'a TextureManager) -> &'a Texture2D {
+        match level {
+            "white_pearl_amulet" => &textures.tools.white_pearl_amulet,
+            "amethyst_amulet" => &textures.tools.amethyst_amulet,
+            "jasper_amulet" => &textures.tools.jasper_amulet,
+            "emerald_amulet" => &textures.tools.emerald_amulet,
+            "black_pearl_amulet" => &textures.tools.black_pearl_amulet,
+            "topaz_amulet" => &textures.tools.topaz_amulet,
+            "ruby_amulet" => &textures.tools.ruby_amulet,
+            "diamond_amulet" => &textures.tools.diamond_amulet,
+            _ => &textures.tools.white_pearl_amulet,
+        }
+    }
+
+    pub fn get_texture<'a>(&self, textures: &'a TextureManager) -> &'a Texture2D {
+        Self::texture_for_level(&self.level, textures)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,6 +61,29 @@ pub struct ToolPickaxe {
     pub durability: f32,
     pub max_durability: f32,
     pub speed: f32,
+    pub level: String,
+}
+
+impl ToolPickaxe {
+    pub fn texture_for_level<'a>(level: &str, textures: &'a TextureManager) -> &'a Texture2D {
+        match level {
+            "stone_pickaxe" => &textures.tools.stone_pickaxe,
+            "copper_pickaxe" => &textures.tools.copper_pickaxe,
+            "bronze_pickaxe" => &textures.tools.bronze_pickaxe,
+            "iron_pickaxe" => &textures.tools.iron_pickaxe,
+            "steel_pickaxe" => &textures.tools.steel_pickaxe,
+            "platinum_pickaxe" => &textures.tools.platinum_pickaxe,
+            "mithril_pickaxe" => &textures.tools.mithril_pickaxe,
+            "ozathinum_pickaxe" => &textures.tools.ozathinum_pickaxe,
+            "torzite_pickaxe" => &textures.tools.torzite_pickaxe,
+            "etherealite_pickaxe" => &textures.tools.etherealite_pickaxe,
+            _ => &textures.tools.stone_pickaxe,
+        }
+    }
+
+    pub fn get_texture<'a>(&self, textures: &'a TextureManager) -> &'a Texture2D {
+        Self::texture_for_level(&self.level, textures)
+    }
 }
 
 pub fn load_leveled_tool(tool: &str, level: &str) -> Map<String, Value> {
@@ -60,6 +104,7 @@ pub fn load_pick(level: &str) -> ToolPickaxe {
         durability: tool.get("durability").unwrap().as_float().unwrap() as f32,
         max_durability: tool.get("durability").unwrap().as_float().unwrap() as f32,
         speed: tool.get("speed").unwrap().as_float().unwrap() as f32,
+        level: level.to_string(),
     }
 }
 
@@ -76,5 +121,6 @@ pub fn load_dash(level: &str) -> ToolDash {
             .unwrap()
             .as_float()
             .unwrap() as f32,
+        level: level.to_string(),
     }
 }
