@@ -9,7 +9,7 @@ output = "copper_bar"
 amount = 1
 [[recipes.copper_bar.inputs]]
 type = "copper ore"
-amount = 10
+amount = 5
 
 [recipes.bronze_bar]
 type = "furnace"
