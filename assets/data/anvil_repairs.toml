@@ -3,112 +3,112 @@
 
 # pickaxes
 
-[repairs.stone_pickaxe]
+[tool_recipes.stone_pickaxe]
 type = "anvil"
 output = "stone_pickaxe"
 amount = 1
-[[repairs.stone_pickaxe.inputs]]
-type = "stone pickaxe"
+[[tool_recipes.stone_pickaxe.inputs]]
+type = "stone_pickaxe"
 amount = 1
-[[repairs.stone_pickaxe.inputs]]
+[[tool_recipes.stone_pickaxe.inputs]]
 type = "stone"
 amount = 1
 
-[repairs.copper_pickaxe]
+[tool_recipes.copper_pickaxe]
 type = "anvil"
 output = "copper_pickaxe"
 amount = 1
-[[repairs.copper_pickaxe.inputs]]
-type = "copper pickaxe"
+[[tool_recipes.copper_pickaxe.inputs]]
+type = "copper_pickaxe"
 amount = 1
-[[repairs.copper_pickaxe.inputs]]
+[[tool_recipes.copper_pickaxe.inputs]]
 type = "copper bar"
 amount = 1
 
-[repairs.bronze_pickaxe]
+[tool_recipes.bronze_pickaxe]
 type = "anvil"
 output = "bronze_pickaxe"
 amount = 1
-[[repairs.bronze_pickaxe.inputs]]
-type = "bronze pickaxe"
+[[tool_recipes.bronze_pickaxe.inputs]]
+type = "bronze_pickaxe"
 amount = 1
-[[repairs.bronze_pickaxe.inputs]]
+[[tool_recipes.bronze_pickaxe.inputs]]
 type = "bronze bar"
 amount = 1
 
-[repairs.iron_pickaxe]
+[tool_recipes.iron_pickaxe]
 type = "anvil"
 output = "iron_pickaxe"
 amount = 1
-[[repairs.iron_pickaxe.inputs]]
-type = "iron pickaxe"
+[[tool_recipes.iron_pickaxe.inputs]]
+type = "iron_pickaxe"
 amount = 1
-[[repairs.iron_pickaxe.inputs]]
+[[tool_recipes.iron_pickaxe.inputs]]
 type = "iron bar"
 amount = 1
 
-[repairs.steel_pickaxe]
+[tool_recipes.steel_pickaxe]
 type = "anvil"
 output = "steel_pickaxe"
 amount = 1
-[[repairs.steel_pickaxe.inputs]]
-type = "steel pickaxe"
+[[tool_recipes.steel_pickaxe.inputs]]
+type = "steel_pickaxe"
 amount = 1
-[[repairs.steel_pickaxe.inputs]]
+[[tool_recipes.steel_pickaxe.inputs]]
 type = "steel bar"
 amount = 1
 
-[repairs.platinum_pickaxe]
+[tool_recipes.platinum_pickaxe]
 type = "anvil"
 output = "platinum_pickaxe"
 amount = 1
-[[repairs.platinum_pickaxe.inputs]]
-type = "platinum pickaxe"
+[[tool_recipes.platinum_pickaxe.inputs]]
+type = "platinum_pickaxe"
 amount = 1
-[[repairs.platinum_pickaxe.inputs]]
+[[tool_recipes.platinum_pickaxe.inputs]]
 type = "platinum bar"
 amount = 1
 
-[repairs.mithril_pickaxe]
+[tool_recipes.mithril_pickaxe]
 type = "anvil"
 output = "mithril_pickaxe"
 amount = 1
-[[repairs.mithril_pickaxe.inputs]]
-type = "mithril pickaxe"
+[[tool_recipes.mithril_pickaxe.inputs]]
+type = "mithril_pickaxe"
 amount = 1
-[[repairs.mithril_pickaxe.inputs]]
+[[tool_recipes.mithril_pickaxe.inputs]]
 type = "mithril bar"
 amount = 1
 
-[repairs.ozathinum_pickaxe]
+[tool_recipes.ozathinum_pickaxe]
 type = "anvil"
 output = "ozathinum_pickaxe"
 amount = 1
-[[repairs.ozathinum_pickaxe.inputs]]
-type = "ozathinum pickaxe"
+[[tool_recipes.ozathinum_pickaxe.inputs]]
+type = "ozathinum_pickaxe"
 amount = 1
-[[repairs.ozathimum_pickaxe.inputs]]
+[[tool_recipes.ozathinum_pickaxe.inputs]]
 type = "ozathinum bar"
 amount = 1
 
-[repairs.torzite_pickaxe]
+[tool_recipes.torzite_pickaxe]
 type = "anvil"
 output = "torzite_pickaxe"
 amount = 1
-[[repairs.torzite_pickaxe.inputs]]
-type = "torzite pickaxe"
+[[tool_recipes.torzite_pickaxe.inputs]]
+type = "torzite_pickaxe"
 amount = 1
-[[repairs.torzite_pickaxe.inputs]]
+[[tool_recipes.torzite_pickaxe.inputs]]
 type = "torzite bar"
 amount = 1
 
-[repairs.etherealite_pickaxe]
+[tool_recipes.etherealite_pickaxe]
 type = "anvil"
 output = "etherealite_pickaxe"
 amount = 1
-[[repairs.etherealite_pickaxe.inputs]]
-type = "etherealite pickaxe"
+[[tool_recipes.etherealite_pickaxe.inputs]]
+type = "etherealite_pickaxe"
 amount = 1
-[[repairs.etherealite_pickaxe.inputs]]
+[[tool_recipes.etherealite_pickaxe.inputs]]
 type = "etherealite bar"
 amount = 1

@@ -1,21 +1,126 @@
 [dash.broken]
+name = "Broken Amulet"
 durability = -1.0
 max_dashes = 0
 dash_time = 0.0
 dash_extended_time = 0.0
 dash_control_modifier = 0.0
 
-[dash.basic]
-durability = 30.0
+[dash.white_pearl_amulet]
+name = "White Pearl Amulet"
+durability = 50.0
 max_dashes = 1
-dash_time = 0.25
-dash_extended_time = 0.35
+dash_time = 0.30
+dash_extended_time = 0.40
+dash_control_modifier = 1.5
+
+[dash.amethyst_amulet]
+name = "Amethyst Amulet"
+durability = 75.0
+max_dashes = 1
+dash_time = 0.32
+dash_extended_time = 0.42
+dash_control_modifier = 1.6
+
+[dash.jasper_amulet]
+name = "Jasper Amulet"
+durability = 100.0
+max_dashes = 2
+dash_time = 0.34
+dash_extended_time = 0.44
+dash_control_modifier = 1.7
+
+[dash.emerald_amulet]
+name = "Emerald Amulet"
+durability = 125.0
+max_dashes = 2
+dash_time = 0.36
+dash_extended_time = 0.46
 dash_control_modifier = 1.8
 
+[dash.black_pearl_amulet]
+name = "Black Pearl Amulet"
+durability = 150.0
+max_dashes = 2
+dash_time = 0.38
+dash_extended_time = 0.48
+dash_control_modifier = 1.9
+
+[dash.topaz_amulet]
+name = "Topaz Amulet"
+durability = 175.0
+max_dashes = 3
+dash_time = 0.40
+dash_extended_time = 0.50
+dash_control_modifier = 2.0
+
+[dash.ruby_amulet]
+name = "Ruby Amulet"
+durability = 200.0
+max_dashes = 3
+dash_time = 0.42
+dash_extended_time = 0.52
+dash_control_modifier = 2.1
+
+[dash.diamond_amulet]
+name = "Diamond Amulet"
+durability = 250.0
+max_dashes = 3
+dash_time = 0.44
+dash_extended_time = 0.54
+dash_control_modifier = 2.2
+
 [pick.broken]
+name = "Broken Pickaxe"
 durability = -1.0
 speed = 0.5
 
-[pick.basic]
-durability = 50.0
+[pick.stone_pickaxe]
+name = "Stone Pickaxe"
+durability = 100.0
 speed = 1.0
+
+[pick.copper_pickaxe]
+name = "Copper Pickaxe"
+durability = 150.0
+speed = 1.1
+
+[pick.bronze_pickaxe]
+name = "Bronze Pickaxe"
+durability = 200.0
+speed = 1.2
+
+[pick.iron_pickaxe]
+name = "Iron Pickaxe"
+durability = 250.0
+speed = 1.3
+
+[pick.steel_pickaxe]
+name = "Steel Pickaxe"
+durability = 300.0
+speed = 1.4
+
+[pick.platinum_pickaxe]
+name = "Platinum Pickaxe"
+durability = 350.0
+speed = 1.5
+
+[pick.mithril_pickaxe]
+name = "Mithril Pickaxe"
+durability = 400.0
+speed = 1.6
+
+[pick.ozathinum_pickaxe]
+name = "Ozathinum Pickaxe"
+durability = 450.0
+speed = 1.7
+
+[pick.torzite_pickaxe]
+name = "Torzite Pickaxe"
+durability = 500.0
+speed = 1.8
+
+[pick.etherealite_pickaxe]
+name = "Etherealite Pickaxe"
+durability = 600.0
+speed = 2.0

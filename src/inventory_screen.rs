@@ -12,6 +12,7 @@ const RENDER_HEIGHT: u32 = 225;
 pub struct InventoryScreen {
     render_target: Option<RenderTexture2D>,
     mute_button: Rectangle,
+    scroll_offset: usize,
 }
 
 impl InventoryScreen {
@@ -28,6 +29,7 @@ impl InventoryScreen {
                 mute_size,
                 mute_size,
             ),
+            scroll_offset: 0,
         }
     }
 
@@ -75,9 +77,10 @@ impl InventoryScreen {
                     && mouse_y <= slot_y + slot_size
                 {
                     let slot_index = row * grid_cols + col;
+                    let actual_index = slot_index + self.scroll_offset;
 
                     // Check if this slot has an item
-                    if let Some(item_stack) = inventory_items.get(slot_index) {
+                    if let Some(item_stack) = inventory_items.get(actual_index) {
                         let bt = Block::from_item_type(item_stack.item_type);
                         if let Some(bt) = bt {
                             let new_tool = Some(ToolType::PlaceBlock(bt));
@@ -200,6 +203,30 @@ impl Screen for InventoryScreen {
             return ScreenCommand::Pop;
         }
 
+        // Handle scrolling with mouse wheel
+        let grid_cols = 6;
+        let grid_rows = 4;
+        let visible_slots = grid_cols * grid_rows;
+        let total_items = ctx.world_state.player.inventory.unique_items();
+        let max_scroll_rows = if total_items > visible_slots {
+            ((total_items - visible_slots) + grid_cols - 1) / grid_cols
+        } else {
+            0
+        };
+
+        if ctx.controller.mouse_wheel_move > 0.0 {
+            // Scroll up
+            if self.scroll_offset > 0 {
+                self.scroll_offset = self.scroll_offset.saturating_sub(grid_cols);
+            }
+        } else if ctx.controller.mouse_wheel_move < 0.0 {
+            // Scroll down
+            let new_offset = self.scroll_offset + grid_cols;
+            if new_offset / grid_cols <= max_scroll_rows {
+                self.scroll_offset = new_offset;
+            }
+        }
+
         // Handle mouse clicks for item selection
         if ctx.controller.left_hand_pressed {
             self.handle_mouse_click(ctx, true);
@@ -243,13 +270,32 @@ impl Screen for InventoryScreen {
                 Color::BLACK,
             );
 
+            // Display scroll info if there are multiple pages
+            let grid_cols = 6;
+            let grid_rows = 4;
+            let visible_slots = grid_cols * grid_rows;
+            let total_items = ctx.world_state.player.inventory.unique_items();
+
+            // Calculate how many rows we can scroll through
+            let total_rows = (total_items + grid_cols - 1) / grid_cols;
+            let max_scroll_row = total_rows.saturating_sub(grid_rows);
+
+            if total_items > visible_slots {
+                let current_row = self.scroll_offset / grid_cols;
+                let scroll_text = format!("Row {}/{}", current_row + 1, max_scroll_row + 1);
+                d.draw_text(
+                    &scroll_text,
+                    weight_x as i32,
+                    (weight_y + 12.0) as i32,
+                    10,
+                    Color::new(100, 100, 100, 255),
+                );
+            }
+
             // Draw inventory slots grid on the left side
             let slot_texture = &ctx.textures.ui.inventory_slot;
             let slot_size = slot_texture.width as f32;
             let slot_padding = 4.0;
-
-            let grid_cols = 6;
-            let grid_rows = 4;
 
             let grid_x = 32.0;
             let grid_y = 40.0;
@@ -267,13 +313,15 @@ impl Screen for InventoryScreen {
             let inventory_items: Vec<_> = ctx.world_state.player.inventory.iter().collect();
 
             // Render items on top of slots
-            for (slot_index, item_stack) in inventory_items.iter().enumerate() {
-                if slot_index >= (grid_cols * grid_rows) {
+            for (visible_index, item_stack) in
+                inventory_items.iter().skip(self.scroll_offset).enumerate()
+            {
+                if visible_index >= (grid_cols * grid_rows) {
                     break; // Don't overflow the grid
                 }
 
-                let col = slot_index % grid_cols;
-                let row = slot_index / grid_cols;
+                let col = visible_index % grid_cols;
+                let row = visible_index / grid_cols;
                 let slot_x = grid_x + (col as f32 * (slot_size + slot_padding));
                 let slot_y = grid_y + (row as f32 * (slot_size + slot_padding));
 
@@ -352,35 +400,59 @@ impl Screen for InventoryScreen {
             d.draw_texture(slot_texture, boots_x as i32, boots_y as i32, Color::WHITE);
 
             // Draw selected tool in left hand slot if set
-            if let Some(texture) = ctx
-                .world_state
-                .player
-                .left_hand
-                .and_then(|tool| tool.get_texture(&ctx.textures))
-            {
-                d.draw_texture_ex(
-                    texture,
-                    Vector2::new(left_hand_x, left_hand_y),
-                    0.0,
-                    1.0,
-                    Color::WHITE,
-                );
+            if let Some(tool) = ctx.world_state.player.left_hand {
+                let texture = match tool {
+                    ToolType::Pickaxe => ctx
+                        .world_state
+                        .player
+                        .tool_pickaxe
+                        .as_ref()
+                        .map(|p| p.get_texture(&ctx.textures)),
+                    ToolType::Dash => ctx
+                        .world_state
+                        .player
+                        .tool_dash
+                        .as_ref()
+                        .map(|d| d.get_texture(&ctx.textures)),
+                    _ => tool.get_texture(&ctx.textures),
+                };
+                if let Some(texture) = texture {
+                    d.draw_texture_ex(
+                        texture,
+                        Vector2::new(left_hand_x, left_hand_y),
+                        0.0,
+                        1.0,
+                        Color::WHITE,
+                    );
+                }
             }
 
             // Draw selected tool in right hand slot if set
-            if let Some(texture) = ctx
-                .world_state
-                .player
-                .right_hand
-                .and_then(|tool| tool.get_texture(&ctx.textures))
-            {
-                d.draw_texture_ex(
-                    texture,
-                    Vector2::new(right_hand_x, right_hand_y),
-                    0.0,
-                    1.0,
-                    Color::WHITE,
-                );
+            if let Some(tool) = ctx.world_state.player.right_hand {
+                let texture = match tool {
+                    ToolType::Pickaxe => ctx
+                        .world_state
+                        .player
+                        .tool_pickaxe
+                        .as_ref()
+                        .map(|p| p.get_texture(&ctx.textures)),
+                    ToolType::Dash => ctx
+                        .world_state
+                        .player
+                        .tool_dash
+                        .as_ref()
+                        .map(|d| d.get_texture(&ctx.textures)),
+                    _ => tool.get_texture(&ctx.textures),
+                };
+                if let Some(texture) = texture {
+                    d.draw_texture_ex(
+                        texture,
+                        Vector2::new(right_hand_x, right_hand_y),
+                        0.0,
+                        1.0,
+                        Color::WHITE,
+                    );
+                }
             }
 
             // Draw tool selection
@@ -427,7 +499,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_dash
                     .as_ref()
-                    .map(|_| &ctx.textures.tools.white_pearl_amulet),
+                    .map(|d| d.get_texture(&ctx.textures)),
                 ctx.world_state
                     .player
                     .tool_dash
@@ -440,7 +512,7 @@ impl Screen for InventoryScreen {
                     .player
                     .tool_pickaxe
                     .as_ref()
-                    .map(|_| &ctx.textures.tools.stone_pickaxe),
+                    .map(|p| p.get_texture(&ctx.textures)),
                 ctx.world_state
                     .player
                     .tool_pickaxe

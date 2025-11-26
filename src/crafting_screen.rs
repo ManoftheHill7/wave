@@ -48,9 +48,104 @@ impl CraftingScreen {
                     return false;
                 }
 
+                // Special filtering for tool recipes
+                match recipe.output {
+                    RecipeIOType::ToolPickaxe {
+                        level: output_level,
+                    } => {
+                        // Check if this is a crafting, repair, or upgrade recipe
+                        let has_tool_input = recipe
+                            .inputs
+                            .iter()
+                            .any(|input| matches!(input, RecipeIOType::ToolPickaxe { .. }));
+
+                        if !has_tool_input {
+                            // This is a crafting recipe (e.g., stone_pickaxe from scratch)
+                            // Don't show if player has ANY pickaxe
+                            if ctx.world_state.player.tool_pickaxe.is_some() {
+                                return false;
+                            }
+                        } else {
+                            // This is either a repair or upgrade recipe
+                            // Check if it's a repair (input level == output level)
+                            let is_repair = recipe.inputs.iter().any(|input| {
+                                if let RecipeIOType::ToolPickaxe { level: input_level } = input {
+                                    input_level == &output_level
+                                } else {
+                                    false
+                                }
+                            });
+
+                            if is_repair {
+                                // Repair recipe: only show if player has this exact level
+                                let has_exact_level = ctx
+                                    .world_state
+                                    .player
+                                    .tool_pickaxe
+                                    .as_ref()
+                                    .map(|p| p.level == output_level)
+                                    .unwrap_or(false);
+                                if !has_exact_level {
+                                    return false;
+                                }
+                            } else {
+                                // Upgrade recipe: only show if player has the required input level
+                                if !recipe.can_craft(&ctx.world_state.player) {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    RecipeIOType::ToolDash {
+                        level: output_level,
+                    } => {
+                        // Same logic for dash tools
+                        let has_tool_input = recipe
+                            .inputs
+                            .iter()
+                            .any(|input| matches!(input, RecipeIOType::ToolDash { .. }));
+
+                        if !has_tool_input {
+                            // Crafting recipe: don't show if player has ANY dash tool
+                            if ctx.world_state.player.tool_dash.is_some() {
+                                return false;
+                            }
+                        } else {
+                            // Repair or upgrade recipe
+                            let is_repair = recipe.inputs.iter().any(|input| {
+                                if let RecipeIOType::ToolDash { level: input_level } = input {
+                                    input_level == &output_level
+                                } else {
+                                    false
+                                }
+                            });
+
+                            if is_repair {
+                                // Repair: only show if player has this exact level
+                                let has_exact_level = ctx
+                                    .world_state
+                                    .player
+                                    .tool_dash
+                                    .as_ref()
+                                    .map(|d| d.level == output_level)
+                                    .unwrap_or(false);
+                                if !has_exact_level {
+                                    return false;
+                                }
+                            } else {
+                                // Upgrade: only show if player can craft it
+                                if !recipe.can_craft(&ctx.world_state.player) {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    _ => {} // Non-tool recipes: no special filtering
+                }
+
                 // Then filter by craftability if toggle is on
                 if self.show_craftable_only {
-                    recipe.can_craft(&ctx.world_state.player.inventory)
+                    recipe.can_craft(&ctx.world_state.player)
                 } else {
                     true
                 }
@@ -111,7 +206,7 @@ impl CraftingScreen {
                 && mouse_y <= item_y + item_h
             {
                 // Craft this recipe
-                recipe.craft(&mut ctx.world_state.player.inventory);
+                recipe.craft(&mut ctx.world_state.player);
                 return;
             }
         }
@@ -124,9 +219,13 @@ impl CraftingScreen {
         let total_h = filtered_recipes.len() as f32 * item_h;
         let max_scroll = (total_h - visible_h).max(0.0);
 
-        // TODO: Get actual mouse wheel input from controller
-        // For now, this is a placeholder
-        // self.scroll_offset = self.scroll_offset.clamp(0.0, max_scroll);
+        // Handle mouse wheel scrolling
+        let scroll_speed = item_h; // Scroll one item at a time
+        if ctx.controller.mouse_wheel_move > 0.0 {
+            self.scroll_offset = (self.scroll_offset - scroll_speed).max(0.0);
+        } else if ctx.controller.mouse_wheel_move < 0.0 {
+            self.scroll_offset = (self.scroll_offset + scroll_speed).min(max_scroll);
+        }
     }
 }
 
@@ -240,6 +339,46 @@ impl Screen for CraftingScreen {
             let list_w = 230.0;
             let item_h = 28.0;
 
+            // Calculate and display scroll info if needed
+            let visible_h = RENDER_HEIGHT as f32 - 50.0;
+            let total_h = filtered_recipes.len() as f32 * item_h;
+            let max_scroll = (total_h - visible_h).max(0.0);
+
+            if max_scroll > 0.0 {
+                // Calculate current position
+                let scroll_progress = if max_scroll > 0.0 {
+                    self.scroll_offset / max_scroll
+                } else {
+                    0.0
+                };
+
+                // Draw scroll indicator bar on the right side of the list
+                let scrollbar_x = list_x + list_w + 2.0;
+                let scrollbar_y = list_y;
+                let scrollbar_w = 4.0;
+                let scrollbar_h = visible_h;
+
+                // Background track
+                d.draw_rectangle(
+                    scrollbar_x as i32,
+                    scrollbar_y as i32,
+                    scrollbar_w as i32,
+                    scrollbar_h as i32,
+                    Color::new(30, 30, 40, 255),
+                );
+
+                // Thumb
+                let thumb_h = (visible_h / total_h * scrollbar_h).max(20.0);
+                let thumb_y = scrollbar_y + (scroll_progress * (scrollbar_h - thumb_h));
+                d.draw_rectangle(
+                    scrollbar_x as i32,
+                    thumb_y as i32,
+                    scrollbar_w as i32,
+                    thumb_h as i32,
+                    Color::new(150, 150, 160, 255),
+                );
+            }
+
             for (i, recipe) in filtered_recipes.iter().enumerate() {
                 let item_y = list_y + (i as f32 * item_h) - self.scroll_offset;
 
@@ -248,7 +387,7 @@ impl Screen for CraftingScreen {
                     continue;
                 }
 
-                let can_craft = recipe.can_craft(&ctx.world_state.player.inventory);
+                let can_craft = recipe.can_craft(&ctx.world_state.player);
                 let is_hovered = self.hovered_recipe_index == Some(i);
 
                 // Background
@@ -298,7 +437,7 @@ impl Screen for CraftingScreen {
                     Color::DARKGRAY
                 };
                 d.draw_text(
-                    &format!("{}x {}", recipe.output_amount, recipe.output.name()),
+                    &format!("{}x {}", recipe.output.amount(), recipe.output.name()),
                     text_x as i32,
                     text_y as i32,
                     12,
@@ -347,14 +486,9 @@ impl Screen for CraftingScreen {
                         12,
                         Color::LIGHTGRAY,
                     );
-                    let output_count = ctx.world_state.player.inventory.count(recipe.output);
+
                     d.draw_text(
-                        &format!(
-                            "{}x {} ({})",
-                            recipe.output_amount,
-                            recipe.output.name(),
-                            output_count
-                        ),
+                        &recipe.output.display_with_count(&ctx.world_state.player),
                         panel_x as i32 + 5,
                         output_y as i32 + 15,
                         10,
@@ -373,16 +507,10 @@ impl Screen for CraftingScreen {
 
                     for (i, input) in recipe.inputs.iter().enumerate() {
                         let ing_y = ingredients_y + 15.0 + (i as f32 * 15.0);
-                        let current_count = ctx.world_state.player.inventory.count(input.item_type);
-                        let has_enough = current_count >= input.amount;
+                        let has_enough = input.player_has(&ctx.world_state.player);
                         let text_color = if has_enough { Color::GREEN } else { Color::RED };
                         d.draw_text(
-                            &format!(
-                                "{}x {} ({})",
-                                input.amount,
-                                input.item_type.name(),
-                                current_count
-                            ),
+                            &input.display_with_count(&ctx.world_state.player),
                             panel_x as i32 + 5,
                             ing_y as i32,
                             10,
@@ -391,7 +519,7 @@ impl Screen for CraftingScreen {
                     }
 
                     // Craft button
-                    let can_craft = recipe.can_craft(&ctx.world_state.player.inventory);
+                    let can_craft = recipe.can_craft(&ctx.world_state.player);
                     let button_y = panel_y + panel_h - 30.0;
                     let button_color = if can_craft {
                         Color::GREEN
