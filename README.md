@@ -85,8 +85,8 @@ Things that I would really like to have
 - [ ] Proximity sound effects for torches
 - [x] Layering music as you go deeper
 - [ ] Flooding caverns music intensity
-- [ ] Sound effects when things happen
-- [ ] Looping sound effects for things like mining
+- [x] Sound effects when things happen
+- [x] Looping sound effects for things like mining
 - [ ] Dynamic wooshing, and thuds for falling and impact
 
 #### Misc
