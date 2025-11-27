@@ -816,23 +816,46 @@ impl Screen for GameScreen {
             return ScreenCommand::Push(Box::new(InventoryScreen::new()));
         }
 
-        // Check if M is pressed to open crafting
+        // Check if M is pressed to open crafting or chest
         if ctx.controller.crafting_pressed {
             use crate::crafting_screen::RecipeType;
             use crate::terrain::Block;
 
-            let filter = match ctx
+            // Crafting stations take priority over chests
+            let crafting_station = ctx
                 .world_state
                 .player
-                .get_intersecting_crafting_station(&ctx.world_state.terrain)
+                .get_intersecting_crafting_station(&ctx.world_state.terrain);
+
+            if let Some(station) = crafting_station {
+                let filter = match station {
+                    Block::Workbench => Some(RecipeType::Workbench),
+                    Block::Anvil => Some(RecipeType::Anvil),
+                    Block::Furnace => Some(RecipeType::Furnace),
+                    _ => None,
+                };
+                return ScreenCommand::Push(Box::new(crate::crafting_screen::CraftingScreen::new(
+                    filter,
+                )));
+            }
+
+            // Check for chest interaction if no crafting station
+            if let Some(chest_pos) = ctx
+                .world_state
+                .player
+                .get_intersecting_chest(&ctx.world_state.terrain)
             {
-                Some(Block::Workbench) => Some(RecipeType::Workbench),
-                Some(Block::Anvil) => Some(RecipeType::Anvil),
-                Some(Block::Furnace) => Some(RecipeType::Furnace),
-                _ => None,
-            };
+                // Only open if this chest has an inventory (was properly placed)
+                if ctx.world_state.chests.contains_key(&chest_pos) {
+                    return ScreenCommand::Push(Box::new(crate::chest_screen::ChestScreen::new(
+                        chest_pos,
+                    )));
+                }
+            }
+
+            // No crafting station or chest - open basic crafting menu
             return ScreenCommand::Push(Box::new(crate::crafting_screen::CraftingScreen::new(
-                filter,
+                None,
             )));
         }
 
@@ -1348,38 +1371,51 @@ impl Screen for GameScreen {
             );
         }
 
-        // Draw crafting station prompt at bottom of screen
-        if let Some(station) = ctx
+        // Draw crafting station or chest prompt at bottom of screen
+        let crafting_station = ctx
             .world_state
             .player
-            .get_intersecting_crafting_station(&ctx.world_state.terrain)
-        {
-            use crate::terrain::Block;
+            .get_intersecting_crafting_station(&ctx.world_state.terrain);
 
-            let prompt = match station {
+        let prompt = if let Some(station) = crafting_station {
+            use crate::terrain::Block;
+            match station {
                 Block::Workbench => "Press M to use Workbench",
                 Block::Anvil => "Press M to use Anvil",
                 Block::Furnace => "Press M to use Furnace",
                 _ => "",
-            };
-
-            if !prompt.is_empty() {
-                let text_width = d.measure_text(prompt, 20);
-                let text_x = (self.screen_width - text_width as f32) / 2.0;
-                let text_y = self.screen_height - 60.0;
-
-                // Draw background box
-                d.draw_rectangle(
-                    text_x as i32 - 10,
-                    text_y as i32 - 5,
-                    text_width + 20,
-                    30,
-                    Color::new(0, 0, 0, 180),
-                );
-
-                // Draw text
-                d.draw_text(prompt, text_x as i32, text_y as i32, 20, Color::WHITE);
             }
+        } else if let Some(chest_pos) = ctx
+            .world_state
+            .player
+            .get_intersecting_chest(&ctx.world_state.terrain)
+        {
+            // Only show prompt if chest has an inventory
+            if ctx.world_state.chests.contains_key(&chest_pos) {
+                "Press M to open Chest"
+            } else {
+                ""
+            }
+        } else {
+            ""
+        };
+
+        if !prompt.is_empty() {
+            let text_width = d.measure_text(prompt, 20);
+            let text_x = (self.screen_width - text_width as f32) / 2.0;
+            let text_y = self.screen_height - 60.0;
+
+            // Draw background box
+            d.draw_rectangle(
+                text_x as i32 - 10,
+                text_y as i32 - 5,
+                text_width + 20,
+                30,
+                Color::new(0, 0, 0, 180),
+            );
+
+            // Draw text
+            d.draw_text(prompt, text_x as i32, text_y as i32, 20, Color::WHITE);
         }
     }
 }

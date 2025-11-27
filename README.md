@@ -94,7 +94,7 @@ Things that I would really like to have
 - [ ] Improved hitbox/collision handling
 - [ ] Tide clears building items
 - [ ] Bombs explode
-- [ ] Chests store items
+- [x] Chests store items
 - [x] Tool repairs/upgrades
 - [x] Tool colour swapping on animations
 - [ ] Death screen/respawn

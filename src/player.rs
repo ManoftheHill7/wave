@@ -349,6 +349,31 @@ impl Player {
         None
     }
 
+    pub fn get_intersecting_chest(&self, terrain: &Terrain) -> Option<(i32, i32)> {
+        // Check multiple points in player bounding box
+        let points = [
+            (self.position.x, self.position.y),               // top-left
+            (self.position.x + self.width, self.position.y),  // top-right
+            (self.position.x, self.position.y + self.height), // bottom-left
+            (self.position.x + self.width, self.position.y + self.height), // bottom-right
+            (
+                self.position.x + self.width / 2.0,
+                self.position.y + self.height / 2.0,
+            ), // center
+        ];
+
+        for (x, y) in points {
+            let bx = x as i32;
+            let by = y as i32;
+            let block = terrain.at(bx, by);
+            if matches!(block, Block::WoodenChest) {
+                return Some((bx, by));
+            }
+        }
+
+        None
+    }
+
     pub fn can_place_block_at(&self, terrain: &Terrain, block: Block, x: i32, y: i32) -> bool {
         // Restrict workbench and anvil placement to underground (y < 0)
         if matches!(block, Block::Workbench | Block::Anvil) && y >= 0 {
@@ -359,7 +384,13 @@ impl Player {
         terrain.can_place_multi_tile(x, y, block)
     }
 
-    pub fn try_place_block(&mut self, terrain: &mut Terrain, block: Block, left_hand: bool) {
+    pub fn try_place_block(
+        &mut self,
+        terrain: &mut Terrain,
+        chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
+        block: Block,
+        left_hand: bool,
+    ) {
         let tile = if left_hand {
             self.raycast_left_tile
         } else {
@@ -379,6 +410,15 @@ impl Player {
                 if taken > 0 {
                     // Use multi-tile placement (works for both single and multi-tile blocks)
                     terrain.place_multi_tile(x, y, block);
+
+                    // Create chest inventory if placing a chest
+                    if matches!(block, Block::WoodenChest) {
+                        chests.insert(
+                            (x, y),
+                            crate::inventory::Inventory::new(crate::world::CHEST_WEIGHT_LIMIT),
+                        );
+                    }
+
                     if self.inventory.count(item_type) == 0 {
                         // TODO: remove from hand
                     }
@@ -387,7 +427,13 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, dt: f32, terrain: &mut Terrain, controller: &Controller) {
+    pub fn update(
+        &mut self,
+        dt: f32,
+        terrain: &mut Terrain,
+        chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
+        controller: &Controller,
+    ) {
         let jump_pressed = controller.jump_pressed;
         let jump_held = controller.jump_held;
         let climb_pressed = controller.climb_pressed;
@@ -539,8 +585,8 @@ impl Player {
         // Reset gliding state (will be set by use_tool if glider is active)
         self.is_gliding = false;
 
-        let mut used_tool = self.use_tool(terrain, controller, true);
-        used_tool = self.use_tool(terrain, controller, false) || used_tool;
+        let mut used_tool = self.use_tool(terrain, chests, controller, true);
+        used_tool = self.use_tool(terrain, chests, controller, false) || used_tool;
         if !used_tool {
             self.is_mining = false;
         }
@@ -909,6 +955,7 @@ impl Player {
     fn use_tool(
         &mut self,
         terrain: &mut Terrain,
+        chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
         controller: &Controller,
         left_hand: bool,
     ) -> bool {
@@ -930,7 +977,7 @@ impl Player {
                 self.manage_dash(controller.raycast_direction);
                 true
             }
-            (Some(ToolType::Pickaxe), true, _) => self.manage_pickaxe(terrain, left_hand),
+            (Some(ToolType::Pickaxe), true, _) => self.manage_pickaxe(terrain, chests, left_hand),
             (Some(ToolType::Lamp), _, _) => {
                 // Lamp is passive, no action needed
                 false
@@ -940,14 +987,19 @@ impl Player {
                 held
             }
             (Some(ToolType::PlaceBlock(blk)), _, true) => {
-                self.try_place_block(terrain, blk, left_hand);
+                self.try_place_block(terrain, chests, blk, left_hand);
                 true
             }
             _ => false,
         }
     }
 
-    fn manage_pickaxe(&mut self, terrain: &mut Terrain, left_hand: bool) -> bool {
+    fn manage_pickaxe(
+        &mut self,
+        terrain: &mut Terrain,
+        chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
+        left_hand: bool,
+    ) -> bool {
         let tile = if left_hand {
             self.raycast_left_tile
         } else {
@@ -993,9 +1045,14 @@ impl Player {
                     self.is_mining = false;
 
                     // Break the block (handles both single-tile and multi-tile blocks)
-                    if let Some((broken_block, _, _)) =
-                        terrain.break_multi_tile(bt.0 as i32, bt.1 as i32)
-                    {
+                    let block_x = bt.0 as i32;
+                    let block_y = bt.1 as i32;
+                    if let Some((broken_block, _, _)) = terrain.break_multi_tile(block_x, block_y) {
+                        // Remove chest inventory if breaking a chest (contents are lost)
+                        if matches!(broken_block, Block::WoodenChest) {
+                            chests.remove(&(block_x, block_y));
+                        }
+
                         // Add drops to inventory
                         if let Some((item_type, amount)) = broken_block.get_drops() {
                             self.inventory.add(item_type, amount);

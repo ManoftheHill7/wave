@@ -1,7 +1,9 @@
 use crate::controller::Controller;
+use crate::inventory::Inventory;
 use crate::lighting::LightingSystem;
 use crate::player::Player;
 use crate::terrain::{ChunkCoord, Terrain, CHUNK_SIZE};
+use std::collections::HashMap;
 
 #[cfg(debug_assertions)]
 const LIQUID_UPDATE_TIMER: f32 = 0.04;
@@ -19,11 +21,14 @@ const TIDE_FREQUENCY: f32 = 1.0 / 120.0;
 pub const LIGHTING_RANGE: i32 = 35;
 pub const RENDER_RANGE: i32 = 35;
 
+pub const CHEST_WEIGHT_LIMIT: f32 = 1000.0;
+
 pub struct WorldState {
     pub player: Player,
     pub terrain: Terrain,
     pub lighting_system: LightingSystem,
     pub ghost_mode: bool,
+    pub chests: HashMap<(i32, i32), Inventory>,
     flow_timer: f32,
     tide_timer: f32,
     illuminate_timer: f32,
@@ -37,6 +42,7 @@ impl WorldState {
             terrain: Terrain::new(12345),
             lighting_system: LightingSystem::new(),
             ghost_mode: false,
+            chests: HashMap::new(),
             flow_timer: 0.0,
             illuminate_timer: 0.0,
             tide_timer: 0.0,
@@ -193,7 +199,8 @@ impl WorldState {
         if self.ghost_mode {
             self.player.update_ghost(dt, &self.terrain, controller);
         } else {
-            self.player.update(dt, &mut self.terrain, controller);
+            self.player
+                .update(dt, &mut self.terrain, &mut self.chests, controller);
         }
 
         // Update lighting at reduced framerate for performance
