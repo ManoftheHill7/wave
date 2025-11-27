@@ -67,6 +67,11 @@ impl WorldState {
             / 2.0) as i32
     }
 
+    /// Returns tide as a percentage from 0.0 (low tide) to 1.0 (high tide)
+    pub fn tide_percent(&self) -> f32 {
+        self.tide_level() as f32 / MAX_TIDE_DEPTH
+    }
+
     fn initialize_chunk_tides(&mut self, coord: ChunkCoord) {
         use crate::terrain::{Block, LiquidData, CELL_RESOLUTION};
 

@@ -1164,6 +1164,10 @@ impl Screen for GameScreen {
                             (0.0, 100.0)
                         }
                     }
+                    crate::tools::ToolType::TideClock => {
+                        // TideClock has no durability
+                        (1.0, 1.0)
+                    }
                     crate::tools::ToolType::PlaceBlock(blk) => {
                         let count = blk
                             .to_item_type()
@@ -1215,6 +1219,34 @@ impl Screen for GameScreen {
 
         // Draw right hand slot (right click tool)
         draw_hand_slot(ctx.world_state.player.right_hand, hud_x + right_offset, "R");
+
+        // Draw tideclock HUD if player has tideclock equipped in either hand
+        let has_tideclock_equipped = matches!(
+            ctx.world_state.player.left_hand,
+            Some(crate::tools::ToolType::TideClock)
+        ) || matches!(
+            ctx.world_state.player.right_hand,
+            Some(crate::tools::ToolType::TideClock)
+        );
+
+        if has_tideclock_equipped && ctx.world_state.player.tool_tideclock.is_some() {
+            let tide_percent = ctx.world_state.tide_percent();
+            let tideclock_texture =
+                crate::tools::ToolTideClock::get_frame_texture(tide_percent, &ctx.textures);
+
+            // Draw tideclock in top left corner
+            let clock_scale = 4.0;
+            let clock_x = 10.0;
+            let clock_y = 10.0;
+
+            d.draw_texture_ex(
+                tideclock_texture,
+                Vector2::new(clock_x, clock_y),
+                0.0,
+                clock_scale,
+                Color::WHITE,
+            );
+        }
 
         // Draw vignette effect when breath is critical
         if ctx.world_state.player.is_swimming {

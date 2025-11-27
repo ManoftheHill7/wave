@@ -61,7 +61,7 @@ Things that I would really like to have
 #### Additional movement options
 
 - [ ] Tool - Grappling Hook
-- [ ] Tool - Glider
+- [x] Tool - Glider
 - [ ] Boots
 
 #### Food
@@ -98,7 +98,7 @@ Things that I would really like to have
 - [x] Tool repairs/upgrades
 - [x] Tool colour swapping on animations
 - [ ] Death screen/respawn
-- [ ] Tide clock ui
+- [x] Tide clock ui
 - [ ] Permenatly save block placement on surface
 - [ ] Breath bar fills slowly out of water
 

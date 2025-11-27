@@ -2,7 +2,7 @@ use crate::controller::Controller;
 use crate::inventory::Inventory;
 use crate::terrain::{Block, Terrain};
 use crate::tools::{
-    load_dash, load_glider, load_pick, ToolDash, ToolGlider, ToolPickaxe, ToolType,
+    load_dash, load_glider, load_pick, ToolDash, ToolGlider, ToolPickaxe, ToolTideClock, ToolType,
 };
 use raylib::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -121,6 +121,7 @@ pub struct Player {
     pub tool_dash: Option<ToolDash>,
     pub tool_pickaxe: Option<ToolPickaxe>,
     pub tool_glider: Option<ToolGlider>,
+    pub tool_tideclock: Option<ToolTideClock>,
 
     pub is_gliding: bool,
 }
@@ -207,6 +208,7 @@ impl Player {
             tool_dash: None,
             tool_pickaxe: Some(load_pick("stone_pickaxe")),
             tool_glider: None,
+            tool_tideclock: None,
 
             is_gliding: false,
         }
@@ -266,8 +268,9 @@ impl Player {
             let max_length = match tool {
                 ToolType::Pickaxe => MAX_RAYCAST_PICKAXE,
                 ToolType::Dash => MAX_RAYCAST_DASH,
-                ToolType::Lamp => 0.0,   // Lamp doesn't raycast
-                ToolType::Glider => 0.0, // Glider doesn't raycast
+                ToolType::Lamp => 0.0,      // Lamp doesn't raycast
+                ToolType::Glider => 0.0,    // Glider doesn't raycast
+                ToolType::TideClock => 0.0, // TideClock doesn't raycast
                 ToolType::PlaceBlock(_) => MAX_RAYCAST_PLACE_BLOCK,
             };
             let rayresult = self.raycast(

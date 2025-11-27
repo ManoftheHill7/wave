@@ -694,6 +694,9 @@ fn process_recipe(
                     input_normalized
                 ));
             }
+            "tool_tideclock" => {
+                input_defs.push("RecipeIOType::ToolTideClock".to_string());
+            }
             _ => {}
         }
     }
@@ -734,6 +737,7 @@ fn process_recipe(
                 output_normalized
             )
         }
+        "tool_tideclock" => "RecipeIOType::ToolTideClock".to_string(),
         _ => return,
     };
 
@@ -822,6 +826,9 @@ fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
         if normalized.contains("glider") {
             return String::from("tool_glider");
         }
+        if normalized == "tidalcave_clock" {
+            return String::from("tool_tideclock");
+        }
 
         String::from("unknown")
     };
@@ -880,6 +887,7 @@ pub enum RecipeIOType {{
     ToolPickaxe {{ level: &'static str }},
     ToolDash {{ level: &'static str }},
     ToolGlider {{ level: &'static str }},
+    ToolTideClock,
 }}
 
 impl RecipeIOType {{
@@ -893,6 +901,7 @@ impl RecipeIOType {{
                     _ => level,
                 }}
             }}
+            RecipeIOType::ToolTideClock => "Tidalcave Clock",
         }}
     }}
 
@@ -903,6 +912,7 @@ impl RecipeIOType {{
             RecipeIOType::ToolPickaxe {{ .. }} => 1,
             RecipeIOType::ToolDash {{ .. }} => 1,
             RecipeIOType::ToolGlider {{ .. }} => 1,
+            RecipeIOType::ToolTideClock => 1,
         }}
     }}
 
@@ -918,6 +928,9 @@ impl RecipeIOType {{
             }}
             RecipeIOType::ToolGlider {{ level }} => {{
                 crate::tools::ToolGlider::texture_for_level(level, textures)
+            }}
+            RecipeIOType::ToolTideClock => {{
+                &textures.items.tidalcave_clock
             }}
         }}
     }}
@@ -937,6 +950,9 @@ impl RecipeIOType {{
             RecipeIOType::ToolGlider {{ level }} => {{
                 player.tool_glider.as_ref().map(|g| g.level == *level).unwrap_or(false)
             }}
+            RecipeIOType::ToolTideClock => {{
+                player.tool_tideclock.is_some()
+            }}
         }}
     }}
 
@@ -955,6 +971,9 @@ impl RecipeIOType {{
             }}
             RecipeIOType::ToolGlider {{ level }} => {{
                 format!("1x {{}} (tool)", level)
+            }}
+            RecipeIOType::ToolTideClock => {{
+                "1x Tidalcave Clock (tool)".to_string()
             }}
         }}
     }}
@@ -996,6 +1015,11 @@ impl Recipe {{
                         _ => return false,
                     }}
                 }}
+                RecipeIOType::ToolTideClock => {{
+                    if player.tool_tideclock.is_none() {{
+                        return false;
+                    }}
+                }}
             }}
         }}
         true
@@ -1030,6 +1054,9 @@ impl Recipe {{
             }}
             RecipeIOType::ToolGlider {{ level }} => {{
                 player.tool_glider = Some(crate::tools::load_glider(level));
+            }}
+            RecipeIOType::ToolTideClock => {{
+                player.tool_tideclock = Some(crate::tools::ToolTideClock::new());
             }}
         }}
 

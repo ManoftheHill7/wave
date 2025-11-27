@@ -12,6 +12,7 @@ pub enum ToolType {
     Pickaxe,
     Lamp,
     Glider,
+    TideClock,
     PlaceBlock(Block),
 }
 
@@ -22,6 +23,7 @@ impl ToolType {
             ToolType::Pickaxe => Some(&textures.tools.stone_pickaxe),
             ToolType::Lamp => Some(&textures.tools.lamp_coal1),
             ToolType::Glider => Some(&textures.tools.glider),
+            ToolType::TideClock => Some(&textures.items.tidalcave_clock),
             ToolType::PlaceBlock(blk) => blk.to_item_type().map(|item| item.get_texture(textures)),
         }
     }
@@ -162,5 +164,28 @@ pub fn load_glider(level: &str) -> ToolGlider {
         max_durability: glider.get("durability").unwrap().as_float().unwrap() as f32,
         max_fall_speed: glider.get("max_fall_speed").unwrap().as_float().unwrap() as f32,
         level: level.to_string(),
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolTideClock {
+    // TideClock has no durability or levels - it just exists
+}
+
+impl ToolTideClock {
+    pub fn new() -> Self {
+        ToolTideClock {}
+    }
+
+    /// Get the tideclock frame texture based on tide percentage (0.0 to 1.0)
+    /// Frame 0 = low tide, last frame = high tide
+    pub fn get_frame_texture<'a>(tide_percent: f32, textures: &'a TextureManager) -> &'a Texture2D {
+        // Clamp to 0.0-1.0 range
+        let percent = 1.0 - tide_percent.clamp(0.0, 1.0);
+        // Get the number of frames available
+        let num_frames = textures.ui.tideclock.len();
+        // Map percentage to frame index
+        let frame = ((percent * (num_frames - 1) as f32).round() as usize).min(num_frames - 1);
+        &textures.ui.tideclock[frame]
     }
 }
