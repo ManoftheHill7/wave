@@ -19,6 +19,7 @@ pub mod chest_screen;
 pub mod config;
 pub mod controller;
 pub mod crafting_screen;
+pub mod death_screen;
 pub mod game_screen;
 pub mod inventory;
 pub mod inventory_screen;

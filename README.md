@@ -93,14 +93,14 @@ Things that I would really like to have
 
 - [ ] Improved hitbox/collision handling
 - [ ] Tide clears building items
-- [ ] Bombs explode
+- [x] Bombs explode
 - [x] Chests store items
 - [x] Tool repairs/upgrades
 - [x] Tool colour swapping on animations
-- [ ] Death screen/respawn
+- [x] Death screen/respawn
 - [x] Tide clock ui
 - [ ] Permenatly save block placement on surface
-- [ ] Breath bar fills slowly out of water
+- [x] Breath bar fills slowly out of water
 
 #### Combat
 

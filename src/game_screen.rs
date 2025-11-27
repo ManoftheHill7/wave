@@ -282,6 +282,7 @@ fn render_water(d: &mut RaylibDrawHandle, terrain: &Terrain, x: f32, y: f32) {
 fn render_terrain(
     d: &mut RaylibDrawHandle,
     terrain: &Terrain,
+    world_state: &crate::world::WorldState,
     px: i32,
     py: i32,
     textures: &crate::TextureManager,
@@ -381,6 +382,26 @@ fn render_terrain(
                         textures.tiles.stone_tile.texture(),
                         Some(src_rect),
                     );
+                } else if block == Block::Bomb {
+                    // Check if this is an active bomb with animation
+                    if let Some(frame) = world_state.get_bomb_frame(x, y) {
+                        let texture = match frame {
+                            0 => &textures.tiles.bomb1,
+                            1 => &textures.tiles.bomb2,
+                            2 => &textures.tiles.bomb3,
+                            3 => &textures.tiles.bomb4,
+                            4 => &textures.tiles.bomb5,
+                            5 => &textures.tiles.bomb6,
+                            6 => &textures.tiles.bomb7,
+                            7 => &textures.tiles.bomb8,
+                            _ => &textures.tiles.bomb9,
+                        };
+                        render_tile(d, x as f32, y as f32, texture, None);
+                    } else {
+                        // Fallback to default bomb texture
+                        let texture = block.get_texture(textures);
+                        render_tile(d, x as f32, y as f32, texture, None);
+                    }
                 } else {
                     let texture = block.get_texture(textures);
                     render_tile(d, x as f32, y as f32, texture, None);
@@ -811,6 +832,11 @@ impl Screen for GameScreen {
             0.12,
         );
 
+        // Check for player death
+        if ctx.world_state.player.health <= 0 {
+            return ScreenCommand::Push(Box::new(crate::death_screen::DeathScreen::new()));
+        }
+
         // Check if Tab is pressed to open inventory
         if ctx.controller.menu_pressed {
             return ScreenCommand::Push(Box::new(InventoryScreen::new()));
@@ -943,7 +969,14 @@ impl Screen for GameScreen {
             let px = ctx.world_state.player.position.x as i32;
             let py = ctx.world_state.player.position.y as i32;
 
-            render_terrain(&mut d2, &ctx.world_state.terrain, px, py, &ctx.textures);
+            render_terrain(
+                &mut d2,
+                &ctx.world_state.terrain,
+                &ctx.world_state,
+                px,
+                py,
+                &ctx.textures,
+            );
 
             // Draw chunk boundaries when debug is enabled
             if ctx.debug_enabled {
