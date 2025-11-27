@@ -766,6 +766,22 @@ fn render_player(
             Color::RED,
         );
     }
+
+    // Render block break progress overlay
+    if player.is_mining {
+        if let Some((bx, by)) = player.currently_mining {
+            let block = terrain.at(bx as i32, by as i32);
+            if block != Block::Air {
+                let durability = block.durability();
+                let progress =
+                    ((player.time - player.started_mining_at) / durability).clamp(0.0, 1.0);
+                let frame = (progress * 4.0).floor().min(3.0) as usize;
+                let break_texture = &textures.ui.block_break[frame];
+
+                render_tile(d, bx, by, break_texture, None);
+            }
+        }
+    }
 }
 
 pub struct GameScreen {
