@@ -127,6 +127,14 @@ pub struct Player {
     pub tool_tideclock: Option<ToolTideClock>,
 
     pub is_gliding: bool,
+
+    // Sound timing (not saved)
+    #[serde(skip)]
+    pub last_pickaxe_sound: f32,
+    #[serde(skip)]
+    pub last_footstep_sound: f32,
+    #[serde(skip)]
+    pub jumped_this_frame: bool,
 }
 
 // Custom serialization for raylib Vector2
@@ -215,6 +223,10 @@ impl Player {
             tool_tideclock: None,
 
             is_gliding: false,
+
+            last_pickaxe_sound: 0.0,
+            last_footstep_sound: 0.0,
+            jumped_this_frame: false,
         }
     }
 
@@ -449,6 +461,9 @@ impl Player {
         let jump_held = controller.jump_held;
         let climb_pressed = controller.climb_pressed;
         let input_dir = controller.input_dir;
+
+        // Reset per-frame flags
+        self.jumped_this_frame = false;
 
         self.time += dt;
 
@@ -923,6 +938,7 @@ impl Player {
         self.gravity_reduction = JUMP_GRAVITY_REDUCTION;
         self.try_jumped_at = 0.0;
         self.is_jumping = true;
+        self.jumped_this_frame = true;
 
         if self.is_dashing {
             self.dash_dir.y -= 0.5;
@@ -1042,12 +1058,14 @@ impl Player {
                 if !self.is_mining {
                     self.is_mining = true;
                     self.started_mining_at = self.time;
+                    self.last_pickaxe_sound = self.time;
                     self.currently_mining = Some(bt);
                 } else {
                     self.facing_dir =
                         (raycast_end.x - (self.position.x + self.width / 2.0)).signum() as i32;
                     if let Some(ot) = self.currently_mining {
                         if ot.0 != bt.0 || ot.1 != bt.1 {
+                            self.last_pickaxe_sound = self.time;
                             self.started_mining_at = self.time;
                             self.currently_mining = Some(bt);
                         }

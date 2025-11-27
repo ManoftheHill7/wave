@@ -6,6 +6,11 @@ use crate::{pixels_per_world_unit, GameContext, Neighbors, ShaderLocs};
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
 
+// Sound effect intervals (in seconds)
+const PICKAXE_SOUND_INTERVAL: f32 = 1.0;
+const FOOTSTEP_SOUND_INTERVAL: f32 = 0.3;
+const FOOTSTEP_MIN_SPEED: f32 = 0.5;
+
 // Maps to uniforms (original_0, replace_0)
 const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Red scarf
 const COLOR_PALETTES: &[[f32; 4]] = &[
@@ -821,6 +826,31 @@ impl Screen for GameScreen {
 
         if ctx.updating {
             ctx.world_state.update(dt, &ctx.controller);
+
+            // Handle sound effects
+            let player = &mut ctx.world_state.player;
+            let time = player.time;
+
+            // Pickaxe sounds while mining
+            if player.is_mining && time - player.last_pickaxe_sound >= PICKAXE_SOUND_INTERVAL {
+                ctx.sounds.play_random("pickaxe");
+                player.last_pickaxe_sound = time;
+            }
+
+            // Footstep sounds while walking on ground
+            if player.on_ground
+                && !player.is_swimming
+                && player.velocity.x.abs() > FOOTSTEP_MIN_SPEED
+                && time - player.last_footstep_sound >= FOOTSTEP_SOUND_INTERVAL
+            {
+                ctx.sounds.play_random("footstep");
+                player.last_footstep_sound = time;
+            }
+
+            // Jump sound (check if player just jumped this frame)
+            if player.jumped_this_frame {
+                ctx.sounds.play_random("jumping");
+            }
         }
 
         smooth_camera_to_target(
