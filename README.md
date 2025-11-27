@@ -74,7 +74,7 @@ Things that I would really like to have
 
 - [ ] Animated tiles (furnace, anvil, torches, eg)
 - [ ] Parallax backgrounds
-- [ ] Overlay block breaking animation
+- [x] Overlay block breaking animation
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
   - Few opening in tunnels, more in caverns
   - Ore can generate in background layers
