@@ -140,6 +140,50 @@ impl CraftingScreen {
                             }
                         }
                     }
+                    RecipeIOType::ToolGlider {
+                        level: output_level,
+                    } => {
+                        // Same logic for glider tools
+                        let has_tool_input = recipe
+                            .inputs
+                            .iter()
+                            .any(|input| matches!(input, RecipeIOType::ToolGlider { .. }));
+
+                        if !has_tool_input {
+                            // Crafting recipe: don't show if player has ANY glider
+                            if ctx.world_state.player.tool_glider.is_some() {
+                                return false;
+                            }
+                        } else {
+                            // Repair or upgrade recipe
+                            let is_repair = recipe.inputs.iter().any(|input| {
+                                if let RecipeIOType::ToolGlider { level: input_level } = input {
+                                    input_level == &output_level
+                                } else {
+                                    false
+                                }
+                            });
+
+                            if is_repair {
+                                // Repair: only show if player has this exact level
+                                let has_exact_level = ctx
+                                    .world_state
+                                    .player
+                                    .tool_glider
+                                    .as_ref()
+                                    .map(|g| g.level == output_level)
+                                    .unwrap_or(false);
+                                if !has_exact_level {
+                                    return false;
+                                }
+                            } else {
+                                // Upgrade: only show if player can craft it
+                                if !recipe.can_craft(&ctx.world_state.player) {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
                     _ => {} // Non-tool recipes: no special filtering
                 }
 
@@ -437,7 +481,7 @@ impl Screen for CraftingScreen {
                     Color::DARKGRAY
                 };
                 d.draw_text(
-                    &format!("{}x {}", recipe.output.amount(), recipe.output.name()),
+                    &recipe.display_name(),
                     text_x as i32,
                     text_y as i32,
                     12,

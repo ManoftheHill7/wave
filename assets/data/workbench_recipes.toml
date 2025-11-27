@@ -157,3 +157,17 @@ amount = 1
 [[recipes.fishing_rod.inputs]]
 type = "rope"
 amount = 2
+
+[tool_recipes.linen_glider]
+type = "workbench"
+output = "linen_glider"
+amount = 1
+[[tool_recipes.linen_glider.inputs]]
+type = "stick"
+amount = 10
+[[tool_recipes.linen_glider.inputs]]
+type = "linen"
+amount = 3
+[[tool_recipes.linen_glider.inputs]]
+type = "rope"
+amount = 5

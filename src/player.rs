@@ -1,7 +1,9 @@
 use crate::controller::Controller;
 use crate::inventory::Inventory;
 use crate::terrain::{Block, Terrain};
-use crate::tools::*;
+use crate::tools::{
+    load_dash, load_glider, load_pick, ToolDash, ToolGlider, ToolPickaxe, ToolType,
+};
 use raylib::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -118,6 +120,9 @@ pub struct Player {
     pub right_hand: Option<ToolType>,
     pub tool_dash: Option<ToolDash>,
     pub tool_pickaxe: Option<ToolPickaxe>,
+    pub tool_glider: Option<ToolGlider>,
+
+    pub is_gliding: bool,
 }
 
 // Custom serialization for raylib Vector2
@@ -201,6 +206,9 @@ impl Player {
 
             tool_dash: None,
             tool_pickaxe: Some(load_pick("stone_pickaxe")),
+            tool_glider: None,
+
+            is_gliding: false,
         }
     }
 
@@ -258,7 +266,8 @@ impl Player {
             let max_length = match tool {
                 ToolType::Pickaxe => MAX_RAYCAST_PICKAXE,
                 ToolType::Dash => MAX_RAYCAST_DASH,
-                ToolType::Lamp => 0.0, // Lamp doesn't raycast
+                ToolType::Lamp => 0.0,   // Lamp doesn't raycast
+                ToolType::Glider => 0.0, // Glider doesn't raycast
                 ToolType::PlaceBlock(_) => MAX_RAYCAST_PLACE_BLOCK,
             };
             let rayresult = self.raycast(
@@ -524,10 +533,31 @@ impl Player {
             self.dashes = max_dashes;
         }
 
+        // Reset gliding state (will be set by use_tool if glider is active)
+        self.is_gliding = false;
+
         let mut used_tool = self.use_tool(terrain, controller, true);
         used_tool = self.use_tool(terrain, controller, false) || used_tool;
         if !used_tool {
             self.is_mining = false;
+        }
+
+        // Apply glider physics - clamp fall speed and consume durability
+        if self.is_gliding {
+            if let Some(glider) = &self.tool_glider {
+                let max_fall = glider.max_fall_speed;
+                if self.velocity.y > max_fall {
+                    self.velocity.y = max_fall;
+                }
+            }
+            // Consume durability over time while gliding
+            if let Some(glider) = self.tool_glider.as_mut() {
+                glider.durability -= dt;
+                if glider.durability <= 0.0 {
+                    self.break_tool(ToolType::Glider);
+                    self.is_gliding = false;
+                }
+            }
         }
 
         // Apply dash velocity
@@ -862,6 +892,13 @@ impl Player {
                     self.tool_dash.as_mut().unwrap().level = original_level;
                 }
             }
+            ToolType::Glider => {
+                if let Some(glider) = &self.tool_glider {
+                    let original_level = glider.level.clone();
+                    self.tool_glider = Some(load_glider("broken"));
+                    self.tool_glider.as_mut().unwrap().level = original_level;
+                }
+            }
             _ => {}
         }
     }
@@ -894,6 +931,10 @@ impl Player {
             (Some(ToolType::Lamp), _, _) => {
                 // Lamp is passive, no action needed
                 false
+            }
+            (Some(ToolType::Glider), held, _) => {
+                self.manage_glider(held);
+                held
             }
             (Some(ToolType::PlaceBlock(blk)), _, true) => {
                 self.try_place_block(terrain, blk, left_hand);
@@ -992,5 +1033,19 @@ impl Player {
 
             self.dash_dir = self.dash_dir.normalized();
         }
+    }
+
+    fn manage_glider(&mut self, held: bool) {
+        // Only glide when in the air and holding the button
+        if !self.on_ground && !self.is_swimming && !self.is_dashing && held {
+            if let Some(glider) = &self.tool_glider {
+                // Only glide if glider has durability
+                if glider.durability > 0.0 {
+                    self.is_gliding = true;
+                    return;
+                }
+            }
+        }
+        self.is_gliding = false;
     }
 }

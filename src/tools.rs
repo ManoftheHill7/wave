@@ -11,6 +11,7 @@ pub enum ToolType {
     Dash,
     Pickaxe,
     Lamp,
+    Glider,
     PlaceBlock(Block),
 }
 
@@ -20,6 +21,7 @@ impl ToolType {
             ToolType::Dash => Some(&textures.tools.white_pearl_amulet),
             ToolType::Pickaxe => Some(&textures.tools.stone_pickaxe),
             ToolType::Lamp => Some(&textures.tools.lamp_coal1),
+            ToolType::Glider => Some(&textures.tools.glider),
             ToolType::PlaceBlock(blk) => blk.to_item_type().map(|item| item.get_texture(textures)),
         }
     }
@@ -121,6 +123,44 @@ pub fn load_dash(level: &str) -> ToolDash {
             .unwrap()
             .as_float()
             .unwrap() as f32,
+        level: level.to_string(),
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolGlider {
+    pub durability: f32,
+    pub max_durability: f32,
+    pub max_fall_speed: f32,
+    pub level: String,
+}
+
+impl ToolGlider {
+    pub fn texture_for_level<'a>(level: &str, textures: &'a TextureManager) -> &'a Texture2D {
+        match level {
+            "broken" => &textures.tools.broken_glider,
+            // All glider tiers use the same texture for now until new art is added
+            "linen_glider" | "pearl_glider" | "amethyst_glider" | "emerald_glider"
+            | "topaz_glider" | "ruby_glider" | "diamond_glider" => &textures.tools.glider,
+            _ => &textures.tools.glider,
+        }
+    }
+
+    pub fn get_texture<'a>(&self, textures: &'a TextureManager) -> &'a Texture2D {
+        if self.durability <= 0.0 {
+            &textures.tools.broken_glider
+        } else {
+            Self::texture_for_level(&self.level, textures)
+        }
+    }
+}
+
+pub fn load_glider(level: &str) -> ToolGlider {
+    let glider = load_leveled_tool("glider", level);
+    ToolGlider {
+        durability: glider.get("durability").unwrap().as_float().unwrap() as f32,
+        max_durability: glider.get("durability").unwrap().as_float().unwrap() as f32,
+        max_fall_speed: glider.get("max_fall_speed").unwrap().as_float().unwrap() as f32,
         level: level.to_string(),
     }
 }

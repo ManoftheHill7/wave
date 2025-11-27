@@ -688,6 +688,12 @@ fn process_recipe(
                     input_normalized
                 ));
             }
+            "tool_glider" => {
+                input_defs.push(format!(
+                    "RecipeIOType::ToolGlider {{ level: \"{}\" }}",
+                    input_normalized
+                ));
+            }
             _ => {}
         }
     }
@@ -719,6 +725,12 @@ fn process_recipe(
         "tool_dash" => {
             format!(
                 "RecipeIOType::ToolDash {{ level: \"{}\" }}",
+                output_normalized
+            )
+        }
+        "tool_glider" => {
+            format!(
+                "RecipeIOType::ToolGlider {{ level: \"{}\" }}",
                 output_normalized
             )
         }
@@ -779,6 +791,15 @@ fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
         }
     }
 
+    // Extract glider names
+    if let Some(glider_table) = tools_data.get("glider").and_then(|v| v.as_table()) {
+        for (level, data) in glider_table.iter() {
+            if let Some(name) = data.as_table().and_then(|t| t.get("name")).and_then(|n| n.as_str()) {
+                tool_names.push(format!("            \"{}\" => \"{}\",", level, name));
+            }
+        }
+    }
+
     let mut recipe_definitions = Vec::new();
     let mut skipped_recipes = Vec::new();
 
@@ -797,6 +818,9 @@ fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
         }
         if normalized.contains("amulet") {
             return String::from("tool_dash");
+        }
+        if normalized.contains("glider") {
+            return String::from("tool_glider");
         }
 
         String::from("unknown")
@@ -855,6 +879,7 @@ pub enum RecipeIOType {{
     Item {{ item_type: ItemType, amount: u32 }},
     ToolPickaxe {{ level: &'static str }},
     ToolDash {{ level: &'static str }},
+    ToolGlider {{ level: &'static str }},
 }}
 
 impl RecipeIOType {{
@@ -862,7 +887,7 @@ impl RecipeIOType {{
     pub fn name(&self) -> &'static str {{
         match self {{
             RecipeIOType::Item {{ item_type, .. }} => item_type.name(),
-            RecipeIOType::ToolPickaxe {{ level }} | RecipeIOType::ToolDash {{ level }} => {{
+            RecipeIOType::ToolPickaxe {{ level }} | RecipeIOType::ToolDash {{ level }} | RecipeIOType::ToolGlider {{ level }} => {{
                 match *level {{
 {}
                     _ => level,
@@ -877,6 +902,7 @@ impl RecipeIOType {{
             RecipeIOType::Item {{ amount, .. }} => *amount,
             RecipeIOType::ToolPickaxe {{ .. }} => 1,
             RecipeIOType::ToolDash {{ .. }} => 1,
+            RecipeIOType::ToolGlider {{ .. }} => 1,
         }}
     }}
 
@@ -889,6 +915,9 @@ impl RecipeIOType {{
             }}
             RecipeIOType::ToolDash {{ level }} => {{
                 crate::tools::ToolDash::texture_for_level(level, textures)
+            }}
+            RecipeIOType::ToolGlider {{ level }} => {{
+                crate::tools::ToolGlider::texture_for_level(level, textures)
             }}
         }}
     }}
@@ -905,6 +934,9 @@ impl RecipeIOType {{
             RecipeIOType::ToolDash {{ level }} => {{
                 player.tool_dash.as_ref().map(|d| d.level == *level).unwrap_or(false)
             }}
+            RecipeIOType::ToolGlider {{ level }} => {{
+                player.tool_glider.as_ref().map(|g| g.level == *level).unwrap_or(false)
+            }}
         }}
     }}
 
@@ -919,6 +951,9 @@ impl RecipeIOType {{
                 format!("1x {{}} (tool)", level)
             }}
             RecipeIOType::ToolDash {{ level }} => {{
+                format!("1x {{}} (tool)", level)
+            }}
+            RecipeIOType::ToolGlider {{ level }} => {{
                 format!("1x {{}} (tool)", level)
             }}
         }}
@@ -955,6 +990,12 @@ impl Recipe {{
                         _ => return false,
                     }}
                 }}
+                RecipeIOType::ToolGlider {{ level }} => {{
+                    match &player.tool_glider {{
+                        Some(glider) if glider.level == *level => {{}},
+                        _ => return false,
+                    }}
+                }}
             }}
         }}
         true
@@ -987,9 +1028,67 @@ impl Recipe {{
             RecipeIOType::ToolDash {{ level }} => {{
                 player.tool_dash = Some(crate::tools::load_dash(level));
             }}
+            RecipeIOType::ToolGlider {{ level }} => {{
+                player.tool_glider = Some(crate::tools::load_glider(level));
+            }}
         }}
 
         true
+    }}
+
+    /// Check if this recipe is a repair (tool input with same level as tool output)
+    pub fn is_repair(&self) -> bool {{
+        match &self.output {{
+            RecipeIOType::ToolPickaxe {{ level: out_level }} => {{
+                self.inputs.iter().any(|input| {{
+                    matches!(input, RecipeIOType::ToolPickaxe {{ level }} if level == out_level)
+                }})
+            }}
+            RecipeIOType::ToolDash {{ level: out_level }} => {{
+                self.inputs.iter().any(|input| {{
+                    matches!(input, RecipeIOType::ToolDash {{ level }} if level == out_level)
+                }})
+            }}
+            RecipeIOType::ToolGlider {{ level: out_level }} => {{
+                self.inputs.iter().any(|input| {{
+                    matches!(input, RecipeIOType::ToolGlider {{ level }} if level == out_level)
+                }})
+            }}
+            _ => false,
+        }}
+    }}
+
+    /// Check if this recipe is an upgrade (tool input with different level than tool output)
+    pub fn is_upgrade(&self) -> bool {{
+        match &self.output {{
+            RecipeIOType::ToolPickaxe {{ level: out_level }} => {{
+                self.inputs.iter().any(|input| {{
+                    matches!(input, RecipeIOType::ToolPickaxe {{ level }} if level != out_level)
+                }})
+            }}
+            RecipeIOType::ToolDash {{ level: out_level }} => {{
+                self.inputs.iter().any(|input| {{
+                    matches!(input, RecipeIOType::ToolDash {{ level }} if level != out_level)
+                }})
+            }}
+            RecipeIOType::ToolGlider {{ level: out_level }} => {{
+                self.inputs.iter().any(|input| {{
+                    matches!(input, RecipeIOType::ToolGlider {{ level }} if level != out_level)
+                }})
+            }}
+            _ => false,
+        }}
+    }}
+
+    /// Get display name for the recipe list (prefixed with "Repair - " or "Upgrade - " as appropriate)
+    pub fn display_name(&self) -> String {{
+        if self.is_repair() {{
+            format!("Repair - {{}}", self.output.name())
+        }} else if self.is_upgrade() {{
+            format!("Upgrade - {{}}", self.output.name())
+        }} else {{
+            format!("{{}}x {{}}", self.output.amount(), self.output.name())
+        }}
     }}
 }}
 
