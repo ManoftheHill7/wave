@@ -646,12 +646,27 @@ impl TerrainGenerator {
         let noise_detail = 100;
         let noise_height = 10;
 
+        // Fade distance: distance over which terrain height fades in from zero
+        let fade_distance = 10.0;
+        let fade_start = 64.0;
+
         // Starts to show flaws if x>14000
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
-            let height_f =
-                noise_height as f64 * self.noise.get([wx as f64 * (1.0 / noise_detail as f64)]);
-            let height = height_f as i32 - coord.x + BEACH_HEIGHT;
+            let wx_noise = self.noise.get([wx as f64 * (1.0 / noise_detail as f64)]);
+
+            // Calculate fade factor: 0.0 at wx=0, gradually increasing to 1.0 at fade_distance
+            let fade_factor = ((wx as f64 - fade_start) / fade_distance).min(1.0);
+
+            // Apply fade factor to noise, ensuring smooth transition from zero
+            let height_f = noise_height as f64 * wx_noise;
+            let desired_height = height_f as i32 - coord.x + BEACH_HEIGHT;
+
+            // Lerp between BEACH_HEIGHT and desired_height using fade_factor
+            // At fade_factor=0.0 (wx=0): height = BEACH_HEIGHT
+            // At fade_factor=1.0 (wx>=fade_distance): height = desired_height
+            let height = (BEACH_HEIGHT as f64 * (1.0 - fade_factor) + desired_height as f64 * fade_factor) as i32;
+            dbg!(wx, desired_height, fade_factor);
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
 
