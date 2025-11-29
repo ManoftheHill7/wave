@@ -112,3 +112,82 @@ amount = 1
 [[tool_recipes.etherealite_pickaxe.inputs]]
 type = "etherealite bar"
 amount = 1
+
+# glider repairs
+
+[tool_recipes.linen_glider]
+type = "anvil"
+output = "linen_glider"
+amount = 1
+[[tool_recipes.linen_glider.inputs]]
+type = "linen_glider"
+amount = 1
+[[tool_recipes.linen_glider.inputs]]
+type = "linen"
+amount = 1
+
+[tool_recipes.pearl_glider]
+type = "anvil"
+output = "pearl_glider"
+amount = 1
+[[tool_recipes.pearl_glider.inputs]]
+type = "pearl_glider"
+amount = 1
+[[tool_recipes.pearl_glider.inputs]]
+type = "linen"
+amount = 1
+
+[tool_recipes.amethyst_glider]
+type = "anvil"
+output = "amethyst_glider"
+amount = 1
+[[tool_recipes.amethyst_glider.inputs]]
+type = "amethyst_glider"
+amount = 1
+[[tool_recipes.amethyst_glider.inputs]]
+type = "linen"
+amount = 1
+
+[tool_recipes.emerald_glider]
+type = "anvil"
+output = "emerald_glider"
+amount = 1
+[[tool_recipes.emerald_glider.inputs]]
+type = "emerald_glider"
+amount = 1
+[[tool_recipes.emerald_glider.inputs]]
+type = "linen"
+amount = 1
+
+[tool_recipes.topaz_glider]
+type = "anvil"
+output = "topaz_glider"
+amount = 1
+[[tool_recipes.topaz_glider.inputs]]
+type = "topaz_glider"
+amount = 1
+[[tool_recipes.topaz_glider.inputs]]
+type = "linen"
+amount = 1
+
+[tool_recipes.ruby_glider]
+type = "anvil"
+output = "ruby_glider"
+amount = 1
+[[tool_recipes.ruby_glider.inputs]]
+type = "ruby_glider"
+amount = 1
+[[tool_recipes.ruby_glider.inputs]]
+type = "linen"
+amount = 1
+
+[tool_recipes.diamond_glider]
+type = "anvil"
+output = "diamond_glider"
+amount = 1
+[[tool_recipes.diamond_glider.inputs]]
+type = "diamond_glider"
+amount = 1
+[[tool_recipes.diamond_glider.inputs]]
+type = "linen"
+amount = 1

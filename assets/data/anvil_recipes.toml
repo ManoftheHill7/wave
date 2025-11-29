@@ -56,3 +56,71 @@ amount = 2
 [[recipes.lamp.inputs]]
 type = "glass"
 amount = 1
+
+# glider upgrades
+
+[tool_recipes.pearl_glider_upgrade]
+type = "anvil"
+output = "pearl_glider"
+amount = 1
+[[tool_recipes.pearl_glider_upgrade.inputs]]
+type = "linen_glider"
+amount = 1
+[[tool_recipes.pearl_glider_upgrade.inputs]]
+type = "white pearl"
+amount = 1
+
+[tool_recipes.amethyst_glider_upgrade]
+type = "anvil"
+output = "amethyst_glider"
+amount = 1
+[[tool_recipes.amethyst_glider_upgrade.inputs]]
+type = "pearl_glider"
+amount = 1
+[[tool_recipes.amethyst_glider_upgrade.inputs]]
+type = "amethyst"
+amount = 1
+
+[tool_recipes.emerald_glider_upgrade]
+type = "anvil"
+output = "emerald_glider"
+amount = 1
+[[tool_recipes.emerald_glider_upgrade.inputs]]
+type = "amethyst_glider"
+amount = 1
+[[tool_recipes.emerald_glider_upgrade.inputs]]
+type = "emerald"
+amount = 1
+
+[tool_recipes.topaz_glider_upgrade]
+type = "anvil"
+output = "topaz_glider"
+amount = 1
+[[tool_recipes.topaz_glider_upgrade.inputs]]
+type = "emerald_glider"
+amount = 1
+[[tool_recipes.topaz_glider_upgrade.inputs]]
+type = "topaz"
+amount = 1
+
+[tool_recipes.ruby_glider_upgrade]
+type = "anvil"
+output = "ruby_glider"
+amount = 1
+[[tool_recipes.ruby_glider_upgrade.inputs]]
+type = "topaz_glider"
+amount = 1
+[[tool_recipes.ruby_glider_upgrade.inputs]]
+type = "ruby"
+amount = 1
+
+[tool_recipes.diamond_glider_upgrade]
+type = "anvil"
+output = "diamond_glider"
+amount = 1
+[[tool_recipes.diamond_glider_upgrade.inputs]]
+type = "ruby_glider"
+amount = 1
+[[tool_recipes.diamond_glider_upgrade.inputs]]
+type = "diamond"
+amount = 1

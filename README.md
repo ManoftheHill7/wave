@@ -10,7 +10,7 @@ Name is a placeholder. The concept is a survival crafting game, where when the t
 - [DECIDED]: Farming? No. Only fishing and forging
 - [DECIDED]: Eating food to heal, must be at base
 - [DECIDED]: Clock on HUD. Crafted by items. Sounds indicate rising water.
-- [OPEN]: How to implement water? Static? Cellular automata? Water that rises independent of terrain? Smooth particle hydrodynamics?
+- [OPEN]: How to implement water? Static? Cellular automata? Water that rises independent of terrain? Smooth particle hydrodynamics? Simple springs for waves?
 - [DECIDED]: Should there be boss battles? Unique boss per layer. Probably wont get to this
 
 ## Plan
@@ -61,7 +61,7 @@ Things that I would really like to have
 #### Additional movement options
 
 - [ ] Tool - Grappling Hook
-- [ ] Tool - Glider
+- [x] Tool - Glider
 - [ ] Boots
 
 #### Food
@@ -94,11 +94,11 @@ Things that I would really like to have
 - [ ] Improved hitbox/collision handling
 - [ ] Tide clears building items
 - [ ] Bombs explode
-- [ ] Chests store items
+- [x] Chests store items
 - [x] Tool repairs/upgrades
 - [x] Tool colour swapping on animations
 - [ ] Death screen/respawn
-- [ ] Tide clock ui
+- [x] Tide clock ui
 - [ ] Permenatly save block placement on surface
 - [ ] Breath bar fills slowly out of water
 

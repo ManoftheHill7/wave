@@ -14,26 +14,26 @@ const COLOR_PALETTES: &[[f32; 4]] = &[
     [215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0], // Pink scarf
     [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Green scarf
 
-    //[1.0, 1.0, 1.0, 1.0]; // Air boots primary
-    //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Air boots secondary
-    //[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Dash boots primary
-    //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Dash boots secondary
-    //[95.0 / 255.0, 205.0 / 255.0, 228.0 / 255.0, 1.0]; // Flippers primary
-    //[48.0 / 255.0, 96.0 / 255.0, 130.0 / 255.0, 1.0]; // Flippers secondary
-    //[215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0]; // Floatie boots primary
-    //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Floatie boots secondary
-    //[118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0]; // Gravity boots primary
-    //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Gravity boots secondary
-    //[143.0 / 255.0, 86.0 / 255.0, 59.0 / 255.0, 1.0]; // Hover boots primary
-    //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Hover boots secondary
-    //[223.0 / 255.0, 113.0 / 255.0, 38.0 / 255.0, 1.0]; // Rocket boots primary
-    //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Rocket boots secondary
-    //[251.0 / 255.0, 242.0 / 255.0, 54.0 / 255.0, 1.0]; // Rubber boots primary
-    //[82.0 / 255.0, 75.0 / 255.0, 36.0 / 255.0, 1.0]; // Rubber boots secondary
-    //[203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0]; // Steel boots primary
-    //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Steel boots secondary
-    //[75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0]; // Wall boots primary
-    //[50.0 / 255.0, 60.0 / 255.0, 57.0 / 255.0, 1.0]; // Wall boots secondary
+                                                       //[1.0, 1.0, 1.0, 1.0]; // Air boots primary
+                                                       //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Air boots secondary
+                                                       //[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Dash boots primary
+                                                       //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Dash boots secondary
+                                                       //[95.0 / 255.0, 205.0 / 255.0, 228.0 / 255.0, 1.0]; // Flippers primary
+                                                       //[48.0 / 255.0, 96.0 / 255.0, 130.0 / 255.0, 1.0]; // Flippers secondary
+                                                       //[215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0]; // Floatie boots primary
+                                                       //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Floatie boots secondary
+                                                       //[118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0]; // Gravity boots primary
+                                                       //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Gravity boots secondary
+                                                       //[143.0 / 255.0, 86.0 / 255.0, 59.0 / 255.0, 1.0]; // Hover boots primary
+                                                       //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Hover boots secondary
+                                                       //[223.0 / 255.0, 113.0 / 255.0, 38.0 / 255.0, 1.0]; // Rocket boots primary
+                                                       //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Rocket boots secondary
+                                                       //[251.0 / 255.0, 242.0 / 255.0, 54.0 / 255.0, 1.0]; // Rubber boots primary
+                                                       //[82.0 / 255.0, 75.0 / 255.0, 36.0 / 255.0, 1.0]; // Rubber boots secondary
+                                                       //[203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0]; // Steel boots primary
+                                                       //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Steel boots secondary
+                                                       //[75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0]; // Wall boots primary
+                                                       //[50.0 / 255.0, 60.0 / 255.0, 57.0 / 255.0, 1.0]; // Wall boots secondary
 ];
 
 // Tool sprite original colors to swap from
@@ -43,6 +43,7 @@ const TOOL_ORIGINAL_SECONDARY: &[f32; 4] = &[105.0 / 255.0, 106.0 / 255.0, 106.0
 // Tool color palettes by pickaxe level: (primary, secondary)
 fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
     match level {
+        // Pickaxes
         "stone_pickaxe" => (
             [132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Stone primary (same as original)
             [105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Stone secondary (same as original)
@@ -83,9 +84,38 @@ fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
             [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Etherealite primary
             [69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0],   // Etherealite secondary
         ),
+        // Gliders (gem-based)
+        "linen_glider" => (
+            [132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Linen primary (natural/default)
+            [105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Linen secondary
+        ),
+        "pearl_glider" => (
+            [255.0 / 255.0, 241.0 / 255.0, 232.0 / 255.0, 1.0], // Pearl primary (creamy white)
+            [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Pearl secondary
+        ),
+        "amethyst_glider" => (
+            [155.0 / 255.0, 89.0 / 255.0, 182.0 / 255.0, 1.0], // Amethyst primary (purple)
+            [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Amethyst secondary
+        ),
+        "emerald_glider" => (
+            [46.0 / 255.0, 204.0 / 255.0, 113.0 / 255.0, 1.0], // Emerald primary (green)
+            [39.0 / 255.0, 174.0 / 255.0, 96.0 / 255.0, 1.0],  // Emerald secondary
+        ),
+        "topaz_glider" => (
+            [241.0 / 255.0, 196.0 / 255.0, 15.0 / 255.0, 1.0], // Topaz primary (golden yellow)
+            [243.0 / 255.0, 156.0 / 255.0, 18.0 / 255.0, 1.0], // Topaz secondary
+        ),
+        "ruby_glider" => (
+            [231.0 / 255.0, 76.0 / 255.0, 60.0 / 255.0, 1.0], // Ruby primary (red)
+            [192.0 / 255.0, 57.0 / 255.0, 43.0 / 255.0, 1.0], // Ruby secondary
+        ),
+        "diamond_glider" => (
+            [133.0 / 255.0, 193.0 / 255.0, 233.0 / 255.0, 1.0], // Diamond primary (light blue)
+            [93.0 / 255.0, 173.0 / 255.0, 226.0 / 255.0, 1.0],  // Diamond secondary
+        ),
         _ => (
-            [132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Default (stone) primary
-            [105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Default (stone) secondary
+            [132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Default primary
+            [105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Default secondary
         ),
     }
 }
@@ -405,6 +435,8 @@ fn render_player(
         }
     } else if player.is_swimming {
         animate!(pt.swimming, SWIMMING_FRAME_LENGTH)
+    } else if player.is_gliding {
+        animate!(pt.gliding, FALLING_FRAME_LENGTH)
     } else if player.is_sliding {
         animate!(pt.sliding, SLIDING_FRAME_LENGTH)
     } else if player.on_ground {
@@ -472,8 +504,12 @@ fn render_player(
             raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_FLOAT as i32,
         );
 
-        // Set tool color swap uniforms when mining
-        let tool_swap_enabled = if player.is_mining { 1.0f32 } else { 0.0f32 };
+        // Set tool color swap uniforms when mining or gliding
+        let tool_swap_enabled = if player.is_mining || player.is_gliding {
+            1.0f32
+        } else {
+            0.0f32
+        };
         raylib::ffi::SetShaderValue(
             shader.as_ref().clone(),
             shader_locs.tool_swap_enabled,
@@ -487,6 +523,37 @@ fn render_player(
                 .as_ref()
                 .map(|p| get_tool_colors(&p.level))
                 .unwrap_or_else(|| get_tool_colors("stone_pickaxe"));
+
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.tool_original_primary,
+                TOOL_ORIGINAL_PRIMARY.as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.tool_original_secondary,
+                TOOL_ORIGINAL_SECONDARY.as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.tool_replace_primary,
+                tool_primary.as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.tool_replace_secondary,
+                tool_secondary.as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+        } else if player.is_gliding {
+            let (tool_primary, tool_secondary) = player
+                .tool_glider
+                .as_ref()
+                .map(|g| get_tool_colors(&g.level))
+                .unwrap_or_else(|| get_tool_colors("linen_glider"));
 
             raylib::ffi::SetShaderValue(
                 shader.as_ref().clone(),
@@ -749,23 +816,46 @@ impl Screen for GameScreen {
             return ScreenCommand::Push(Box::new(InventoryScreen::new()));
         }
 
-        // Check if M is pressed to open crafting
+        // Check if M is pressed to open crafting or chest
         if ctx.controller.crafting_pressed {
             use crate::crafting_screen::RecipeType;
             use crate::terrain::Block;
 
-            let filter = match ctx
+            // Crafting stations take priority over chests
+            let crafting_station = ctx
                 .world_state
                 .player
-                .get_intersecting_crafting_station(&ctx.world_state.terrain)
+                .get_intersecting_crafting_station(&ctx.world_state.terrain);
+
+            if let Some(station) = crafting_station {
+                let filter = match station {
+                    Block::Workbench => Some(RecipeType::Workbench),
+                    Block::Anvil => Some(RecipeType::Anvil),
+                    Block::Furnace => Some(RecipeType::Furnace),
+                    _ => None,
+                };
+                return ScreenCommand::Push(Box::new(crate::crafting_screen::CraftingScreen::new(
+                    filter,
+                )));
+            }
+
+            // Check for chest interaction if no crafting station
+            if let Some(chest_pos) = ctx
+                .world_state
+                .player
+                .get_intersecting_chest(&ctx.world_state.terrain)
             {
-                Some(Block::Workbench) => Some(RecipeType::Workbench),
-                Some(Block::Anvil) => Some(RecipeType::Anvil),
-                Some(Block::Furnace) => Some(RecipeType::Furnace),
-                _ => None,
-            };
+                // Only open if this chest has an inventory (was properly placed)
+                if ctx.world_state.chests.contains_key(&chest_pos) {
+                    return ScreenCommand::Push(Box::new(crate::chest_screen::ChestScreen::new(
+                        chest_pos,
+                    )));
+                }
+            }
+
+            // No crafting station or chest - open basic crafting menu
             return ScreenCommand::Push(Box::new(crate::crafting_screen::CraftingScreen::new(
-                filter,
+                None,
             )));
         }
 
@@ -1058,6 +1148,12 @@ impl Screen for GameScreen {
                         .tool_dash
                         .as_ref()
                         .map(|d| d.get_texture(&ctx.textures)),
+                    crate::tools::ToolType::Glider => ctx
+                        .world_state
+                        .player
+                        .tool_glider
+                        .as_ref()
+                        .map(|g| g.get_texture(&ctx.textures)),
                     _ => selected_tool.get_texture(&ctx.textures),
                 };
                 if let Some(texture) = texture {
@@ -1082,6 +1178,17 @@ impl Screen for GameScreen {
                     }
                     crate::tools::ToolType::Lamp => {
                         // Lamp doesn't have durability (yet)
+                        (1.0, 1.0)
+                    }
+                    crate::tools::ToolType::Glider => {
+                        if let Some(glider) = &ctx.world_state.player.tool_glider {
+                            (glider.durability, glider.max_durability)
+                        } else {
+                            (0.0, 100.0)
+                        }
+                    }
+                    crate::tools::ToolType::TideClock => {
+                        // TideClock has no durability
                         (1.0, 1.0)
                     }
                     crate::tools::ToolType::PlaceBlock(blk) => {
@@ -1135,6 +1242,34 @@ impl Screen for GameScreen {
 
         // Draw right hand slot (right click tool)
         draw_hand_slot(ctx.world_state.player.right_hand, hud_x + right_offset, "R");
+
+        // Draw tideclock HUD if player has tideclock equipped in either hand
+        let has_tideclock_equipped = matches!(
+            ctx.world_state.player.left_hand,
+            Some(crate::tools::ToolType::TideClock)
+        ) || matches!(
+            ctx.world_state.player.right_hand,
+            Some(crate::tools::ToolType::TideClock)
+        );
+
+        if has_tideclock_equipped && ctx.world_state.player.tool_tideclock.is_some() {
+            let tide_percent = ctx.world_state.tide_percent();
+            let tideclock_texture =
+                crate::tools::ToolTideClock::get_frame_texture(tide_percent, &ctx.textures);
+
+            // Draw tideclock in top left corner
+            let clock_scale = 4.0;
+            let clock_x = 10.0;
+            let clock_y = 10.0;
+
+            d.draw_texture_ex(
+                tideclock_texture,
+                Vector2::new(clock_x, clock_y),
+                0.0,
+                clock_scale,
+                Color::WHITE,
+            );
+        }
 
         // Draw vignette effect when breath is critical
         if ctx.world_state.player.is_swimming {
@@ -1236,38 +1371,51 @@ impl Screen for GameScreen {
             );
         }
 
-        // Draw crafting station prompt at bottom of screen
-        if let Some(station) = ctx
+        // Draw crafting station or chest prompt at bottom of screen
+        let crafting_station = ctx
             .world_state
             .player
-            .get_intersecting_crafting_station(&ctx.world_state.terrain)
-        {
-            use crate::terrain::Block;
+            .get_intersecting_crafting_station(&ctx.world_state.terrain);
 
-            let prompt = match station {
+        let prompt = if let Some(station) = crafting_station {
+            use crate::terrain::Block;
+            match station {
                 Block::Workbench => "Press M to use Workbench",
                 Block::Anvil => "Press M to use Anvil",
                 Block::Furnace => "Press M to use Furnace",
                 _ => "",
-            };
+            }
+        } else if let Some(chest_pos) = ctx
+            .world_state
+            .player
+            .get_intersecting_chest(&ctx.world_state.terrain)
+        {
+            // Only show prompt if chest has an inventory
+            if ctx.world_state.chests.contains_key(&chest_pos) {
+                "Press M to open Chest"
+            } else {
+                ""
+            }
+        } else {
+            ""
+        };
 
             if !prompt.is_empty() {
                 let text_width = d.measure_text(prompt, 20);
                 let text_x = (self.screen_width - text_width as f32) / 2.0;
                 let text_y = self.screen_height - 300.0;
 
-                // Draw background box
-                d.draw_rectangle(
-                    text_x as i32 - 10,
-                    text_y as i32 - 5,
-                    text_width + 20,
-                    30,
-                    Color::new(0, 0, 0, 180),
-                );
+            // Draw background box
+            d.draw_rectangle(
+                text_x as i32 - 10,
+                text_y as i32 - 5,
+                text_width + 20,
+                30,
+                Color::new(0, 0, 0, 180),
+            );
 
-                // Draw text
-                d.draw_text(prompt, text_x as i32, text_y as i32, 20, Color::WHITE);
-            }
+            // Draw text
+            d.draw_text(prompt, text_x as i32, text_y as i32, 20, Color::WHITE);
         }
     }
 }

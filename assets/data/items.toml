@@ -326,6 +326,4 @@ name = "Bomb"
 weight = 3.0
 type = "block"
 
-[items.tidalcave_clock]
-name = "Tidalcave Clock"
-weight = 10.0
+# tidalcave_clock is now a tool, not an item

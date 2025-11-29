@@ -34,28 +34,38 @@ fn main() {
         let filename = format!(
             "assets/maps/gen_{}_{}{}{}{}{}{}.png",
             orientation,
-            edge_chars[0], edge_chars[1], edge_chars[2],
-            edge_chars[3], edge_chars[4], edge_chars[5]
+            edge_chars[0],
+            edge_chars[1],
+            edge_chars[2],
+            edge_chars[3],
+            edge_chars[4],
+            edge_chars[5]
         );
 
-        img.save(&filename).expect(&format!("Failed to save {}", filename));
+        img.save(&filename)
+            .expect(&format!("Failed to save {}", filename));
         println!("Generated {}", filename);
     }
 }
 
-fn generate_image(cavern: &RgbaImage, tunnel: &RgbaImage, combo: u8, is_vertical: bool) -> RgbaImage {
+fn generate_image(
+    cavern: &RgbaImage,
+    tunnel: &RgbaImage,
+    combo: u8,
+    is_vertical: bool,
+) -> RgbaImage {
     let (width, height) = if is_vertical { (32, 64) } else { (64, 32) };
     let mut img = RgbaImage::new(width, height);
 
     // Decode which template to use for each edge (bit 0-5 of combo)
     // 0 = cavern, 1 = tunnel
     let edges = [
-        combo & 1 != 0,         // bit 0: left edge
-        combo & 2 != 0,         // bit 1: right edge
-        combo & 4 != 0,         // bit 2: top-left edge
-        combo & 8 != 0,         // bit 3: top-right edge
-        combo & 16 != 0,        // bit 4: bottom-left edge
-        combo & 32 != 0,        // bit 5: bottom-right edge
+        combo & 1 != 0,  // bit 0: left edge
+        combo & 2 != 0,  // bit 1: right edge
+        combo & 4 != 0,  // bit 2: top-left edge
+        combo & 8 != 0,  // bit 3: top-right edge
+        combo & 16 != 0, // bit 4: bottom-left edge
+        combo & 32 != 0, // bit 5: bottom-right edge
     ];
 
     // For each pixel, determine which template to use
@@ -80,59 +90,71 @@ fn choose_template_for_pixel(x: u32, y: u32, edges: &[bool; 6], is_vertical: boo
     //   Bottom-left edge: row 31, columns 1-32
     //   Bottom-right edge: row 31, columns 33-62
     // Vertical: 32x64
-    //   Left edge: column 0, rows 1-32
-    //   Right edge: column 31, rows 1-32
-    //   Top-left edge: row 0, columns 1-30
-    //   Top-right edge: row 0, columns 1-30 (same as top-left for vertical)
-    //   Bottom-left edge: row 63, columns 1-30
-    //   Bottom-right edge: row 63, columns 1-30 (same as bottom-left for vertical)
+    //   Top edge: row 0, columns 1-30
+    //   Bottom edge: row 63, columns 1-30
+    //   Left-top edge: column 0, rows 1-32
+    //   Left-bottom edge: column 0, rows 33-62
+    //   Right-top edge: column 31, rows 1-32
+    //   Right-bottom edge: column 31, rows 33-62
 
     let mut min_distance = f32::MAX;
     let mut closest_edge = 0;
 
     if is_vertical {
         // Vertical orientation (32x64)
-        // Left edge: column 0, rows 1-32
-        if y >= 1 && y <= 32 {
-            let dist = x as f32;
+        // Top edge: row 0, columns 1-30
+        if x >= 1 && x <= 30 {
+            let dist = y as f32;
             if dist < min_distance {
                 min_distance = dist;
                 closest_edge = 0;
             }
         }
 
-        // Right edge: column 31, rows 1-32
-        if y >= 1 && y <= 32 {
-            let dist = (31 - x) as f32;
+        // Bottom edge: row 63, columns 1-30
+        if x >= 1 && x <= 30 {
+            let dist = (63 - y) as f32;
             if dist < min_distance {
                 min_distance = dist;
                 closest_edge = 1;
             }
         }
 
-        // Top-left edge: row 0, columns 1-30
-        if x >= 1 && x <= 30 {
-            let dist = y as f32;
+        // Left-top edge: column 0, rows 1-32
+        if y >= 1 && y <= 32 {
+            let dist = x as f32;
             if dist < min_distance {
                 min_distance = dist;
                 closest_edge = 2;
             }
         }
 
-        // Top-right edge: row 0, columns 1-30 (same range for vertical)
-        // This will have same distance as top-left, so we keep it consistent
+        // Left-bottom edge: column 0, rows 33-62
+        if y >= 33 && y <= 62 {
+            let dist = x as f32;
+            if dist < min_distance {
+                min_distance = dist;
+                closest_edge = 3;
+            }
+        }
 
-        // Bottom-left edge: row 63, columns 1-30
-        if x >= 1 && x <= 30 {
-            let dist = (63 - y) as f32;
+        // Right-top edge: column 31, rows 1-32
+        if y >= 1 && y <= 32 {
+            let dist = (31 - x) as f32;
             if dist < min_distance {
                 min_distance = dist;
                 closest_edge = 4;
             }
         }
 
-        // Bottom-right edge: row 63, columns 1-30 (same range for vertical)
-        // This will have same distance as bottom-left
+        // Right-bottom edge: column 31, rows 33-62
+        if y >= 33 && y <= 62 {
+            let dist = (31 - x) as f32;
+            if dist < min_distance {
+                min_distance = dist;
+                closest_edge = 5;
+            }
+        }
     } else {
         // Horizontal orientation (64x32)
         // Distance to left edge (column 0, rows 1-30)

@@ -124,3 +124,43 @@ speed = 1.8
 name = "Etherealite Pickaxe"
 durability = 600.0
 speed = 2.0
+
+[glider.broken]
+name = "Broken Glider"
+durability = -1.0
+max_fall_speed = 50.0
+
+[glider.linen_glider]
+name = "Linen Glider"
+durability = 150.0
+max_fall_speed = 3.5
+
+[glider.pearl_glider]
+name = "Pearl Glider"
+durability = 200.0
+max_fall_speed = 3.0
+
+[glider.amethyst_glider]
+name = "Amethyst Glider"
+durability = 250.0
+max_fall_speed = 2.6
+
+[glider.emerald_glider]
+name = "Emerald Glider"
+durability = 300.0
+max_fall_speed = 2.2
+
+[glider.topaz_glider]
+name = "Topaz Glider"
+durability = 375.0
+max_fall_speed = 1.9
+
+[glider.ruby_glider]
+name = "Ruby Glider"
+durability = 450.0
+max_fall_speed = 1.6
+
+[glider.diamond_glider]
+name = "Diamond Glider"
+durability = 550.0
+max_fall_speed = 1.3

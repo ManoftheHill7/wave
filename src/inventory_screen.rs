@@ -159,6 +159,42 @@ impl InventoryScreen {
             );
             return;
         }
+
+        // Check glider tool slot (column 6)
+        if ctx.world_state.player.tool_glider.is_some() {
+            let tool_x = tool_start_x + (6.0 * (slot_size + slot_padding));
+            if mouse_x >= tool_x
+                && mouse_x <= tool_x + slot_size
+                && mouse_y >= tool_y
+                && mouse_y <= tool_y + slot_size
+            {
+                Self::set_hand_with_swap(
+                    &mut ctx.world_state.player.left_hand,
+                    &mut ctx.world_state.player.right_hand,
+                    Some(ToolType::Glider),
+                    is_left_click,
+                );
+                return;
+            }
+        }
+
+        // Check tideclock tool slot (column 7)
+        if ctx.world_state.player.tool_tideclock.is_some() {
+            let tool_x = tool_start_x + (7.0 * (slot_size + slot_padding));
+            if mouse_x >= tool_x
+                && mouse_x <= tool_x + slot_size
+                && mouse_y >= tool_y
+                && mouse_y <= tool_y + slot_size
+            {
+                Self::set_hand_with_swap(
+                    &mut ctx.world_state.player.left_hand,
+                    &mut ctx.world_state.player.right_hand,
+                    Some(ToolType::TideClock),
+                    is_left_click,
+                );
+                return;
+            }
+        }
     }
 
     /// Helper function to set a hand with swap logic
@@ -414,6 +450,18 @@ impl Screen for InventoryScreen {
                         .tool_dash
                         .as_ref()
                         .map(|d| d.get_texture(&ctx.textures)),
+                    ToolType::Glider => ctx
+                        .world_state
+                        .player
+                        .tool_glider
+                        .as_ref()
+                        .map(|g| g.get_texture(&ctx.textures)),
+                    ToolType::TideClock => ctx
+                        .world_state
+                        .player
+                        .tool_tideclock
+                        .as_ref()
+                        .map(|_| &ctx.textures.items.tidalcave_clock),
                     _ => tool.get_texture(&ctx.textures),
                 };
                 if let Some(texture) = texture {
@@ -442,6 +490,18 @@ impl Screen for InventoryScreen {
                         .tool_dash
                         .as_ref()
                         .map(|d| d.get_texture(&ctx.textures)),
+                    ToolType::Glider => ctx
+                        .world_state
+                        .player
+                        .tool_glider
+                        .as_ref()
+                        .map(|g| g.get_texture(&ctx.textures)),
+                    ToolType::TideClock => ctx
+                        .world_state
+                        .player
+                        .tool_tideclock
+                        .as_ref()
+                        .map(|_| &ctx.textures.items.tidalcave_clock),
                     _ => tool.get_texture(&ctx.textures),
                 };
                 if let Some(texture) = texture {
@@ -527,7 +587,32 @@ impl Screen for InventoryScreen {
                 Some(ToolType::Lamp),
             ); // Lamp
             draw_tool_slot(5, None, None); // Fishing rod
-            draw_tool_slot(6, None, None); // Glider
+            draw_tool_slot(
+                6,
+                ctx.world_state
+                    .player
+                    .tool_glider
+                    .as_ref()
+                    .map(|g| g.get_texture(&ctx.textures)),
+                ctx.world_state
+                    .player
+                    .tool_glider
+                    .as_ref()
+                    .map(|_| ToolType::Glider),
+            ); // Glider
+            draw_tool_slot(
+                7,
+                ctx.world_state
+                    .player
+                    .tool_tideclock
+                    .as_ref()
+                    .map(|_| &ctx.textures.items.tidalcave_clock),
+                ctx.world_state
+                    .player
+                    .tool_tideclock
+                    .as_ref()
+                    .map(|_| ToolType::TideClock),
+            ); // TideClock
 
             // Draw mute button
             let mute_color = if ctx.music.is_muted() {

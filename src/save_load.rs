@@ -1,3 +1,4 @@
+use crate::inventory::Inventory;
 use crate::player::Player;
 use crate::terrain::{Block, Chunk, ChunkCoord, MultiTileData};
 use crate::terrain_generator::Generator;
@@ -15,6 +16,8 @@ pub struct SaveData {
     pub flow_timer: f32,
     pub tide_timer: f32,
     pub terrain_seed: Option<u64>,
+    #[serde(default)]
+    pub chests: HashMap<(i32, i32), Inventory>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -111,6 +114,7 @@ pub fn save_game(world_state: &WorldState, slot: u32) -> Result<(), String> {
         flow_timer: world_state.get_flow_timer(),
         tide_timer: world_state.get_tide_timer(),
         terrain_seed,
+        chests: world_state.chests.clone(),
     };
 
     let encoded = bincode::serialize(&save_data)
@@ -192,6 +196,9 @@ pub fn apply_save_data(world_state: &mut WorldState, save_data: SaveData) {
 
         world_state.terrain.chunks.insert(coord, chunk);
     }
+
+    // Restore chest inventories
+    world_state.chests = save_data.chests;
 }
 
 pub fn save_exists(slot: u32) -> bool {

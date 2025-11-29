@@ -1,7 +1,9 @@
 use crate::controller::Controller;
 use crate::inventory::Inventory;
 use crate::terrain::{Block, Terrain};
-use crate::tools::*;
+use crate::tools::{
+    load_dash, load_glider, load_pick, ToolDash, ToolGlider, ToolPickaxe, ToolTideClock, ToolType,
+};
 use raylib::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -118,6 +120,10 @@ pub struct Player {
     pub right_hand: Option<ToolType>,
     pub tool_dash: Option<ToolDash>,
     pub tool_pickaxe: Option<ToolPickaxe>,
+    pub tool_glider: Option<ToolGlider>,
+    pub tool_tideclock: Option<ToolTideClock>,
+
+    pub is_gliding: bool,
 }
 
 // Custom serialization for raylib Vector2
@@ -201,6 +207,10 @@ impl Player {
 
             tool_dash: None,
             tool_pickaxe: Some(load_pick("stone_pickaxe")),
+            tool_glider: None,
+            tool_tideclock: None,
+
+            is_gliding: false,
         }
     }
 
@@ -258,7 +268,9 @@ impl Player {
             let max_length = match tool {
                 ToolType::Pickaxe => MAX_RAYCAST_PICKAXE,
                 ToolType::Dash => MAX_RAYCAST_DASH,
-                ToolType::Lamp => 0.0, // Lamp doesn't raycast
+                ToolType::Lamp => 0.0,      // Lamp doesn't raycast
+                ToolType::Glider => 0.0,    // Glider doesn't raycast
+                ToolType::TideClock => 0.0, // TideClock doesn't raycast
                 ToolType::PlaceBlock(_) => MAX_RAYCAST_PLACE_BLOCK,
             };
             let rayresult = self.raycast(
@@ -337,6 +349,31 @@ impl Player {
         None
     }
 
+    pub fn get_intersecting_chest(&self, terrain: &Terrain) -> Option<(i32, i32)> {
+        // Check multiple points in player bounding box
+        let points = [
+            (self.position.x, self.position.y),               // top-left
+            (self.position.x + self.width, self.position.y),  // top-right
+            (self.position.x, self.position.y + self.height), // bottom-left
+            (self.position.x + self.width, self.position.y + self.height), // bottom-right
+            (
+                self.position.x + self.width / 2.0,
+                self.position.y + self.height / 2.0,
+            ), // center
+        ];
+
+        for (x, y) in points {
+            let bx = x as i32;
+            let by = y as i32;
+            let block = terrain.at(bx, by);
+            if matches!(block, Block::WoodenChest) {
+                return Some((bx, by));
+            }
+        }
+
+        None
+    }
+
     pub fn can_place_block_at(&self, terrain: &Terrain, block: Block, x: i32, y: i32) -> bool {
         // Restrict workbench and anvil placement to underground (y < 0)
         if matches!(block, Block::Workbench | Block::Anvil) && y >= 0 {
@@ -347,7 +384,13 @@ impl Player {
         terrain.can_place_multi_tile(x, y, block)
     }
 
-    pub fn try_place_block(&mut self, terrain: &mut Terrain, block: Block, left_hand: bool) {
+    pub fn try_place_block(
+        &mut self,
+        terrain: &mut Terrain,
+        chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
+        block: Block,
+        left_hand: bool,
+    ) {
         let tile = if left_hand {
             self.raycast_left_tile
         } else {
@@ -367,6 +410,15 @@ impl Player {
                 if taken > 0 {
                     // Use multi-tile placement (works for both single and multi-tile blocks)
                     terrain.place_multi_tile(x, y, block);
+
+                    // Create chest inventory if placing a chest
+                    if matches!(block, Block::WoodenChest) {
+                        chests.insert(
+                            (x, y),
+                            crate::inventory::Inventory::new(crate::world::CHEST_WEIGHT_LIMIT),
+                        );
+                    }
+
                     if self.inventory.count(item_type) == 0 {
                         // TODO: remove from hand
                     }
@@ -375,7 +427,13 @@ impl Player {
         }
     }
 
-    pub fn update(&mut self, dt: f32, terrain: &mut Terrain, controller: &Controller) {
+    pub fn update(
+        &mut self,
+        dt: f32,
+        terrain: &mut Terrain,
+        chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
+        controller: &Controller,
+    ) {
         let jump_pressed = controller.jump_pressed;
         let jump_held = controller.jump_held;
         let climb_pressed = controller.climb_pressed;
@@ -524,10 +582,31 @@ impl Player {
             self.dashes = max_dashes;
         }
 
-        let mut used_tool = self.use_tool(terrain, controller, true);
-        used_tool = self.use_tool(terrain, controller, false) || used_tool;
+        // Reset gliding state (will be set by use_tool if glider is active)
+        self.is_gliding = false;
+
+        let mut used_tool = self.use_tool(terrain, chests, controller, true);
+        used_tool = self.use_tool(terrain, chests, controller, false) || used_tool;
         if !used_tool {
             self.is_mining = false;
+        }
+
+        // Apply glider physics - clamp fall speed and consume durability
+        if self.is_gliding {
+            if let Some(glider) = &self.tool_glider {
+                let max_fall = glider.max_fall_speed;
+                if self.velocity.y > max_fall {
+                    self.velocity.y = max_fall;
+                }
+            }
+            // Consume durability over time while gliding
+            if let Some(glider) = self.tool_glider.as_mut() {
+                glider.durability -= dt;
+                if glider.durability <= 0.0 {
+                    self.break_tool(ToolType::Glider);
+                    self.is_gliding = false;
+                }
+            }
         }
 
         // Apply dash velocity
@@ -862,6 +941,13 @@ impl Player {
                     self.tool_dash.as_mut().unwrap().level = original_level;
                 }
             }
+            ToolType::Glider => {
+                if let Some(glider) = &self.tool_glider {
+                    let original_level = glider.level.clone();
+                    self.tool_glider = Some(load_glider("broken"));
+                    self.tool_glider.as_mut().unwrap().level = original_level;
+                }
+            }
             _ => {}
         }
     }
@@ -869,6 +955,7 @@ impl Player {
     fn use_tool(
         &mut self,
         terrain: &mut Terrain,
+        chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
         controller: &Controller,
         left_hand: bool,
     ) -> bool {
@@ -890,20 +977,29 @@ impl Player {
                 self.manage_dash(controller.raycast_direction);
                 true
             }
-            (Some(ToolType::Pickaxe), true, _) => self.manage_pickaxe(terrain, left_hand),
+            (Some(ToolType::Pickaxe), true, _) => self.manage_pickaxe(terrain, chests, left_hand),
             (Some(ToolType::Lamp), _, _) => {
                 // Lamp is passive, no action needed
                 false
             }
+            (Some(ToolType::Glider), held, _) => {
+                self.manage_glider(held);
+                held
+            }
             (Some(ToolType::PlaceBlock(blk)), _, true) => {
-                self.try_place_block(terrain, blk, left_hand);
+                self.try_place_block(terrain, chests, blk, left_hand);
                 true
             }
             _ => false,
         }
     }
 
-    fn manage_pickaxe(&mut self, terrain: &mut Terrain, left_hand: bool) -> bool {
+    fn manage_pickaxe(
+        &mut self,
+        terrain: &mut Terrain,
+        chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
+        left_hand: bool,
+    ) -> bool {
         let tile = if left_hand {
             self.raycast_left_tile
         } else {
@@ -949,9 +1045,14 @@ impl Player {
                     self.is_mining = false;
 
                     // Break the block (handles both single-tile and multi-tile blocks)
-                    if let Some((broken_block, _, _)) =
-                        terrain.break_multi_tile(bt.0 as i32, bt.1 as i32)
-                    {
+                    let block_x = bt.0 as i32;
+                    let block_y = bt.1 as i32;
+                    if let Some((broken_block, _, _)) = terrain.break_multi_tile(block_x, block_y) {
+                        // Remove chest inventory if breaking a chest (contents are lost)
+                        if matches!(broken_block, Block::WoodenChest) {
+                            chests.remove(&(block_x, block_y));
+                        }
+
                         // Add drops to inventory
                         if let Some((item_type, amount)) = broken_block.get_drops() {
                             self.inventory.add(item_type, amount);
@@ -992,5 +1093,19 @@ impl Player {
 
             self.dash_dir = self.dash_dir.normalized();
         }
+    }
+
+    fn manage_glider(&mut self, held: bool) {
+        // Only glide when in the air and holding the button
+        if !self.on_ground && !self.is_swimming && !self.is_dashing && held {
+            if let Some(glider) = &self.tool_glider {
+                // Only glide if glider has durability
+                if glider.durability > 0.0 {
+                    self.is_gliding = true;
+                    return;
+                }
+            }
+        }
+        self.is_gliding = false;
     }
 }
