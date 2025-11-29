@@ -118,6 +118,7 @@ pub struct Player {
 
     pub left_hand: Option<ToolType>,
     pub right_hand: Option<ToolType>,
+    pub head_slot: Option<ToolType>,
     pub tool_dash: Option<ToolDash>,
     pub tool_pickaxe: Option<ToolPickaxe>,
     pub tool_glider: Option<ToolGlider>,
@@ -204,6 +205,7 @@ impl Player {
 
             left_hand: Some(ToolType::Pickaxe),
             right_hand: None,
+            head_slot: None,
 
             tool_dash: None,
             tool_pickaxe: Some(load_pick("stone_pickaxe")),
@@ -552,6 +554,24 @@ impl Player {
                 self.try_jumped_at = self.time;
             }
         }
+        
+        // Activate head slot equipment when jump pressed while in air
+        if jump_pressed && !self.on_ground && !self.is_swimming && !self.is_dashing {
+            match self.head_slot {
+                Some(ToolType::Glider) => {
+                    if let Some(glider) = &self.tool_glider {
+                        if glider.durability > 0.0 {
+                            self.is_gliding = true;
+                        }
+                    }
+                }
+                Some(ToolType::Dash) => {
+                    // Dash in the direction of the raycast (mouse direction)
+                    self.manage_dash(controller.raycast_direction);
+                }
+                _ => {}
+            }
+        }
 
         // Jump release (variable jump height)
         if (!jump_held || self.velocity.y > 0.0)
@@ -582,13 +602,29 @@ impl Player {
             self.dashes = max_dashes;
         }
 
-        // Reset gliding state (will be set by use_tool if glider is active)
-        self.is_gliding = false;
-
         let mut used_tool = self.use_tool(terrain, chests, controller, true);
         used_tool = self.use_tool(terrain, chests, controller, false) || used_tool;
         if !used_tool {
             self.is_mining = false;
+        }
+
+        // Glider stays active while jump is held in the air with glider equipped in head slot
+        if !self.on_ground && !self.is_swimming && !self.is_dashing && jump_held {
+            if self.head_slot == Some(ToolType::Glider) {
+                if let Some(glider) = &self.tool_glider {
+                    if glider.durability > 0.0 {
+                        // Keep gliding active
+                    } else {
+                        self.is_gliding = false;
+                    }
+                } else {
+                    self.is_gliding = false;
+                }
+            } else {
+                self.is_gliding = false;
+            }
+        } else {
+            self.is_gliding = false;
         }
 
         // Apply glider physics - clamp fall speed and consume durability
@@ -973,18 +1009,18 @@ impl Player {
             )
         };
         match (hand, held, pressed) {
-            (Some(ToolType::Dash), _, true) => {
-                self.manage_dash(controller.raycast_direction);
-                true
+            (Some(ToolType::Dash), _, _) => {
+                // Dash is now activated via head slot with jump key while in air
+                false
             }
             (Some(ToolType::Pickaxe), true, _) => self.manage_pickaxe(terrain, chests, left_hand),
             (Some(ToolType::Lamp), _, _) => {
                 // Lamp is passive, no action needed
                 false
             }
-            (Some(ToolType::Glider), held, _) => {
-                self.manage_glider(held);
-                held
+            (Some(ToolType::Glider), _, _) => {
+                // Glider is now activated via head slot with jump key
+                false
             }
             (Some(ToolType::PlaceBlock(blk)), _, true) => {
                 self.try_place_block(terrain, chests, blk, left_hand);
@@ -1095,17 +1131,5 @@ impl Player {
         }
     }
 
-    fn manage_glider(&mut self, held: bool) {
-        // Only glide when in the air and holding the button
-        if !self.on_ground && !self.is_swimming && !self.is_dashing && held {
-            if let Some(glider) = &self.tool_glider {
-                // Only glide if glider has durability
-                if glider.durability > 0.0 {
-                    self.is_gliding = true;
-                    return;
-                }
-            }
-        }
-        self.is_gliding = false;
-    }
+
 }

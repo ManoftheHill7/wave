@@ -40,7 +40,7 @@ impl WorldState {
         let mut rng = rand::thread_rng();
         let seed = rng.gen::<u64>();
         println!("World seed: {}", seed);
-        
+
         WorldState {
             // player: Player::new(38.74, -3.99), // This spot reproduces the getting stuck bug
             player: Player::new(32.0, -3.0),
