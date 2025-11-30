@@ -432,6 +432,13 @@ fn render_player(
         animate!(&pt.dash, WALK_FRAME_LENGTH)
     } else if player.is_mining {
         animate_from!(pt.mining, MINING_FRAME_LENGTH, player.started_mining_at)
+    } else if player.is_on_ladder {
+        // Ladder climbing animation - use ladder frames when moving vertically
+        if player.velocity.y != 0.0 {
+            animate!(pt.ladder, CLIMBING_FRAME_LENGTH)
+        } else {
+            &pt.ladder[0]
+        }
     } else if player.is_climbing {
         if player.velocity.y != 0.0 {
             animate!(pt.climb, CLIMBING_FRAME_LENGTH)
