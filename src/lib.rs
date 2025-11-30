@@ -19,6 +19,7 @@ pub mod chest_screen;
 pub mod config;
 pub mod controller;
 pub mod crafting_screen;
+pub mod credits_screen;
 pub mod death_screen;
 pub mod game_screen;
 pub mod inventory;
@@ -37,6 +38,7 @@ pub mod world;
 
 // Re-export commonly used types
 pub use controller::Controller;
+pub use credits_screen::CreditsScreen;
 pub use game_screen::GameScreen;
 pub use menu_screen::MenuScreen;
 pub use world::WorldState;
