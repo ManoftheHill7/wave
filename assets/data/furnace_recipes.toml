@@ -134,23 +134,6 @@ type = "mithril lava bucket"
 amount = 1
 
 
-# tools
-
-[recipes.amethyst_amulet]
-type = "furnace"
-output = "amethyst_amulet"
-amount = 1
-[[recipes.amethyst_amulet.inputs]]
-type = "white pearl amulet"
-amount = 1
-[[recipes.amethyst_amulet.inputs]]
-type = "amethyst"
-amount = 2
-[[recipes.amethyst_amulet.inputs]]
-type = "gold bar"
-amount = 2
-
-
 # misc
 
 [recipes.lumostone]

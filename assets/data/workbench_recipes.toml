@@ -119,6 +119,60 @@ amount = 2
 type = "glass"
 amount = 3
 
+[recipes.copper_ladder]
+type = "workbench"
+output = "copper_ladder"
+amount = 12
+[[recipes.copper_ladder.inputs]]
+type = "copper bar"
+amount = 1
+
+[recipes.steel_ladder]
+type = "workbench"
+output = "steel_ladder"
+amount = 4
+[[recipes.steel_ladder.inputs]]
+type = "steel bar"
+amount = 1
+
+[recipes.iron_shell]
+type = "workbench"
+output = "iron_shell"
+amount = 1
+[[recipes.iron_shell.inputs]]
+type = "iron bar"
+amount = 1
+
+[recipes.mithril_bucket]
+type = "workbench"
+output = "mithril_bucket"
+amount = 1
+[[recipes.mithril_bucket.inputs]]
+type = "mithril bar"
+amount = 2
+
+[recipes.explosive_dust]
+type = "workbench"
+output = "explosive_dust"
+amount = 1
+[[recipes.explosive_dust.inputs]]
+type = "coal"
+amount = 3
+[[recipes.explosive_dust.inputs]]
+type = "lumostone"
+amount = 3
+
+[recipes.lamp]
+type = "workbench"
+output = "lamp"
+amount = 1
+[[recipes.lamp.inputs]]
+type = "bronze bar"
+amount = 2
+[[recipes.lamp.inputs]]
+type = "glass"
+amount = 1
+
 
 # tools
 

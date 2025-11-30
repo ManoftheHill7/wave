@@ -1,61 +1,205 @@
-# anvil recipes
+# anvil recipes - only for upgrades and repairs
 
-[recipes.copper_ladder]
+# pickaxe upgrades
+
+[tool_recipes.copper_pickaxe_upgrade]
 type = "anvil"
-output = "copper_ladder"
-amount = 12
-[[recipes.copper_ladder.inputs]]
+output = "copper_pickaxe"
+amount = 1
+[[tool_recipes.copper_pickaxe_upgrade.inputs]]
+type = "stone_pickaxe"
+amount = 1
+[[tool_recipes.copper_pickaxe_upgrade.inputs]]
 type = "copper bar"
-amount = 1
-
-[recipes.steel_ladder]
-type = "anvil"
-output = "steel_ladder"
 amount = 4
-[[recipes.steel_ladder.inputs]]
-type = "steel bar"
-amount = 1
 
-[recipes.iron_shell]
+[tool_recipes.bronze_pickaxe_upgrade]
 type = "anvil"
-output = "iron_shell"
+output = "bronze_pickaxe"
 amount = 1
-[[recipes.iron_shell.inputs]]
-type = "iron bar"
+[[tool_recipes.bronze_pickaxe_upgrade.inputs]]
+type = "copper_pickaxe"
 amount = 1
-
-[recipes.mithril_bucket]
-type = "anvil"
-output = "mithril_bucket"
-amount = 1
-[[recipes.mithril_bucket.inputs]]
-type = "mithril bar"
-amount = 2
-
-[recipes.explosive_dust]
-type = "anvil"
-output = "explosive_dust"
-amount = 1
-[[recipes.explosive_dust.inputs]]
-type = "coal"
-amount = 3
-[[recipes.explosive_dust.inputs]]
-type = "lumostone"
-amount = 3
-
-
-# tools
-
-[recipes.lamp]
-type = "anvil"
-output = "lamp"
-amount = 1
-[[recipes.lamp.inputs]]
+[[tool_recipes.bronze_pickaxe_upgrade.inputs]]
 type = "bronze bar"
-amount = 2
-[[recipes.lamp.inputs]]
-type = "glass"
+amount = 4
+
+[tool_recipes.iron_pickaxe_upgrade]
+type = "anvil"
+output = "iron_pickaxe"
 amount = 1
+[[tool_recipes.iron_pickaxe_upgrade.inputs]]
+type = "bronze_pickaxe"
+amount = 1
+[[tool_recipes.iron_pickaxe_upgrade.inputs]]
+type = "iron bar"
+amount = 4
+
+[tool_recipes.steel_pickaxe_upgrade]
+type = "anvil"
+output = "steel_pickaxe"
+amount = 1
+[[tool_recipes.steel_pickaxe_upgrade.inputs]]
+type = "iron_pickaxe"
+amount = 1
+[[tool_recipes.steel_pickaxe_upgrade.inputs]]
+type = "steel bar"
+amount = 4
+
+[tool_recipes.platinum_pickaxe_upgrade]
+type = "anvil"
+output = "platinum_pickaxe"
+amount = 1
+[[tool_recipes.platinum_pickaxe_upgrade.inputs]]
+type = "steel_pickaxe"
+amount = 1
+[[tool_recipes.platinum_pickaxe_upgrade.inputs]]
+type = "platinum bar"
+amount = 4
+
+[tool_recipes.mithril_pickaxe_upgrade]
+type = "anvil"
+output = "mithril_pickaxe"
+amount = 1
+[[tool_recipes.mithril_pickaxe_upgrade.inputs]]
+type = "platinum_pickaxe"
+amount = 1
+[[tool_recipes.mithril_pickaxe_upgrade.inputs]]
+type = "mithril bar"
+amount = 4
+
+[tool_recipes.ozathinum_pickaxe_upgrade]
+type = "anvil"
+output = "ozathinum_pickaxe"
+amount = 1
+[[tool_recipes.ozathinum_pickaxe_upgrade.inputs]]
+type = "mithril_pickaxe"
+amount = 1
+[[tool_recipes.ozathinum_pickaxe_upgrade.inputs]]
+type = "ozathinum bar"
+amount = 3
+
+[tool_recipes.torzite_pickaxe_upgrade]
+type = "anvil"
+output = "torzite_pickaxe"
+amount = 1
+[[tool_recipes.torzite_pickaxe_upgrade.inputs]]
+type = "ozathinum_pickaxe"
+amount = 1
+[[tool_recipes.torzite_pickaxe_upgrade.inputs]]
+type = "torzite bar"
+amount = 2
+
+[tool_recipes.etherealite_pickaxe_upgrade]
+type = "anvil"
+output = "etherealite_pickaxe"
+amount = 1
+[[tool_recipes.etherealite_pickaxe_upgrade.inputs]]
+type = "torzite_pickaxe"
+amount = 1
+[[tool_recipes.etherealite_pickaxe_upgrade.inputs]]
+type = "etherealite bar"
+amount = 1
+
+# amulet upgrades
+
+[tool_recipes.amethyst_amulet_upgrade]
+type = "anvil"
+output = "amethyst_amulet"
+amount = 1
+[[tool_recipes.amethyst_amulet_upgrade.inputs]]
+type = "white_pearl_amulet"
+amount = 1
+[[tool_recipes.amethyst_amulet_upgrade.inputs]]
+type = "amethyst"
+amount = 2
+[[tool_recipes.amethyst_amulet_upgrade.inputs]]
+type = "gold bar"
+amount = 2
+
+[tool_recipes.jasper_amulet_upgrade]
+type = "anvil"
+output = "jasper_amulet"
+amount = 1
+[[tool_recipes.jasper_amulet_upgrade.inputs]]
+type = "amethyst_amulet"
+amount = 1
+[[tool_recipes.jasper_amulet_upgrade.inputs]]
+type = "jasper"
+amount = 2
+[[tool_recipes.jasper_amulet_upgrade.inputs]]
+type = "gold bar"
+amount = 2
+
+[tool_recipes.emerald_amulet_upgrade]
+type = "anvil"
+output = "emerald_amulet"
+amount = 1
+[[tool_recipes.emerald_amulet_upgrade.inputs]]
+type = "jasper_amulet"
+amount = 1
+[[tool_recipes.emerald_amulet_upgrade.inputs]]
+type = "emerald"
+amount = 2
+[[tool_recipes.emerald_amulet_upgrade.inputs]]
+type = "gold bar"
+amount = 2
+
+[tool_recipes.black_pearl_amulet_upgrade]
+type = "anvil"
+output = "black_pearl_amulet"
+amount = 1
+[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
+type = "emerald_amulet"
+amount = 1
+[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
+type = "black pearl"
+amount = 2
+[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
+type = "gold bar"
+amount = 2
+
+[tool_recipes.topaz_amulet_upgrade]
+type = "anvil"
+output = "topaz_amulet"
+amount = 1
+[[tool_recipes.topaz_amulet_upgrade.inputs]]
+type = "black_pearl_amulet"
+amount = 1
+[[tool_recipes.topaz_amulet_upgrade.inputs]]
+type = "topaz"
+amount = 2
+[[tool_recipes.topaz_amulet_upgrade.inputs]]
+type = "gold bar"
+amount = 2
+
+[tool_recipes.ruby_amulet_upgrade]
+type = "anvil"
+output = "ruby_amulet"
+amount = 1
+[[tool_recipes.ruby_amulet_upgrade.inputs]]
+type = "topaz_amulet"
+amount = 1
+[[tool_recipes.ruby_amulet_upgrade.inputs]]
+type = "ruby"
+amount = 2
+[[tool_recipes.ruby_amulet_upgrade.inputs]]
+type = "gold bar"
+amount = 2
+
+[tool_recipes.diamond_amulet_upgrade]
+type = "anvil"
+output = "diamond_amulet"
+amount = 1
+[[tool_recipes.diamond_amulet_upgrade.inputs]]
+type = "ruby_amulet"
+amount = 1
+[[tool_recipes.diamond_amulet_upgrade.inputs]]
+type = "diamond"
+amount = 2
+[[tool_recipes.diamond_amulet_upgrade.inputs]]
+type = "gold bar"
+amount = 2
 
 # glider upgrades
 
