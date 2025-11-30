@@ -6,6 +6,11 @@ use crate::{pixels_per_world_unit, GameContext, Neighbors, ShaderLocs};
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
 
+// Sound effect intervals (in seconds)
+const PICKAXE_SOUND_INTERVAL: f32 = 1.0;
+const FOOTSTEP_SOUND_INTERVAL: f32 = 0.3;
+const FOOTSTEP_MIN_SPEED: f32 = 0.5;
+
 // Maps to uniforms (original_0, replace_0)
 const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Red scarf
 const COLOR_PALETTES: &[[f32; 4]] = &[
@@ -282,6 +287,7 @@ fn render_water(d: &mut RaylibDrawHandle, terrain: &Terrain, x: f32, y: f32) {
 fn render_terrain(
     d: &mut RaylibDrawHandle,
     terrain: &Terrain,
+    world_state: &crate::world::WorldState,
     px: i32,
     py: i32,
     textures: &crate::TextureManager,
@@ -386,6 +392,26 @@ fn render_terrain(
                         textures.tiles.stone_tile.texture(),
                         Some(src_rect),
                     );
+                } else if block == Block::Bomb {
+                    // Check if this is an active bomb with animation
+                    if let Some(frame) = world_state.get_bomb_frame(x, y) {
+                        let texture = match frame {
+                            0 => &textures.tiles.bomb1,
+                            1 => &textures.tiles.bomb2,
+                            2 => &textures.tiles.bomb3,
+                            3 => &textures.tiles.bomb4,
+                            4 => &textures.tiles.bomb5,
+                            5 => &textures.tiles.bomb6,
+                            6 => &textures.tiles.bomb7,
+                            7 => &textures.tiles.bomb8,
+                            _ => &textures.tiles.bomb9,
+                        };
+                        render_tile(d, x as f32, y as f32, texture, None);
+                    } else {
+                        // Fallback to default bomb texture
+                        let texture = block.get_texture(textures);
+                        render_tile(d, x as f32, y as f32, texture, None);
+                    }
                 } else {
                     let texture = block.get_texture(textures);
                     render_tile(d, x as f32, y as f32, texture, None);
@@ -752,6 +778,22 @@ fn render_player(
             Color::RED,
         );
     }
+
+    // Render block break progress overlay
+    if player.is_mining {
+        if let Some((bx, by)) = player.currently_mining {
+            let block = terrain.at(bx as i32, by as i32);
+            if block != Block::Air {
+                let durability = block.durability();
+                let progress =
+                    ((player.time - player.started_mining_at) / durability).clamp(0.0, 1.0);
+                let frame = (progress * 4.0).floor().min(3.0) as usize;
+                let break_texture = &textures.ui.block_break[frame];
+
+                render_tile(d, bx, by, break_texture, None);
+            }
+        }
+    }
 }
 
 pub struct GameScreen {
@@ -812,6 +854,31 @@ impl Screen for GameScreen {
 
         if ctx.updating {
             ctx.world_state.update(dt, &ctx.controller);
+
+            // Handle sound effects
+            let player = &mut ctx.world_state.player;
+            let time = player.time;
+
+            // Pickaxe sounds while mining
+            if player.is_mining && time - player.last_pickaxe_sound >= PICKAXE_SOUND_INTERVAL {
+                ctx.sounds.play_random("pickaxe");
+                player.last_pickaxe_sound = time;
+            }
+
+            // Footstep sounds while walking on ground
+            if player.on_ground
+                && !player.is_swimming
+                && player.velocity.x.abs() > FOOTSTEP_MIN_SPEED
+                && time - player.last_footstep_sound >= FOOTSTEP_SOUND_INTERVAL
+            {
+                ctx.sounds.play_random("footstep");
+                player.last_footstep_sound = time;
+            }
+
+            // Jump sound (check if player just jumped this frame)
+            if player.jumped_this_frame {
+                ctx.sounds.play_random("jumping");
+            }
         }
 
         smooth_camera_to_target(
@@ -822,6 +889,11 @@ impl Screen for GameScreen {
             dt,
             0.12,
         );
+
+        // Check for player death
+        if ctx.world_state.player.health <= 0 {
+            return ScreenCommand::Push(Box::new(crate::death_screen::DeathScreen::new()));
+        }
 
         // Check if Tab is pressed to open inventory
         if ctx.controller.menu_pressed {
@@ -955,7 +1027,14 @@ impl Screen for GameScreen {
             let px = ctx.world_state.player.position.x as i32;
             let py = ctx.world_state.player.position.y as i32;
 
-            render_terrain(&mut d2, &ctx.world_state.terrain, px, py, &ctx.textures);
+            render_terrain(
+                &mut d2,
+                &ctx.world_state.terrain,
+                &ctx.world_state,
+                px,
+                py,
+                &ctx.textures,
+            );
 
             // Draw chunk boundaries when debug is enabled
             if ctx.debug_enabled {

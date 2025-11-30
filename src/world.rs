@@ -24,12 +24,48 @@ pub const RENDER_RANGE: i32 = 35;
 
 pub const CHEST_WEIGHT_LIMIT: f32 = 1000.0;
 
+// Bomb configuration
+pub const BOMB_FUSE_TIME: f32 = 3.0;
+pub const BOMB_BLAST_STRENGTH: f32 = 50.0;
+pub const BOMB_BLAST_RADIUS: i32 = 6;
+pub const BOMB_PLAYER_DAMAGE: f32 = 6.0; // Max damage at center (in health points)
+
+#[derive(Clone)]
+pub struct ActiveBomb {
+    pub x: i32,
+    pub y: i32,
+    pub timer: f32,
+    pub fuse_time: f32,
+    pub blast_strength: f32,
+    pub blast_radius: i32,
+}
+
+impl ActiveBomb {
+    pub fn new(x: i32, y: i32) -> Self {
+        ActiveBomb {
+            x,
+            y,
+            timer: 0.0,
+            fuse_time: BOMB_FUSE_TIME,
+            blast_strength: BOMB_BLAST_STRENGTH,
+            blast_radius: BOMB_BLAST_RADIUS,
+        }
+    }
+
+    /// Get the animation frame (0-8) based on timer progress
+    pub fn get_frame(&self) -> usize {
+        let progress = (self.timer / self.fuse_time).min(1.0);
+        (progress * 8.0).floor() as usize
+    }
+}
+
 pub struct WorldState {
     pub player: Player,
     pub terrain: Terrain,
     pub lighting_system: LightingSystem,
     pub ghost_mode: bool,
     pub chests: HashMap<(i32, i32), Inventory>,
+    pub active_bombs: Vec<ActiveBomb>,
     flow_timer: f32,
     tide_timer: f32,
     illuminate_timer: f32,
@@ -48,6 +84,7 @@ impl WorldState {
             lighting_system: LightingSystem::new(),
             ghost_mode: false,
             chests: HashMap::new(),
+            active_bombs: Vec::new(),
             flow_timer: 0.0,
             illuminate_timer: 0.0,
             tide_timer: 0.0,
@@ -204,8 +241,13 @@ impl WorldState {
         if self.ghost_mode {
             self.player.update_ghost(dt, &self.terrain, controller);
         } else {
-            self.player
-                .update(dt, &mut self.terrain, &mut self.chests, controller);
+            self.player.update(
+                dt,
+                &mut self.terrain,
+                &mut self.chests,
+                &mut self.active_bombs,
+                controller,
+            );
         }
 
         // Update lighting at reduced framerate for performance
@@ -246,5 +288,142 @@ impl WorldState {
             .unload_distant_chunks(px, py, unload_chunk_radius);
 
         self.update_tides();
+        self.update_bombs(dt);
+    }
+
+    fn update_bombs(&mut self, dt: f32) {
+        use crate::terrain::Block;
+
+        // Update all bomb timers
+        for bomb in &mut self.active_bombs {
+            bomb.timer += dt;
+        }
+
+        // Collect bombs that should explode
+        let exploded_bombs: Vec<ActiveBomb> = self
+            .active_bombs
+            .iter()
+            .filter(|b| b.timer >= b.fuse_time)
+            .cloned()
+            .collect();
+
+        // Process explosions
+        for bomb in exploded_bombs {
+            self.explode_bomb(&bomb);
+        }
+
+        // Remove exploded bombs
+        self.active_bombs.retain(|b| b.timer < b.fuse_time);
+    }
+
+    fn explode_bomb(&mut self, bomb: &ActiveBomb) {
+        use crate::terrain::Block;
+
+        // Remove the bomb block itself
+        self.terrain.set(bomb.x, bomb.y, Block::Air);
+
+        // Cast rays in many directions for blast with shielding
+        let num_rays = 72; // Every 5 degrees
+        for i in 0..num_rays {
+            let angle = (i as f32 / num_rays as f32) * std::f32::consts::PI * 2.0;
+            let dir_x = angle.cos();
+            let dir_y = angle.sin();
+
+            let mut remaining_damage = bomb.blast_strength;
+
+            // Walk along the ray
+            for dist in 1..=bomb.blast_radius {
+                if remaining_damage <= 0.0 {
+                    break;
+                }
+
+                let bx = bomb.x + (dir_x * dist as f32).round() as i32;
+                let by = bomb.y + (dir_y * dist as f32).round() as i32;
+
+                let block = self.terrain.at(bx, by);
+                let durability = block.durability();
+
+                // Skip air and water (durability 0)
+                if durability <= 0.0 {
+                    continue;
+                }
+
+                // Check if we can destroy this block
+                if remaining_damage >= durability {
+                    // Destroy the block (no drops)
+                    self.terrain.set(bx, by, Block::Air);
+
+                    // Also remove chest inventory if it was a chest
+                    if matches!(block, Block::WoodenChest) {
+                        self.chests.remove(&(bx, by));
+                    }
+
+                    // Damage absorbed by the block
+                    remaining_damage -= durability;
+                } else {
+                    // Block survives, shields everything behind it
+                    break;
+                }
+            }
+        }
+
+        // Calculate player damage
+        let player_center_x = self.player.position.x + self.player.width / 2.0;
+        let player_center_y = self.player.position.y + self.player.height / 2.0;
+
+        let dx = player_center_x - bomb.x as f32;
+        let dy = player_center_y - bomb.y as f32;
+        let player_dist = (dx * dx + dy * dy).sqrt();
+
+        if player_dist <= bomb.blast_radius as f32 {
+            // Check line of sight to player
+            if self.has_explosion_line_of_sight(bomb.x, bomb.y, player_center_x, player_center_y) {
+                // Damage falls off with distance
+                let damage_ratio = 1.0 - (player_dist / bomb.blast_radius as f32);
+                let damage = (BOMB_PLAYER_DAMAGE * damage_ratio).round() as i32;
+                self.player.health -= damage;
+
+                // Ensure health doesn't go below 0
+                if self.player.health < 0 {
+                    self.player.health = 0;
+                }
+            }
+        }
+    }
+
+    /// Check if there's line of sight from bomb to target (for player damage)
+    fn has_explosion_line_of_sight(&self, from_x: i32, from_y: i32, to_x: f32, to_y: f32) -> bool {
+        let dx = to_x - from_x as f32;
+        let dy = to_y - from_y as f32;
+        let dist = (dx * dx + dy * dy).sqrt();
+
+        if dist < 1.0 {
+            return true;
+        }
+
+        let steps = dist.ceil() as i32;
+        let step_x = dx / steps as f32;
+        let step_y = dy / steps as f32;
+
+        for i in 1..steps {
+            let check_x = (from_x as f32 + step_x * i as f32).round() as i32;
+            let check_y = (from_y as f32 + step_y * i as f32).round() as i32;
+
+            let block = self.terrain.at(check_x, check_y);
+            // If there's a solid block in the way, no line of sight
+            if block.is_solid() {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    /// Get the animation frame for a bomb at a specific position
+    pub fn get_bomb_frame(&self, x: i32, y: i32) -> Option<usize> {
+        self.active_bombs
+            .iter()
+            .find(|b| b.x == x && b.y == y)
+            .map(|b| b.get_frame())
     }
 }

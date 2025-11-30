@@ -49,6 +49,7 @@ pub const MAX_RAYCAST_PLACE_BLOCK: f32 = 3.5;
 pub const INVENTORY_STARTING_WEIGHT: f32 = 100.0;
 pub const STARTING_HEALTH: i32 = 12; // 4 frames of heart * 3 hearts
 pub const MAX_BREATH_HOLD: f32 = 10.0;
+pub const DROWN_DAMAGE_INTERVAL: f32 = 1.0; // Lose 1 heart per second when out of breath
 
 pub const SPIKE_IMMUNITY_COOLDOWN: f32 = 0.3;
 
@@ -114,6 +115,8 @@ pub struct Player {
 
     pub health: i32,
     pub breath: f32,
+    #[serde(default)]
+    pub last_drown_damage: f32,
 
     pub inventory: Inventory,
 
@@ -126,6 +129,14 @@ pub struct Player {
     pub tool_tideclock: Option<ToolTideClock>,
 
     pub is_gliding: bool,
+
+    // Sound timing (not saved)
+    #[serde(skip)]
+    pub last_pickaxe_sound: f32,
+    #[serde(skip)]
+    pub last_footstep_sound: f32,
+    #[serde(skip)]
+    pub jumped_this_frame: bool,
 }
 
 // Custom serialization for raylib Vector2
@@ -202,6 +213,7 @@ impl Player {
 
             health: STARTING_HEALTH,
             breath: MAX_BREATH_HOLD,
+            last_drown_damage: 0.0,
 
             inventory: Inventory::new(INVENTORY_STARTING_WEIGHT),
 
@@ -215,6 +227,10 @@ impl Player {
             tool_tideclock: None,
 
             is_gliding: false,
+
+            last_pickaxe_sound: 0.0,
+            last_footstep_sound: 0.0,
+            jumped_this_frame: false,
         }
     }
 
@@ -392,6 +408,7 @@ impl Player {
         &mut self,
         terrain: &mut Terrain,
         chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
+        active_bombs: &mut Vec<crate::world::ActiveBomb>,
         block: Block,
         left_hand: bool,
     ) {
@@ -423,6 +440,11 @@ impl Player {
                         );
                     }
 
+                    // Start bomb timer if placing a bomb
+                    if matches!(block, Block::Bomb) {
+                        active_bombs.push(crate::world::ActiveBomb::new(x, y));
+                    }
+
                     if self.inventory.count(item_type) == 0 {
                         // TODO: remove from hand
                     }
@@ -436,12 +458,16 @@ impl Player {
         dt: f32,
         terrain: &mut Terrain,
         chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
+        active_bombs: &mut Vec<crate::world::ActiveBomb>,
         controller: &Controller,
     ) {
         let jump_pressed = controller.jump_pressed;
         let jump_held = controller.jump_held;
         let climb_pressed = controller.climb_pressed;
         let input_dir = controller.input_dir;
+
+        // Reset per-frame flags
+        self.jumped_this_frame = false;
 
         self.time += dt;
 
@@ -480,8 +506,15 @@ impl Player {
             self.last_in_water = self.time;
             self.on_ground = false;
             self.breath -= dt;
+
+            // Take drowning damage when out of breath
+            if self.breath <= 0.0 && self.time - self.last_drown_damage >= DROWN_DAMAGE_INTERVAL {
+                self.health -= 1;
+                self.last_drown_damage = self.time;
+            }
         } else {
-            self.breath = MAX_BREATH_HOLD;
+            // Recover breath at twice the decay rate
+            self.breath = (self.breath + 2.0 * dt).min(MAX_BREATH_HOLD);
         }
 
         // Check if on ladder
@@ -569,7 +602,7 @@ impl Player {
                 self.try_jumped_at = self.time;
             }
         }
-        
+
         // Activate head slot equipment when jump pressed while in air (but not on ladder)
         if jump_pressed && !self.on_ground && !self.is_swimming && !self.is_dashing && !self.is_on_ladder {
             match self.head_slot {
@@ -621,8 +654,11 @@ impl Player {
             self.dashes = max_dashes;
         }
 
-        let mut used_tool = self.use_tool(terrain, chests, controller, true);
-        used_tool = self.use_tool(terrain, chests, controller, false) || used_tool;
+        // Reset gliding state (will be set by use_tool if glider is active)
+        self.is_gliding = false;
+
+        let mut used_tool = self.use_tool(terrain, chests, active_bombs, controller, true);
+        used_tool = self.use_tool(terrain, chests, active_bombs, controller, false) || used_tool;
         if !used_tool {
             self.is_mining = false;
         }
@@ -674,7 +710,7 @@ impl Player {
             // Ladder climbing - free movement up and down
             let ladder_speed = CLIMB_SPEED;
             let speed = ACCEL * dt;
-            
+
             // Horizontal movement on ladder
             if input_dir.x != 0.0 {
                 self.facing_dir = input_dir.x.signum() as i32;
@@ -683,7 +719,7 @@ impl Player {
             } else {
                 self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
             }
-            
+
             // Vertical movement on ladder
             if input_dir.y != 0.0 {
                 self.velocity.y = input_dir.y * ladder_speed;
@@ -990,6 +1026,7 @@ impl Player {
         self.gravity_reduction = JUMP_GRAVITY_REDUCTION;
         self.try_jumped_at = 0.0;
         self.is_jumping = true;
+        self.jumped_this_frame = true;
 
         if self.is_dashing {
             self.dash_dir.y -= 0.5;
@@ -1041,6 +1078,7 @@ impl Player {
         &mut self,
         terrain: &mut Terrain,
         chests: &mut std::collections::HashMap<(i32, i32), crate::inventory::Inventory>,
+        active_bombs: &mut Vec<crate::world::ActiveBomb>,
         controller: &Controller,
         left_hand: bool,
     ) -> bool {
@@ -1072,7 +1110,7 @@ impl Player {
                 false
             }
             (Some(ToolType::PlaceBlock(blk)), _, true) => {
-                self.try_place_block(terrain, chests, blk, left_hand);
+                self.try_place_block(terrain, chests, active_bombs, blk, left_hand);
                 true
             }
             _ => false,
@@ -1108,12 +1146,14 @@ impl Player {
                 if !self.is_mining {
                     self.is_mining = true;
                     self.started_mining_at = self.time;
+                    self.last_pickaxe_sound = self.time;
                     self.currently_mining = Some(bt);
                 } else {
                     self.facing_dir =
                         (raycast_end.x - (self.position.x + self.width / 2.0)).signum() as i32;
                     if let Some(ot) = self.currently_mining {
                         if ot.0 != bt.0 || ot.1 != bt.1 {
+                            self.last_pickaxe_sound = self.time;
                             self.started_mining_at = self.time;
                             self.currently_mining = Some(bt);
                         }

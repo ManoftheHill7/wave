@@ -74,7 +74,7 @@ Things that I would really like to have
 
 - [ ] Animated tiles (furnace, anvil, torches, eg)
 - [ ] Parallax backgrounds
-- [ ] Overlay block breaking animation
+- [x] Overlay block breaking animation
 - [ ] Multiple tile layers, allow placing blocks in foreground/background
   - Few opening in tunnels, more in caverns
   - Ore can generate in background layers
@@ -85,22 +85,22 @@ Things that I would really like to have
 - [ ] Proximity sound effects for torches
 - [x] Layering music as you go deeper
 - [ ] Flooding caverns music intensity
-- [ ] Sound effects when things happen
-- [ ] Looping sound effects for things like mining
+- [x] Sound effects when things happen
+- [x] Looping sound effects for things like mining
 - [ ] Dynamic wooshing, and thuds for falling and impact
 
 #### Misc
 
 - [ ] Improved hitbox/collision handling
 - [ ] Tide clears building items
-- [ ] Bombs explode
+- [x] Bombs explode
 - [x] Chests store items
 - [x] Tool repairs/upgrades
 - [x] Tool colour swapping on animations
-- [ ] Death screen/respawn
+- [x] Death screen/respawn
 - [x] Tide clock ui
 - [ ] Permenatly save block placement on surface
-- [ ] Breath bar fills slowly out of water
+- [x] Breath bar fills slowly out of water
 
 #### Combat
 
