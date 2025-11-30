@@ -88,19 +88,106 @@ fn get_save_path(slot: u32) -> PathBuf {
     path
 }
 
-pub fn save_game(world_state: &WorldState, slot: u32) -> Result<(), String> {
+fn get_chunks_dir(slot: u32) -> PathBuf {
+    let mut path = get_save_dir();
+    path.push(format!("save_{}_chunks", slot));
+    path
+}
+
+fn get_chunk_path(slot: u32, coord: ChunkCoord) -> PathBuf {
+    let mut path = get_chunks_dir(slot);
+    path.push(format!("chunk_{}_{}.bin", coord.x, coord.y));
+    path
+}
+
+/// Save a single chunk to disk
+pub fn save_chunk(slot: u32, chunk: &Chunk) -> Result<(), String> {
+    let chunks_dir = get_chunks_dir(slot);
+    fs::create_dir_all(&chunks_dir)
+        .map_err(|e| format!("Failed to create chunks directory: {}", e))?;
+
+    let chunk_data = ChunkData::from_chunk(chunk);
+    let encoded = bincode::serialize(&chunk_data)
+        .map_err(|e| format!("Failed to serialize chunk data: {}", e))?;
+
+    let chunk_path = get_chunk_path(slot, chunk.coord);
+    let mut file =
+        File::create(&chunk_path).map_err(|e| format!("Failed to create chunk file: {}", e))?;
+
+    file.write_all(&encoded)
+        .map_err(|e| format!("Failed to write chunk file: {}", e))?;
+
+    Ok(())
+}
+
+/// Load a single chunk from disk, returns None if file doesn't exist
+pub fn load_chunk(slot: u32, coord: ChunkCoord) -> Result<Option<Chunk>, String> {
+    let chunk_path = get_chunk_path(slot, coord);
+
+    if !chunk_path.exists() {
+        return Ok(None);
+    }
+
+    let mut file =
+        File::open(&chunk_path).map_err(|e| format!("Failed to open chunk file: {}", e))?;
+
+    let mut encoded = Vec::new();
+    file.read_to_end(&mut encoded)
+        .map_err(|e| format!("Failed to read chunk file: {}", e))?;
+
+    let chunk_data: ChunkData = bincode::deserialize(&encoded)
+        .map_err(|e| format!("Failed to deserialize chunk data: {}", e))?;
+
+    Ok(Some(chunk_data.to_chunk()))
+}
+
+/// Check if a saved chunk exists for the given slot and coordinate
+pub fn chunk_exists(slot: u32, coord: ChunkCoord) -> bool {
+    get_chunk_path(slot, coord).exists()
+}
+
+/// Delete all chunk files for a save slot
+pub fn delete_chunks(slot: u32) -> Result<(), String> {
+    let chunks_dir = get_chunks_dir(slot);
+
+    if !chunks_dir.exists() {
+        return Ok(());
+    }
+
+    fs::remove_dir_all(&chunks_dir)
+        .map_err(|e| format!("Failed to delete chunks directory: {}", e))?;
+
+    Ok(())
+}
+
+pub fn save_game(world_state: &mut WorldState, slot: u32) -> Result<(), String> {
     let save_dir = get_save_dir();
     fs::create_dir_all(&save_dir).map_err(|e| format!("Failed to create save directory: {}", e))?;
 
-    let mut chunks = HashMap::new();
+    // Set the save slot on terrain so future chunk operations use the right slot
+    world_state.terrain.save_slot = Some(slot);
 
-    // Save all chunks including ocean and beach chunks
-    // Water will be restored to air blocks below sea level on load
+    // Save all dirty chunks to individual files
+    let mut chunks_saved = 0;
+    for (_coord, chunk) in &world_state.terrain.chunks {
+        if chunk.dirty {
+            save_chunk(slot, chunk)?;
+            chunks_saved += 1;
+        }
+    }
+
+    // Mark all chunks as clean after saving
+    for chunk in world_state.terrain.chunks.values_mut() {
+        chunk.dirty = false;
+    }
+
+    // Only store currently loaded chunks in the main save file (for quick resume)
+    let mut chunks = HashMap::new();
     for (coord, chunk) in &world_state.terrain.chunks {
         chunks.insert(*coord, ChunkData::from_chunk(chunk));
     }
 
-    let chunk_count = chunks.len();
+    let loaded_chunk_count = chunks.len();
 
     // Extract seed from terrain generator
     let terrain_seed = match &world_state.terrain.generator {
@@ -128,10 +215,11 @@ pub fn save_game(world_state: &WorldState, slot: u32) -> Result<(), String> {
         .map_err(|e| format!("Failed to write save file: {}", e))?;
 
     println!(
-        "Game saved to: {:?} ({} bytes, {} chunks)",
+        "Game saved to: {:?} ({} bytes, {} loaded chunks, {} dirty chunks saved to disk)",
         save_path,
         encoded.len(),
-        chunk_count
+        loaded_chunk_count,
+        chunks_saved
     );
     Ok(())
 }
@@ -161,12 +249,15 @@ pub fn load_game(slot: u32) -> Result<SaveData, String> {
     Ok(save_data)
 }
 
-pub fn apply_save_data(world_state: &mut WorldState, save_data: SaveData) {
+pub fn apply_save_data(world_state: &mut WorldState, save_data: SaveData, slot: u32) {
     use crate::terrain::{Block, CHUNK_SIZE};
 
     world_state.player = save_data.player;
     world_state.set_flow_timer(save_data.flow_timer);
     world_state.set_tide_timer(save_data.tide_timer);
+
+    // Set the save slot so terrain can load/save chunks from the right location
+    world_state.terrain.save_slot = Some(slot);
 
     world_state.terrain.chunks.clear();
 
@@ -194,6 +285,9 @@ pub fn apply_save_data(world_state: &mut WorldState, save_data: SaveData) {
             }
         }
 
+        // Chunks loaded from save are clean (not dirty)
+        chunk.dirty = false;
+
         world_state.terrain.chunks.insert(coord, chunk);
     }
 
@@ -213,6 +307,9 @@ pub fn delete_save(slot: u32) -> Result<(), String> {
     }
 
     fs::remove_file(&save_path).map_err(|e| format!("Failed to delete save file: {}", e))?;
+
+    // Also delete chunk files for this save slot
+    delete_chunks(slot)?;
 
     println!("Save file deleted: {:?}", save_path);
     Ok(())
@@ -237,6 +334,16 @@ pub fn delete_all_saves() -> Result<(), String> {
                     eprintln!("Failed to delete {:?}: {}", path, e);
                 } else {
                     deleted_count += 1;
+                }
+            } else if path.is_dir()
+                && path
+                    .file_name()
+                    .map(|n| n.to_string_lossy().contains("_chunks"))
+                    .unwrap_or(false)
+            {
+                // Delete chunk directories
+                if let Err(e) = fs::remove_dir_all(&path) {
+                    eprintln!("Failed to delete {:?}: {}", path, e);
                 }
             }
         }

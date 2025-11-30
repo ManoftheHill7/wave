@@ -97,6 +97,8 @@ pub struct Chunk {
     pub coord: ChunkCoord,
     /// Maps local (x, y) coordinates to multi-tile data
     multi_tile_data: HashMap<(usize, usize), MultiTileData>,
+    /// Whether this chunk has been modified since loading/generation
+    pub dirty: bool,
 }
 
 impl Chunk {
@@ -107,6 +109,7 @@ impl Chunk {
             cells_next: vec![LiquidData::new(0.0); CELLS_PER_TILE * CHUNK_SIZE * CHUNK_SIZE],
             coord,
             multi_tile_data: HashMap::new(),
+            dirty: false,
         }
     }
 
@@ -135,6 +138,7 @@ impl Chunk {
         } else {
             self.multi_tile_data.remove(&(local_x, local_y));
         }
+        self.dirty = true;
     }
 
     pub fn set(&mut self, local_x: usize, local_y: usize, block: Block) {
@@ -472,6 +476,8 @@ pub struct Terrain {
     pub chunks: HashMap<ChunkCoord, Chunk>,
     chunk_size: i32,
     pub generator: Generator,
+    /// The current save slot (None for new unsaved games)
+    pub save_slot: Option<u32>,
 }
 
 impl Terrain {
@@ -480,6 +486,7 @@ impl Terrain {
             chunks: HashMap::new(),
             chunk_size: CHUNK_SIZE as i32,
             generator: Generator::Procedural(crate::terrain_generator::TerrainGenerator::new(seed)),
+            save_slot: None,
         }
     }
 
@@ -671,6 +678,7 @@ impl Terrain {
 
         if let Some(chunk) = self.chunks.get_mut(&chunk_coord) {
             chunk.set(local_coord.0, local_coord.1, block);
+            chunk.dirty = true;
         }
     }
 
@@ -817,6 +825,15 @@ impl Terrain {
     }
 
     pub fn load_chunk(&mut self, coord: ChunkCoord) {
+        // First, check if there's a saved chunk file
+        if let Some(slot) = self.save_slot {
+            if let Ok(Some(chunk)) = crate::save_load::load_chunk(slot, coord) {
+                self.chunks.insert(coord, chunk);
+                return;
+            }
+        }
+
+        // No saved chunk, generate procedurally
         let chunk = self.generator.generate_chunk(coord);
         self.chunks.insert(coord, chunk);
     }
@@ -845,10 +862,32 @@ impl Terrain {
     pub fn unload_distant_chunks(&mut self, center_x: i32, center_y: i32, max_distance: i32) {
         let center_chunk = self.world_to_chunk(center_x, center_y);
 
-        self.chunks.retain(|coord, _| {
-            let dx = (coord.x - center_chunk.x).abs();
-            let dy = (coord.y - center_chunk.y).abs();
-            dx <= max_distance && dy <= max_distance
-        });
+        // Collect chunks to unload and save dirty ones
+        let chunks_to_unload: Vec<ChunkCoord> = self
+            .chunks
+            .iter()
+            .filter_map(|(coord, chunk)| {
+                let dx = (coord.x - center_chunk.x).abs();
+                let dy = (coord.y - center_chunk.y).abs();
+                if dx > max_distance || dy > max_distance {
+                    // Save dirty chunks before unloading
+                    if chunk.dirty {
+                        if let Some(slot) = self.save_slot {
+                            if let Err(e) = crate::save_load::save_chunk(slot, chunk) {
+                                eprintln!("Failed to save chunk {:?}: {}", coord, e);
+                            }
+                        }
+                    }
+                    Some(*coord)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        // Remove unloaded chunks
+        for coord in chunks_to_unload {
+            self.chunks.remove(&coord);
+        }
     }
 }

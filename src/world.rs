@@ -19,8 +19,8 @@ const LIGHTING_UPDATE_TIMER: f32 = 1.0 / 48.0;
 const MAX_TIDE_DEPTH: f32 = 1000.0;
 const TIDE_FREQUENCY: f32 = 1.0 / 120.0;
 
-pub const LIGHTING_RANGE: i32 = 35;
-pub const RENDER_RANGE: i32 = 35;
+pub const LIGHTING_RANGE: i32 = 40;
+pub const RENDER_RANGE: i32 = 40;
 
 pub const CHEST_WEIGHT_LIMIT: f32 = 1000.0;
 

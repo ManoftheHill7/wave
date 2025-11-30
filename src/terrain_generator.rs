@@ -665,7 +665,8 @@ impl TerrainGenerator {
             // Lerp between BEACH_HEIGHT and desired_height using fade_factor
             // At fade_factor=0.0 (wx=0): height = BEACH_HEIGHT
             // At fade_factor=1.0 (wx>=fade_distance): height = desired_height
-            let height = (BEACH_HEIGHT as f64 * (1.0 - fade_factor) + desired_height as f64 * fade_factor) as i32;
+            let height = (BEACH_HEIGHT as f64 * (1.0 - fade_factor)
+                + desired_height as f64 * fade_factor) as i32;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
 
@@ -940,6 +941,8 @@ impl TerrainGenerator {
     }
 
     pub fn generate_beach_chunk(&mut self, coord: ChunkCoord) -> Chunk {
+        use rand::SeedableRng;
+
         let mut chunk = Chunk::new(coord);
         let chunk_size: i32 = CHUNK_SIZE as i32;
 
@@ -948,6 +951,10 @@ impl TerrainGenerator {
         let big_slope = -2.0;
         let offset_right = BEACH_HEIGHT as f32 - (chunk_size - inflection_x) as f32 * little_slope;
         let offset_left = offset_right - big_slope * inflection_x as f32;
+
+        // Create seeded RNG for clam placement
+        let clam_seed = self.seed ^ ((coord.x as u64) << 32) ^ (coord.y as u64) ^ 0xC1A3;
+        let mut rng = rand::rngs::StdRng::seed_from_u64(clam_seed);
 
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
@@ -978,6 +985,25 @@ impl TerrainGenerator {
                 };
 
                 chunk.set(lx, ly, block_type);
+            }
+        }
+
+        // Add clams on air tiles above sand below sea level (underwater)
+        for lx in 0..CHUNK_SIZE {
+            // ly + 1 must be valid, so stop at CHUNK_SIZE - 1
+            for ly in 0..(CHUNK_SIZE - 1) {
+                let wy = coord.y * chunk_size + ly as i32;
+                // Only spawn below sea level (wy > SEA_LEVEL means underwater)
+                if wy <= SEA_LEVEL {
+                    continue;
+                }
+                // Check if current tile is air and tile below is sand
+                if chunk.get(lx, ly) == Block::Air && chunk.get(lx, ly + 1) == Block::Sand {
+                    // 15% chance to spawn a clam
+                    if rng.gen_bool(0.15) {
+                        chunk.set(lx, ly, Block::Clam);
+                    }
+                }
             }
         }
 

@@ -130,6 +130,10 @@ pub struct Player {
 
     pub is_gliding: bool,
 
+    /// Nearby pickup block position and name (for UI prompt)
+    #[serde(skip)]
+    pub nearby_pickup: Option<(i32, i32, &'static str)>,
+
     // Sound timing (not saved)
     #[serde(skip)]
     pub last_pickaxe_sound: f32,
@@ -227,6 +231,8 @@ impl Player {
             tool_tideclock: None,
 
             is_gliding: false,
+
+            nearby_pickup: None,
 
             last_pickaxe_sound: 0.0,
             last_footstep_sound: 0.0,
@@ -446,7 +452,12 @@ impl Player {
                     }
 
                     if self.inventory.count(item_type) == 0 {
-                        // TODO: remove from hand
+                        // Unequip from hand when last item is placed
+                        if left_hand {
+                            self.left_hand = None;
+                        } else {
+                            self.right_hand = None;
+                        }
                     }
                 }
             }
@@ -603,8 +614,14 @@ impl Player {
             }
         }
 
-        // Activate head slot equipment when jump pressed while in air (but not on ladder)
-        if jump_pressed && !self.on_ground && !self.is_swimming && !self.is_dashing && !self.is_on_ladder {
+        // Activate head slot equipment when jump pressed while truly in air
+        // (not on ground, past coyote time, not on wall, not on ladder)
+        let truly_in_air = !self.on_ground
+            && !self.within_grace(self.last_on_ground, JUMP_COYOTE_TIME)
+            && !on_wall
+            && !self.is_on_ladder;
+
+        if jump_pressed && truly_in_air && !self.is_swimming && !self.is_dashing {
             match self.head_slot {
                 Some(ToolType::Glider) => {
                     if let Some(glider) = &self.tool_glider {
@@ -663,23 +680,20 @@ impl Player {
             self.is_mining = false;
         }
 
-        // Glider stays active while jump is held in the air with glider equipped in head slot
-        if !self.on_ground && !self.is_swimming && !self.is_dashing && jump_held {
+        // Glider stays active while jump is held, falling, in the air with glider equipped in head slot
+        if !self.on_ground
+            && !self.is_swimming
+            && !self.is_dashing
+            && jump_held
+            && self.velocity.y > 0.0
+        {
             if self.head_slot == Some(ToolType::Glider) {
                 if let Some(glider) = &self.tool_glider {
                     if glider.durability > 0.0 {
-                        // Keep gliding active
-                    } else {
-                        self.is_gliding = false;
+                        self.is_gliding = true;
                     }
-                } else {
-                    self.is_gliding = false;
                 }
-            } else {
-                self.is_gliding = false;
             }
-        } else {
-            self.is_gliding = false;
         }
 
         // Apply glider physics - clamp fall speed and consume durability
@@ -714,8 +728,7 @@ impl Player {
             // Horizontal movement on ladder
             if input_dir.x != 0.0 {
                 self.facing_dir = input_dir.x.signum() as i32;
-                self.velocity.x =
-                    Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
+                self.velocity.x = Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
             } else {
                 self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
             }
@@ -773,7 +786,64 @@ impl Player {
         }
         self.last_velocity = self.velocity;
 
+        // Check for nearby pickup blocks and handle pickup
+        self.check_nearby_pickups(terrain, controller);
+
         self.calculated_selected_blocks(terrain, controller);
+    }
+
+    /// Check for pickup blocks near the player and handle the 'E' key to pick them up
+    fn check_nearby_pickups(&mut self, terrain: &mut Terrain, controller: &Controller) {
+        use crate::terrain::Block;
+
+        // Reset nearby pickup
+        self.nearby_pickup = None;
+
+        // Check blocks in a small radius around the player
+        let player_x = self.position.x + self.width / 2.0;
+        let player_y = self.position.y + self.height / 2.0;
+        let check_radius = 2.0; // 2 tile radius
+
+        let min_x = (player_x - check_radius).floor() as i32;
+        let max_x = (player_x + check_radius).ceil() as i32;
+        let min_y = (player_y - check_radius).floor() as i32;
+        let max_y = (player_y + check_radius).ceil() as i32;
+
+        let mut closest_pickup: Option<(i32, i32, f32, &'static str)> = None;
+
+        for x in min_x..=max_x {
+            for y in min_y..=max_y {
+                let block = terrain.at(x, y);
+                if block.is_pickup() {
+                    // Calculate distance to this block
+                    let block_center_x = x as f32 + 0.5;
+                    let block_center_y = y as f32 + 0.5;
+                    let dx = block_center_x - player_x;
+                    let dy = block_center_y - player_y;
+                    let dist = (dx * dx + dy * dy).sqrt();
+
+                    if dist <= check_radius {
+                        if closest_pickup.is_none() || dist < closest_pickup.as_ref().unwrap().2 {
+                            closest_pickup = Some((x, y, dist, block.name()));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Store the closest pickup for UI display
+        if let Some((x, y, _, name)) = closest_pickup {
+            self.nearby_pickup = Some((x, y, name));
+
+            // Handle pickup if E is pressed
+            if controller.interact_pressed {
+                let block = terrain.at(x, y);
+                if let Some((item_type, amount)) = block.get_drops() {
+                    self.inventory.add(item_type, amount);
+                    terrain.set(x, y, Block::Air);
+                }
+            }
+        }
     }
 
     fn raycast(&self, start: Vector2, end: Vector2, terrain: &Terrain) -> RaycastResult {
@@ -1219,6 +1289,4 @@ impl Player {
             self.dash_dir = self.dash_dir.normalized();
         }
     }
-
-
 }

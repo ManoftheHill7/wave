@@ -8,6 +8,7 @@ pub struct Controller {
     pub raycast_direction: Vector2,
     pub menu_pressed: bool,
     pub crafting_pressed: bool,
+    pub interact_pressed: bool,
     pub left_hand_pressed: bool,
     pub right_hand_pressed: bool,
     pub left_hand_held: bool,
@@ -26,6 +27,7 @@ impl Controller {
             raycast_direction: Vector2::zero(),
             menu_pressed: false,
             crafting_pressed: false,
+            interact_pressed: false,
             left_hand_pressed: false,
             right_hand_pressed: false,
             left_hand_held: false,
@@ -79,6 +81,7 @@ impl Controller {
 
         self.menu_pressed = rl.is_key_pressed(KeyboardKey::KEY_TAB);
         self.crafting_pressed = rl.is_key_pressed(KeyboardKey::KEY_M);
+        self.interact_pressed = rl.is_key_pressed(KeyboardKey::KEY_E);
 
         self.left_hand_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_LEFT);
         self.right_hand_pressed = rl.is_mouse_button_pressed(MouseButton::MOUSE_BUTTON_RIGHT);

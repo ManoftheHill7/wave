@@ -3,14 +3,14 @@
 
 # pickaxes
 
-[tool_recipes.stone_pickaxe]
+[tool_recipes.stone_pickaxe_repair]
 type = "anvil"
 output = "stone_pickaxe"
 amount = 1
-[[tool_recipes.stone_pickaxe.inputs]]
+[[tool_recipes.stone_pickaxe_repair.inputs]]
 type = "stone_pickaxe"
 amount = 1
-[[tool_recipes.stone_pickaxe.inputs]]
+[[tool_recipes.stone_pickaxe_repair.inputs]]
 type = "stone"
 amount = 1
 

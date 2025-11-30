@@ -298,7 +298,8 @@ fn render_terrain(
             let block = terrain.at(x, y);
 
             // Render water in air, tide, ladder, and spike blocks (water shows behind ladders/spikes)
-            if block == Block::Air || block == Block::Tide || block.is_ladder() || block.is_spike() {
+            if block == Block::Air || block == Block::Tide || block.is_ladder() || block.is_spike()
+            {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
                         render_water(
@@ -1469,13 +1470,15 @@ impl Screen for GameScreen {
             .player
             .get_intersecting_crafting_station(&ctx.world_state.terrain);
 
-        let prompt = if let Some(station) = crafting_station {
+        let prompt: String = if let Some((_x, _y, name)) = ctx.world_state.player.nearby_pickup {
+            format!("Press E to pickup {}", name)
+        } else if let Some(station) = crafting_station {
             use crate::terrain::Block;
             match station {
-                Block::Workbench => "Press M to use Workbench",
-                Block::Anvil => "Press M to use Anvil",
-                Block::Furnace => "Press M to use Furnace",
-                _ => "",
+                Block::Workbench => "Press M to use Workbench".to_string(),
+                Block::Anvil => "Press M to use Anvil".to_string(),
+                Block::Furnace => "Press M to use Furnace".to_string(),
+                _ => String::new(),
             }
         } else if let Some(chest_pos) = ctx
             .world_state
@@ -1484,18 +1487,18 @@ impl Screen for GameScreen {
         {
             // Only show prompt if chest has an inventory
             if ctx.world_state.chests.contains_key(&chest_pos) {
-                "Press M to open Chest"
+                "Press M to open Chest".to_string()
             } else {
-                ""
+                String::new()
             }
         } else {
-            ""
+            String::new()
         };
 
-            if !prompt.is_empty() {
-                let text_width = d.measure_text(prompt, 20);
-                let text_x = (self.screen_width - text_width as f32) / 2.0;
-                let text_y = self.screen_height - 300.0;
+        if !prompt.is_empty() {
+            let text_width = d.measure_text(&prompt, 20);
+            let text_x = (self.screen_width - text_width as f32) / 2.0;
+            let text_y = self.screen_height - 300.0;
 
             // Draw background box
             d.draw_rectangle(
@@ -1507,7 +1510,7 @@ impl Screen for GameScreen {
             );
 
             // Draw text
-            d.draw_text(prompt, text_x as i32, text_y as i32, 20, Color::WHITE);
+            d.draw_text(&prompt, text_x as i32, text_y as i32, 20, Color::WHITE);
         }
     }
 }

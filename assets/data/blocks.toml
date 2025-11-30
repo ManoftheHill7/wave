@@ -75,10 +75,18 @@ amount = 1
 
 [blocks.flax]
 name = "Flax"
-type = "solid"
+type = "pickup"
 durability = 0.25
 drops = "flax"
 amount = 1
+
+[blocks.clam]
+name = "Clam"
+type = "pickup"
+durability = 0.25
+drops = "white_pearl"
+amount = 1
+image = "items.clam"
 
 [blocks.water]
 name = "Water"

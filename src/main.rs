@@ -37,13 +37,19 @@ fn main() {
                 println!("Starting new game...");
             }
 
+            // Save immediately so chunks can be saved/loaded from files
+            match save_load::save_game(&mut ctx.world_state, 0) {
+                Ok(()) => println!("✓ New game saved!"),
+                Err(e) => eprintln!("✗ Failed to save new game: {}", e),
+            }
+
             Box::new(GameScreen::new(&ctx))
         } else if resume_mode {
             // Try to load save, if it fails, go to menu
             if save_load::save_exists(0) {
                 match save_load::load_game(0) {
                     Ok(save_data) => {
-                        save_load::apply_save_data(&mut ctx.world_state, save_data);
+                        save_load::apply_save_data(&mut ctx.world_state, save_data, 0);
                         println!("✓ Game loaded successfully!");
                         Box::new(GameScreen::new(&ctx))
                     }
@@ -85,7 +91,7 @@ fn main() {
         manager.render(&mut rl, &thread, &ctx);
     }
 
-    match save_load::save_game(&ctx.world_state, 0) {
+    match save_load::save_game(&mut ctx.world_state, 0) {
         Ok(()) => println!("✓ Game saved successfully!"),
         Err(e) => eprintln!("✗ Failed to save game: {}", e),
     }

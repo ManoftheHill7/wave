@@ -84,12 +84,17 @@ impl Screen for MenuScreen {
         // Check button clicks
         if ctx.controller.left_hand_pressed {
             if self.hovered_button == Some(ButtonType::NewGame) {
+                // Save immediately so chunks can be saved/loaded from files
+                match save_load::save_game(&mut ctx.world_state, 0) {
+                    Ok(()) => println!("✓ New game saved!"),
+                    Err(e) => eprintln!("✗ Failed to save new game: {}", e),
+                }
                 return ScreenCommand::Push(Box::new(crate::GameScreen::new(ctx)));
             } else if self.hovered_button == Some(ButtonType::LoadGame) {
                 if save_load::save_exists(0) {
                     match save_load::load_game(0) {
                         Ok(save_data) => {
-                            save_load::apply_save_data(&mut ctx.world_state, save_data);
+                            save_load::apply_save_data(&mut ctx.world_state, save_data, 0);
                             println!("✓ Game loaded successfully!");
                             return ScreenCommand::Push(Box::new(crate::GameScreen::new(ctx)));
                         }
@@ -102,6 +107,7 @@ impl Screen for MenuScreen {
                 }
             } else if self.hovered_button == Some(ButtonType::Mute) {
                 ctx.music.toggle_mute();
+                ctx.sounds.set_muted(ctx.music.is_muted());
             }
         }
 
