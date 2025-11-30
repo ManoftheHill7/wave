@@ -111,20 +111,47 @@ impl Screen for MenuScreen {
     fn render(&mut self, rl: &mut RaylibHandle, thread: &RaylibThread, ctx: &Self::Context) {
         let mut d = rl.begin_drawing(thread);
 
-        // White background
-        d.clear_background(Color::WHITE);
+        // Stone background
+        let stone_background = &ctx.textures.tiles.stone;
+        let stone_scale = 16.0;
+        let stone_size = stone_background.width as f32 * stone_scale;
+        let stone_grid_cols = 13;
+        let stone_grid_rows = 8;
+
+        for row in 0..stone_grid_rows {
+            for col in 0..stone_grid_cols {
+                let stone_grid_x = col as f32 * stone_size;
+                let stone_grid_y = row as f32 * stone_size;
+
+                d.draw_texture_ex(
+            stone_background,
+            Vector2::new(stone_grid_x,stone_grid_y),
+            0.0,
+            stone_scale, 
+            Color::GRAY
+             );
+            }
+        }
 
         // Title
-        let title = "WAVES";
-        let title_size = 80;
+        let title = "TIDALCAVE";
+        let title_size = 160;
         let title_width = d.measure_text(title, title_size);
+         d.draw_text(
+            title,
+            (1600 - title_width + 16) / 2,
+            192,
+            title_size,
+            Color::new(0, 0, 0, 127),
+        );
         d.draw_text(
             title,
             (1600 - title_width) / 2,
             200,
             title_size,
-            Color::BLACK,
+            Color::new(91, 110, 225, 255),
         );
+       
 
         // New Game button
         let new_game_color = if self.hovered_button == Some(ButtonType::NewGame) {
@@ -133,7 +160,7 @@ impl Screen for MenuScreen {
             Color::LIGHTGRAY
         };
         d.draw_rectangle_rec(self.new_game_button, new_game_color);
-        d.draw_rectangle_lines_ex(self.new_game_button, 2.0, Color::BLACK);
+        d.draw_rectangle_lines_ex(self.new_game_button, 4.0, Color::BLACK);
 
         let new_game_text = "New Game";
         let new_game_width = d.measure_text(new_game_text, 30);
@@ -156,7 +183,7 @@ impl Screen for MenuScreen {
             Color::LIGHTGRAY
         };
         d.draw_rectangle_rec(self.load_game_button, load_game_color);
-        d.draw_rectangle_lines_ex(self.load_game_button, 2.0, Color::BLACK);
+        d.draw_rectangle_lines_ex(self.load_game_button, 4.0, Color::BLACK);
 
         let load_game_text = if load_game_enabled {
             "Load Game"

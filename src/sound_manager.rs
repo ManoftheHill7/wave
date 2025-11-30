@@ -63,7 +63,7 @@ impl SoundManager {
         Ok(SoundManager {
             sounds,
             muted: false,
-            volume: 1.0,
+            volume: 0.2,
         })
     }
 
