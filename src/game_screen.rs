@@ -297,8 +297,12 @@ fn render_terrain(
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
 
-            // Render water in air, tide, ladder, and spike blocks (water shows behind ladders/spikes)
-            if block == Block::Air || block == Block::Tide || block.is_ladder() || block.is_spike()
+            // Render water in air, tide, ladder, spike, and pickup blocks (water shows behind them)
+            if block == Block::Air
+                || block == Block::Tide
+                || block.is_ladder()
+                || block.is_spike()
+                || block.is_pickup()
             {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
@@ -314,17 +318,21 @@ fn render_terrain(
 
             if block.is_spike() {
                 let neighbors = Neighbors {
-                    up: terrain.spike_at(x, y - 1),
-                    up_right: terrain.spike_at(x + 1, y - 1),
-                    right: terrain.spike_at(x + 1, y),
-                    down_right: terrain.spike_at(x + 1, y + 1),
-                    down: terrain.spike_at(x, y + 1),
-                    down_left: terrain.spike_at(x - 1, y + 1),
-                    left: terrain.spike_at(x - 1, y),
-                    up_left: terrain.spike_at(x - 1, y - 1),
+                    up: terrain.spike_at(x, y - 1) || terrain.solid_terrain_at(x, y - 1),
+                    up_right: terrain.spike_at(x + 1, y - 1)
+                        || terrain.solid_terrain_at(x + 1, y - 1),
+                    right: terrain.spike_at(x + 1, y) || terrain.solid_terrain_at(x + 1, y),
+                    down_right: terrain.spike_at(x + 1, y + 1)
+                        || terrain.solid_terrain_at(x + 1, y + 1),
+                    down: terrain.spike_at(x, y + 1) || terrain.solid_terrain_at(x, y + 1),
+                    down_left: terrain.spike_at(x - 1, y + 1)
+                        || terrain.solid_terrain_at(x - 1, y + 1),
+                    left: terrain.spike_at(x - 1, y) || terrain.solid_terrain_at(x - 1, y),
+                    up_left: terrain.spike_at(x - 1, y - 1)
+                        || terrain.solid_terrain_at(x - 1, y - 1),
                 };
                 let src_rect = textures.tiles.spikes.get_tile_rect(x, y, &neighbors);
-                let final_src_rect = if block == Block::Stalactite {
+                let final_src_rect = if false && block == Block::Stalactite {
                     Rectangle::new(
                         src_rect.x,
                         src_rect.y + src_rect.height,
@@ -1020,6 +1028,50 @@ impl Screen for GameScreen {
 
         let mut d = rl.begin_drawing(thread);
         d.clear_background(Color::RAYWHITE);
+
+        // Draw background based on y position
+        {
+            let mut d2 = d.begin_mode2D(self.camera);
+            let ppw = pixels_per_world_unit();
+            let px = ctx.world_state.player.position.x as i32;
+            let py = ctx.world_state.player.position.y as i32;
+            let range = RENDER_RANGE as i32;
+
+            let sky_color = Color::new(135, 206, 235, 255); // Light blue
+            let cave_color = Color::new(50, 50, 55, 255); // Dark grey
+            let sky_cutoff = 5.0;
+
+            // Draw sky (y above sky_cutoff)
+            if py - range < sky_cutoff as i32 {
+                let sky_min_y = (py - range).max(-range * 2) as f32;
+                let sky_max_y = 0.0;
+                let sky_height = sky_max_y - sky_min_y;
+                if sky_height > sky_cutoff {
+                    d2.draw_rectangle(
+                        ((px - range) as f32 * ppw) as i32,
+                        (sky_min_y * ppw) as i32,
+                        ((range * 2) as f32 * ppw) as i32,
+                        (sky_height * ppw) as i32,
+                        sky_color,
+                    );
+                }
+            }
+            // Draw cave (y below sky_cutoff)
+            if py + range > sky_cutoff as i32 {
+                let cave_min_y = 0.0f32.max((py - range) as f32);
+                let cave_max_y = (py + range) as f32;
+                let cave_height = cave_max_y - cave_min_y;
+                if cave_height > sky_cutoff {
+                    d2.draw_rectangle(
+                        ((px - range) as f32 * ppw) as i32,
+                        (cave_min_y * ppw) as i32,
+                        ((range * 2) as f32 * ppw) as i32,
+                        (cave_height * ppw) as i32,
+                        cave_color,
+                    );
+                }
+            }
+        }
 
         {
             let mut d2 = d.begin_mode2D(self.camera);

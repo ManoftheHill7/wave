@@ -66,7 +66,7 @@ impl SoundManager {
 
         Ok(SoundManager {
             sounds,
-            muted: false,
+            muted: cfg.audio.muted,
             volume: 0.2,
         })
     }

@@ -509,13 +509,13 @@ fn extract_horizontal_edges(image: &mut Image) -> [u32; 6] {
 
 fn extract_vertical_edges(image: &mut Image) -> [u32; 6] {
     // Vertical (32x64): only sample middle 30 pixels of each edge
-    // Left/Right edges: skip first and last row (rows 1-30 and 34-63)
+    // Left/Right edges: skip first and last row (rows 1-30 and 33-62)
     // Top/Bottom edges: skip first and last column (columns 1-30)
     [
         extract_edge_line(image, (0, 1), (0, 30)), // Left top (middle 30)
-        extract_edge_line(image, (0, 34), (0, 63)), // Left bottom (middle 30)
+        extract_edge_line(image, (0, 33), (0, 62)), // Left bottom (middle 30)
         extract_edge_line(image, (31, 1), (31, 30)), // Right top (middle 30)
-        extract_edge_line(image, (31, 34), (31, 63)), // Right bottom (middle 30)
+        extract_edge_line(image, (31, 33), (31, 62)), // Right bottom (middle 30)
         extract_edge_line(image, (1, 0), (30, 0)), // Top (middle 30)
         extract_edge_line(image, (1, 63), (30, 63)), // Bottom (middle 30)
     ]

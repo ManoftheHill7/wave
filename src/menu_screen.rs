@@ -7,6 +7,7 @@ pub struct MenuScreen {
     new_game_button: Rectangle,
     load_game_button: Rectangle,
     mute_button: Rectangle,
+    credits_button: Rectangle,
     hovered_button: Option<ButtonType>,
 }
 
@@ -15,6 +16,7 @@ enum ButtonType {
     NewGame,
     LoadGame,
     Mute,
+    Credits,
 }
 
 impl MenuScreen {
@@ -29,6 +31,11 @@ impl MenuScreen {
         // Mute button in top-right corner
         let mute_size = 48.0;
         let mute_margin = 20.0;
+
+        // Credits button in bottom-left corner
+        let credits_width = 150.0;
+        let credits_height = 40.0;
+        let credits_margin = 20.0;
 
         MenuScreen {
             new_game_button: Rectangle::new(
@@ -48,6 +55,12 @@ impl MenuScreen {
                 mute_margin,
                 mute_size,
                 mute_size,
+            ),
+            credits_button: Rectangle::new(
+                credits_margin,
+                screen_height - credits_height - credits_margin,
+                credits_width,
+                credits_height,
             ),
             hovered_button: None,
         }
@@ -79,6 +92,8 @@ impl Screen for MenuScreen {
             self.hovered_button = Some(ButtonType::LoadGame);
         } else if self.mute_button.check_collision_point_rec(mouse_pos) {
             self.hovered_button = Some(ButtonType::Mute);
+        } else if self.credits_button.check_collision_point_rec(mouse_pos) {
+            self.hovered_button = Some(ButtonType::Credits);
         }
 
         // Check button clicks
@@ -108,6 +123,8 @@ impl Screen for MenuScreen {
             } else if self.hovered_button == Some(ButtonType::Mute) {
                 ctx.music.toggle_mute();
                 ctx.sounds.set_muted(ctx.music.is_muted());
+            } else if self.hovered_button == Some(ButtonType::Credits) {
+                return ScreenCommand::Push(Box::new(crate::CreditsScreen::new()));
             }
         }
 
@@ -130,12 +147,12 @@ impl Screen for MenuScreen {
                 let stone_grid_y = row as f32 * stone_size;
 
                 d.draw_texture_ex(
-            stone_background,
-            Vector2::new(stone_grid_x,stone_grid_y),
-            0.0,
-            stone_scale, 
-            Color::GRAY
-             );
+                    stone_background,
+                    Vector2::new(stone_grid_x, stone_grid_y),
+                    0.0,
+                    stone_scale,
+                    Color::GRAY,
+                );
             }
         }
 
@@ -143,7 +160,7 @@ impl Screen for MenuScreen {
         let title = "TIDALCAVE";
         let title_size = 160;
         let title_width = d.measure_text(title, title_size);
-         d.draw_text(
+        d.draw_text(
             title,
             (1600 - title_width + 16) / 2,
             192,
@@ -157,7 +174,6 @@ impl Screen for MenuScreen {
             title_size,
             Color::new(91, 110, 225, 255),
         );
-       
 
         // New Game button
         let new_game_color = if self.hovered_button == Some(ButtonType::NewGame) {
@@ -237,5 +253,24 @@ impl Screen for MenuScreen {
         if self.hovered_button == Some(ButtonType::Mute) {
             d.draw_rectangle_lines_ex(self.mute_button, 3.0, Color::BLACK);
         }
+
+        // Credits button
+        let credits_color = if self.hovered_button == Some(ButtonType::Credits) {
+            Color::GRAY
+        } else {
+            Color::LIGHTGRAY
+        };
+        d.draw_rectangle_rec(self.credits_button, credits_color);
+        d.draw_rectangle_lines_ex(self.credits_button, 3.0, Color::BLACK);
+
+        let credits_text = "Credits";
+        let credits_width = d.measure_text(credits_text, 24);
+        d.draw_text(
+            credits_text,
+            self.credits_button.x as i32 + ((self.credits_button.width as i32 - credits_width) / 2),
+            self.credits_button.y as i32 + 8,
+            24,
+            Color::BLACK,
+        );
     }
 }
