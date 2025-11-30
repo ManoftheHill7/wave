@@ -13,28 +13,28 @@ image = "fallback"
 [blocks.stone]
 name = "Stone"
 type = "solid"
-durability = 5.0
+durability = 2.5
 drops = "stone"
 amount = 1
 
 [blocks.dirt]
 name = "Dirt"
 type = "solid"
-durability = 2.0
+durability = 1.0
 drops = "dirt"
 amount = 1
 
 [blocks.grass]
 name = "Grass"
 type = "solid"
-durability = 2.0
+durability = 1.0
 drops = "dirt"
 amount = 1
 
 [blocks.sand]
 name = "Sand"
 type = "solid"
-durability = 1.5
+durability = 0.5
 drops = "sand"
 amount = 1
 
@@ -48,42 +48,38 @@ amount = 1
 [blocks.log]
 name = "Log"
 type = "solid"
-durability = 3.0
+durability = 2.0
 drops = "log"
 amount = 1
 
 [blocks.leaves]
 name = "Leaves"
 type = "solid"
-durability = 0.5
+durability = 0.2
 drops = "leaves"
 amount = 1
 
 [blocks.mushroom]
 name = "Mushroom"
-type = "air"
-durability = 0.25
+type = "pickup"
 drops = "mushroom"
 amount = 2
 
 [blocks.canola]
 name = "Canola"
-type = "air"
-durability = 0.25
+type = "pickup"
 drops = "canola"
 amount = 1
 
 [blocks.flax]
 name = "Flax"
 type = "pickup"
-durability = 0.25
 drops = "flax"
 amount = 1
 
 [blocks.clam]
 name = "Clam"
 type = "pickup"
-durability = 0.25
 drops = "white_pearl"
 amount = 1
 image = "items.clam"

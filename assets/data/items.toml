@@ -4,28 +4,28 @@
 
 [items.stone]
 name = "Stone"
-weight = 3.0
+weight = 1.0
 type = "block"
 
 [items.dirt]
 name = "Dirt"
-weight = 2.0
+weight = 0.5
 type = "block"
 
 [items.torch]
 name = "Torch"
-weight = 1.0
+weight = 0.1
 type = "block"
 
 [items.lumostorch]
 name = "Lumostorch"
-weight = 1.0
+weight = 0.2
 type = "block"
 image = "items.lumostorch1"
 
 [items.log]
 name = "Log"
-weight = 2.0
+weight = 1.0
 type = "block"
 
 [items.leaves]
@@ -35,12 +35,12 @@ type = "block"
 
 [items.sand]
 name = "Sand"
-weight = 2.5
+weight = 1.0
 type = "block"
 
 [items.obsidian]
 name = "Obsidian"
-weight = 4.0
+weight = 1.5
 type = "block"
 
 
@@ -52,125 +52,125 @@ weight = 0.5
 
 [items.copper_ore]
 name = "Copper Ore"
-weight = 2.0
+weight = 1.0
 type = "block"
 
 [items.tin_ore]
 name = "Tin Ore"
-weight = 2.0
+weight = 1.0
 type = "block"
 
 [items.iron_ore]
 name = "Iron Ore"
-weight = 3.0
+weight = 1.0
 type = "block"
 
 [items.pure_iron_ore]
 name = "Pure Iron Ore"
-weight = 4.0
+weight = 1.0
 type = "block"
 
 [items.silver_ore]
 name = "Silver Ore"
-weight = 5.0
+weight = 1.0
 type = "block"
 
 [items.gold_ore]
 name = "Gold Ore"
-weight = 6.0
+weight = 1.0
 type = "block"
 
 [items.platinum_ore]
 name = "Platinum Ore"
-weight = 7.0
+weight = 1.0
 type = "block"
 
 [items.mithril_ore]
 name = "Mithril Ore"
-weight = 8.0
+weight = 1.0
 type = "block"
 
 [items.lumosite_ore]
 name = "Lumosite Ore"
-weight = 5.0
+weight = 1.0
 type = "block"
 image = "items.lumosite_ore1"
 
 [items.ozathinum_ore]
 name = "Ozathinum Ore"
-weight = 9.0
+weight = 1.0
 type = "block"
 
 [items.torzite_ore]
 name = "Torzite Ore"
-weight = 10.0
+weight = 1.0
 type = "block"
 
 [items.etherealite_ore]
 name = "Etherealite Ore"
-weight = 12.0
+weight = 1.0
 type = "block"
 
 [items.anvil]
 name = "Anvil"
-weight = 0 #50.0
+weight = 50.0
 type = "block"
 
 [items.workbench]
 name = "Workbench"
-weight = 0 #20.0
+weight = 10.0
 type = "block"
 
 [items.furnace]
 name = "Furnace"
-weight = 0 #75.0
+weight = 75.0
 type = "block"
 
 # precious stones
 
 [items.white_pearl]
 name = "White Pearl"
-weight = 0.5
+weight = 0.1
 
 [items.amethyst]
 name = "Amethyst"
-weight = 1.0
+weight = 0.5
 
 [items.jasper]
 name = "Jasper"
-weight = 1.1
+weight = 0.5
 
 [items.emerald]
 name = "Emerald"
-weight = 1.2
+weight = 0.5
 
 [items.black_pearl]
 name = "Black Pearl"
-weight = 0.6
+weight = 0.1
 
 [items.topaz]
 name = "Topaz"
-weight = 1.3
+weight = 0.5
 
 [items.ruby]
 name = "Ruby"
-weight = 1.4
+weight = 0.5
 
 [items.diamond]
 name = "Diamond"
-weight = 1.5
+weight = 1.0
 
 
 # foraged items
 
 [items.canola]
 name = "Canola"
-weight = 0.4
+weight = 0.2
 type = "block"
 
 [items.flax]
 name = "Flax"
-weight = 0.4
+weight = 0.2
 type = "block"
 
 [items.flaxseed]
@@ -179,7 +179,7 @@ weight = 0.1
 
 [items.mushroom]
 name = "Mushroom"
-weight = 0.25
+weight = 0.2
 type = "block"
 
 [items.fish]
@@ -188,11 +188,11 @@ weight = 0.8
 
 [items.clam]
 name = "Clam"
-weight = 0.75
+weight = 0.3
 
 [items.conch_shell]
 name = "Conch Shell"
-weight = 0.5
+weight = 0.3
 
 
 # anviled items
@@ -213,15 +213,15 @@ type = "block"
 
 [items.mithril_bucket]
 name = "Mithril Bucket"
-weight = 5.0
+weight = 3.0
 
 [items.mithril_lava_bucket]
 name = "Mithril Lava Bucket"
-weight = 10.0
+weight = 8.0
 
 [items.mithril_water_bucket]
 name = "Mithril Water Bucket"
-weight = 8.0
+weight = 5.0
 
 [items.explosive_dust]
 name = "Explosive Dust"
@@ -292,7 +292,7 @@ image = "items.lumostone1"
 
 [items.glass]
 name = "Glass"
-weight = 2.5
+weight = 0.5
 type = "block"
 
 
@@ -319,11 +319,9 @@ type = "block"
 
 [items.linen]
 name = "Linen"
-weight = 1.5
+weight = 0.5
 
 [items.bomb]
 name = "Bomb"
 weight = 3.0
 type = "block"
-
-# tidalcave_clock is now a tool, not an item

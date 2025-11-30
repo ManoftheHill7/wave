@@ -6,23 +6,7 @@ output = "workbench"
 amount = 1
 [[recipes.workbench.inputs]]
 type = "stick"
-amount = 0 # 100
-
-[recipes.anvil]
-type = "always"
-output = "anvil"
-amount = 1
-[[recipes.anvil.inputs]]
-type = "stick"
-amount = 0
-
-[recipes.furnace]
-type = "always"
-output = "furnace"
-amount = 1
-[[recipes.furnace.inputs]]
-type = "stick"
-amount = 0
+amount = 50
 
 [recipes.torch]
 type = "always"
@@ -44,6 +28,22 @@ type = "log"
 amount = 1
 
 # workbench recipes
+
+[recipes.anvil]
+type = "workbench"
+output = "anvil"
+amount = 1
+[[recipes.anvil.inputs]]
+type = "stick"
+amount = 0
+
+[recipes.furnace]
+type = "workbench"
+output = "furnace"
+amount = 1
+[[recipes.furnace.inputs]]
+type = "stick"
+amount = 0
 
 [recipes.wooden_chest]
 type = "workbench"
@@ -175,10 +175,13 @@ type = "workbench"
 output = "white_pearl_amulet"
 amount = 1
 [[tool_recipes.white_pearl_amulet.inputs]]
-type = "white pearl"
-amount = 3
+type = "rope"
+amount = 1
 [[tool_recipes.white_pearl_amulet.inputs]]
-type = "copper bar"
+type = "white pearl"
+amount = 2
+[[tool_recipes.white_pearl_amulet.inputs]]
+type = "bronze bar"
 amount = 2
 
 [tool_recipes.fishing_rod]

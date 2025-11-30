@@ -14,10 +14,10 @@ const FOOTSTEP_MIN_SPEED: f32 = 0.5;
 // Maps to uniforms (original_0, replace_0)
 const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Red scarf
 const COLOR_PALETTES: &[[f32; 4]] = &[
-    [91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Blue scarf
+    [99.0 / 255.0, 155.0 / 255.0, 1.0, 1.0], // Blue scarf
+    [55.0 / 255.0, 148.0 / 255.0, 110.0 / 255.0, 1.0], // Green scarf
     [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],  // Red scarf
-    [215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0], // Pink scarf
-    [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Green scarf
+    [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Purple scarf
 
                                                        //[1.0, 1.0, 1.0, 1.0]; // Air boots primary
                                                        //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Air boots secondary

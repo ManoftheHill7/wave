@@ -52,6 +52,9 @@ impl DeathScreen {
         // Reset health to full
         ctx.world_state.player.health = STARTING_HEALTH;
 
+        // Reset breathing to full
+        ctx.world_state.player.breath = 100.0;
+
         // Reset position to starting location
         ctx.world_state.player.position.x = 32.0;
         ctx.world_state.player.position.y = -3.0;
