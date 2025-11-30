@@ -533,66 +533,156 @@ impl TerrainGenerator {
     }
 
     /// Calculate edge constraints for a tile based on its neighbors in the herringbone pattern
+    ///
+    /// Herringbone pattern adjacencies (where H=Horizontal, V=Vertical):
+    /// - Horizontal tiles have V tiles on left/right, mixed H/V on top/bottom
+    /// - Vertical tiles have H tiles on top/bottom, mixed V/H on left/right
     fn calculate_tile_edge_constraints(
         &self,
         orientation: MapOrientation,
         tile_origin: HalfTileCoord,
     ) -> [EdgeConstraint; 6] {
+        use rand::SeedableRng;
+
         let mut constraints = [EdgeConstraint::Any; 6];
+        let x = tile_origin.x;
+        let y = tile_origin.y;
 
         match orientation {
             MapOrientation::Horizontal => {
                 // Horizontal tile (64x32) edges: [top_left, top_right, bottom_left, bottom_right, left, right]
+                // Tile spans half-tiles (x, y) and (x+1, y)
 
-                // Check left neighbor (another horizontal tile at x-2)
-                let left_neighbor = HalfTileCoord {
-                    x: tile_origin.x - 2,
-                    y: tile_origin.y,
-                };
-                if let Some(left_tile) = self.half_tile_grid.get(&left_neighbor) {
-                    constraints[4] = EdgeConstraint::Compatible(left_tile.edges.edges[5]);
+                // Left edge (index 4): touches Vertical tile at (x-1, y)
+                // That V tile has origin at (x-1, y), our left touches its right_top (index 2)
+                let left_neighbor = HalfTileCoord { x: x - 1, y };
+                if let Some(tile) = self.half_tile_grid.get(&left_neighbor) {
+                    // V tile edges: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+                    constraints[4] = EdgeConstraint::Compatible(tile.edges.edges[2]);
+                    // right_top
                 }
 
-                // Check right neighbor (another horizontal tile at x+2)
-                let right_neighbor = HalfTileCoord {
-                    x: tile_origin.x + 2,
-                    y: tile_origin.y,
-                };
-                if let Some(right_tile) = self.half_tile_grid.get(&right_neighbor) {
-                    constraints[5] = EdgeConstraint::Compatible(right_tile.edges.edges[4]);
+                // Right edge (index 5): touches Vertical tile at (x+2, y)
+                // That V tile has origin at (x+2, y-1), position is Bottom half
+                // Our right touches its left_bottom (index 1)
+                let right_neighbor = HalfTileCoord { x: x + 2, y };
+                if let Some(tile) = self.half_tile_grid.get(&right_neighbor) {
+                    // V tile edges: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+                    constraints[5] = EdgeConstraint::Compatible(tile.edges.edges[1]);
+                    // left_bottom
                 }
 
-                // TODO: Check vertical neighbors above/below for more precise constraints
+                // Top-left edge (index 0): touches H tile at (x, y-1) which is the right half
+                // That H tile has origin at (x-1, y-1), our top_left touches its bottom_right (index 3)
+                let top_left_neighbor = HalfTileCoord { x, y: y - 1 };
+                if let Some(tile) = self.half_tile_grid.get(&top_left_neighbor) {
+                    // H tile edges: [top_left, top_right, bottom_left, bottom_right, left, right]
+                    constraints[0] = EdgeConstraint::Compatible(tile.edges.edges[3]);
+                    // bottom_right
+                }
+
+                // Top-right edge (index 1): touches V tile at (x+1, y-1) which is the bottom half
+                // That V tile has origin at (x+1, y-2), our top_right touches its bottom (index 5)
+                let top_right_neighbor = HalfTileCoord { x: x + 1, y: y - 1 };
+                if let Some(tile) = self.half_tile_grid.get(&top_right_neighbor) {
+                    // V tile edges: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+                    constraints[1] = EdgeConstraint::Compatible(tile.edges.edges[5]);
+                    // bottom
+                }
+
+                // Bottom-left edge (index 2): touches V tile at (x, y+1) which is the top half
+                // That V tile has origin at (x, y+1), our bottom_left touches its top (index 4)
+                let bottom_left_neighbor = HalfTileCoord { x, y: y + 1 };
+                if let Some(tile) = self.half_tile_grid.get(&bottom_left_neighbor) {
+                    // V tile edges: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+                    constraints[2] = EdgeConstraint::Compatible(tile.edges.edges[4]);
+                    // top
+                }
+
+                // Bottom-right edge (index 3): touches H tile at (x+1, y+1) which is the left half
+                // That H tile has origin at (x+1, y+1), our bottom_right touches its top_left (index 0)
+                let bottom_right_neighbor = HalfTileCoord { x: x + 1, y: y + 1 };
+                if let Some(tile) = self.half_tile_grid.get(&bottom_right_neighbor) {
+                    // H tile edges: [top_left, top_right, bottom_left, bottom_right, left, right]
+                    constraints[3] = EdgeConstraint::Compatible(tile.edges.edges[0]);
+                    // top_left
+                }
             }
             MapOrientation::Vertical => {
                 // Vertical tile (32x64) edges: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+                // Tile spans half-tiles (x, y) and (x, y+1)
 
-                // Check top neighbor (another vertical tile at y-2)
-                let top_neighbor = HalfTileCoord {
-                    x: tile_origin.x,
-                    y: tile_origin.y - 2,
-                };
-                if let Some(top_tile) = self.half_tile_grid.get(&top_neighbor) {
-                    constraints[4] = EdgeConstraint::Compatible(top_tile.edges.edges[5]);
+                // Top edge (index 4): touches H tile at (x, y-1) which is the right half
+                // That H tile has origin at (x-1, y-1), our top touches its bottom_right (index 3)
+                let top_neighbor = HalfTileCoord { x, y: y - 1 };
+                if let Some(tile) = self.half_tile_grid.get(&top_neighbor) {
+                    // H tile edges: [top_left, top_right, bottom_left, bottom_right, left, right]
+                    constraints[4] = EdgeConstraint::Compatible(tile.edges.edges[3]);
+                    // bottom_right
                 }
 
-                // Check bottom neighbor (another vertical tile at y+2)
-                let bottom_neighbor = HalfTileCoord {
-                    x: tile_origin.x,
-                    y: tile_origin.y + 2,
-                };
-                if let Some(bottom_tile) = self.half_tile_grid.get(&bottom_neighbor) {
-                    constraints[5] = EdgeConstraint::Compatible(bottom_tile.edges.edges[4]);
+                // Bottom edge (index 5): touches H tile at (x, y+2) which is the left half
+                // That H tile has origin at (x, y+2), our bottom touches its top_left (index 0)
+                let bottom_neighbor = HalfTileCoord { x, y: y + 2 };
+                if let Some(tile) = self.half_tile_grid.get(&bottom_neighbor) {
+                    // H tile edges: [top_left, top_right, bottom_left, bottom_right, left, right]
+                    constraints[5] = EdgeConstraint::Compatible(tile.edges.edges[0]);
+                    // top_left
                 }
 
-                // TODO: Check horizontal neighbors left/right for more precise constraints
+                // Left-top edge (index 0): touches V tile at (x-1, y) which is bottom half
+                // That V tile has origin at (x-1, y-1), our left_top touches its right_bottom (index 3)
+                let left_top_neighbor = HalfTileCoord { x: x - 1, y };
+                if let Some(tile) = self.half_tile_grid.get(&left_top_neighbor) {
+                    // V tile edges: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+                    constraints[0] = EdgeConstraint::Compatible(tile.edges.edges[3]);
+                    // right_bottom
+                }
+
+                // Left-bottom edge (index 1): touches H tile at (x-1, y+1) which is right half
+                // That H tile has origin at (x-2, y+1), our left_bottom touches its right (index 5)
+                let left_bottom_neighbor = HalfTileCoord { x: x - 1, y: y + 1 };
+                if let Some(tile) = self.half_tile_grid.get(&left_bottom_neighbor) {
+                    // H tile edges: [top_left, top_right, bottom_left, bottom_right, left, right]
+                    constraints[1] = EdgeConstraint::Compatible(tile.edges.edges[5]);
+                    // right
+                }
+
+                // Right-top edge (index 2): touches H tile at (x+1, y) which is left half
+                // That H tile has origin at (x+1, y), our right_top touches its left (index 4)
+                let right_top_neighbor = HalfTileCoord { x: x + 1, y };
+                if let Some(tile) = self.half_tile_grid.get(&right_top_neighbor) {
+                    // H tile edges: [top_left, top_right, bottom_left, bottom_right, left, right]
+                    constraints[2] = EdgeConstraint::Compatible(tile.edges.edges[4]);
+                    // left
+                }
+
+                // Right-bottom edge (index 3): touches V tile at (x+1, y+1) which is top half
+                // That V tile has origin at (x+1, y+1), our right_bottom touches its left_top (index 0)
+                let right_bottom_neighbor = HalfTileCoord { x: x + 1, y: y + 1 };
+                if let Some(tile) = self.half_tile_grid.get(&right_bottom_neighbor) {
+                    // V tile edges: [left_top, left_bottom, right_top, right_bottom, top, bottom]
+                    constraints[3] = EdgeConstraint::Compatible(tile.edges.edges[0]);
+                    // left_top
+                }
             }
         }
 
-        // Default to Tunnel edges if no constraints
+        // For unconstrained edges, use 75% tunnel / 25% cavern
+        // Use seeded RNG based on tile position for deterministic results
+        let constraint_seed = self.seed.wrapping_add(0xDEAD)
+            ^ ((tile_origin.x as u64) << 32)
+            ^ (tile_origin.y as u64);
+        let mut rng = rand::rngs::StdRng::seed_from_u64(constraint_seed);
+
         for constraint in &mut constraints {
             if matches!(constraint, EdgeConstraint::Any) {
-                *constraint = EdgeConstraint::Compatible(EdgeType::Tunnel);
+                let edge_type = if rng.gen_bool(0.75) {
+                    EdgeType::Tunnel
+                } else {
+                    EdgeType::Cavern
+                };
+                *constraint = EdgeConstraint::Compatible(edge_type);
             }
         }
 
@@ -862,6 +952,9 @@ impl TerrainGenerator {
             }
         }
 
+        // Fix spikes after all pixels are placed
+        Self::fix_spikes(&mut chunk);
+
         let chunk_seed = ((coord.x as u64) << 32) | (coord.y as u64);
         let mut chunk_rng = StdRng::seed_from_u64(chunk_seed);
         let a = coord.x.abs();
@@ -893,18 +986,40 @@ impl TerrainGenerator {
     }
 
     /// Convert RGB color from map image to Block type
+    /// Note: Gray pixels (127,127,127) return Stalagmite as a placeholder,
+    /// use fix_spikes() after filling the chunk to correct stalactite/stalagmite placement
     fn color_to_block(r: u8, g: u8, b: u8) -> Block {
         if r == 0 && g == 0 && b == 0 {
             Block::Stone
         } else if r == 127 && g == 127 && b == 127 {
-            // Stalactite/Stalagmite - for now just use Stone
-            Block::Stone
+            // Placeholder - will be fixed by fix_spikes()
+            Block::Stalagmite
         } else if r == 255 && g == 255 && b == 255 {
             Block::Air
         } else if r == 0 && g == 149 && b == 199 {
             Block::Tide
         } else {
             unimplemented!("We have unknown pixel of color r={} g={} b={}", r, g, b)
+        }
+    }
+
+    /// Fix spike blocks by checking if they should be stalactites (block above is solid)
+    fn fix_spikes(chunk: &mut Chunk) {
+        for y in 0..CHUNK_SIZE {
+            for x in 0..CHUNK_SIZE {
+                if chunk.get(x, y).is_spike() {
+                    let above_solid = if y > 0 {
+                        chunk.get(x, y - 1).is_solid()
+                    } else {
+                        false
+                    };
+                    if above_solid {
+                        chunk.set(x, y, Block::Stalactite);
+                    } else {
+                        chunk.set(x, y, Block::Stalagmite);
+                    }
+                }
+            }
         }
     }
 

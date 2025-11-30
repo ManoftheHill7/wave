@@ -314,17 +314,21 @@ fn render_terrain(
 
             if block.is_spike() {
                 let neighbors = Neighbors {
-                    up: terrain.spike_at(x, y - 1),
-                    up_right: terrain.spike_at(x + 1, y - 1),
-                    right: terrain.spike_at(x + 1, y),
-                    down_right: terrain.spike_at(x + 1, y + 1),
-                    down: terrain.spike_at(x, y + 1),
-                    down_left: terrain.spike_at(x - 1, y + 1),
-                    left: terrain.spike_at(x - 1, y),
-                    up_left: terrain.spike_at(x - 1, y - 1),
+                    up: terrain.spike_at(x, y - 1) || terrain.solid_terrain_at(x, y - 1),
+                    up_right: terrain.spike_at(x + 1, y - 1)
+                        || terrain.solid_terrain_at(x + 1, y - 1),
+                    right: terrain.spike_at(x + 1, y) || terrain.solid_terrain_at(x + 1, y),
+                    down_right: terrain.spike_at(x + 1, y + 1)
+                        || terrain.solid_terrain_at(x + 1, y + 1),
+                    down: terrain.spike_at(x, y + 1) || terrain.solid_terrain_at(x, y + 1),
+                    down_left: terrain.spike_at(x - 1, y + 1)
+                        || terrain.solid_terrain_at(x - 1, y + 1),
+                    left: terrain.spike_at(x - 1, y) || terrain.solid_terrain_at(x - 1, y),
+                    up_left: terrain.spike_at(x - 1, y - 1)
+                        || terrain.solid_terrain_at(x - 1, y - 1),
                 };
                 let src_rect = textures.tiles.spikes.get_tile_rect(x, y, &neighbors);
-                let final_src_rect = if block == Block::Stalactite {
+                let final_src_rect = if false && block == Block::Stalactite {
                     Rectangle::new(
                         src_rect.x,
                         src_rect.y + src_rect.height,
@@ -1091,16 +1095,18 @@ impl Screen for GameScreen {
             );
 
             // Draw lighting system
-            if let Some(ref texture) = lighting_texture {
-                let mut lighting_shader = ctx.render_state.lighting_shader.borrow_mut();
-                render_lighting(
-                    &mut d2,
-                    &ctx.world_state.lighting_system,
-                    texture,
-                    &mut lighting_shader,
-                    px,
-                    py,
-                );
+            if false {
+                if let Some(ref texture) = lighting_texture {
+                    let mut lighting_shader = ctx.render_state.lighting_shader.borrow_mut();
+                    render_lighting(
+                        &mut d2,
+                        &ctx.world_state.lighting_system,
+                        texture,
+                        &mut lighting_shader,
+                        px,
+                        py,
+                    );
+                }
             }
         }
         // Draw HUD
