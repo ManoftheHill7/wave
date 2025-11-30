@@ -47,11 +47,11 @@ pub const MAX_RAYCAST_DASH: f32 = 1.0;
 pub const MAX_RAYCAST_PLACE_BLOCK: f32 = 3.5;
 
 pub const INVENTORY_STARTING_WEIGHT: f32 = 100.0;
-pub const STARTING_HEALTH: i32 = 12; // 4 frames of heart * 3 hearts
-pub const MAX_BREATH_HOLD: f32 = 10.0;
+pub const STARTING_HEALTH: i32 = 32; // 4 frames of heart * 8 hearts
+pub const MAX_BREATH_HOLD: f32 = 12.0;
 pub const DROWN_DAMAGE_INTERVAL: f32 = 1.0; // Lose 1 heart per second when out of breath
 
-pub const SPIKE_IMMUNITY_COOLDOWN: f32 = 0.3;
+pub const SPIKE_IMMUNITY_COOLDOWN: f32 = 0.6;
 
 #[derive(Debug)]
 struct RaycastResult {

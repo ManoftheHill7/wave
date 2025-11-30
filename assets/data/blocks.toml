@@ -69,13 +69,13 @@ amount = 2
 name = "Canola"
 type = "pickup"
 drops = "canola"
-amount = 1
+amount = 2
 
 [blocks.flax]
 name = "Flax"
 type = "pickup"
 drops = "flax"
-amount = 1
+amount = 2
 
 [blocks.clam]
 name = "Clam"
