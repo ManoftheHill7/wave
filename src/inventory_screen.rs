@@ -350,6 +350,8 @@ impl Screen for InventoryScreen {
             let inventory_items: Vec<_> = ctx.world_state.player.inventory.iter().collect();
 
             // Render items on top of slots
+            let slot_outline = &ctx.textures.ui.inventory_outline;
+
             for (visible_index, item_stack) in
                 inventory_items.iter().skip(self.scroll_offset).enumerate()
             {
@@ -362,6 +364,23 @@ impl Screen for InventoryScreen {
                 let slot_x = grid_x + (col as f32 * (slot_size + slot_padding));
                 let slot_y = grid_y + (row as f32 * (slot_size + slot_padding));
 
+                // Check if this item is equipped in either hand
+                let item_tool =
+                    Block::from_item_type(item_stack.item_type).map(|b| ToolType::PlaceBlock(b));
+                let is_selected = item_tool.is_some()
+                    && (ctx.world_state.player.left_hand == item_tool
+                        || ctx.world_state.player.right_hand == item_tool);
+
+                // Draw slot background with highlight if selected
+                if is_selected {
+                    d.draw_texture(
+                        slot_texture,
+                        slot_x as i32,
+                        slot_y as i32,
+                        Color::new(255, 255, 200, 255),
+                    );
+                }
+
                 // Get texture for this item type
                 let item_texture = get_item_texture(&item_stack.item_type, &ctx.textures);
 
@@ -373,6 +392,11 @@ impl Screen for InventoryScreen {
                     1.0,
                     Color::WHITE,
                 );
+
+                // Draw selection border if selected
+                if is_selected {
+                    d.draw_texture(slot_outline, slot_x as i32, slot_y as i32, Color::WHITE);
+                }
 
                 // Draw item count in bottom-right corner
                 let count_text = item_stack.count.to_string();
@@ -546,7 +570,6 @@ impl Screen for InventoryScreen {
 
             // Draw tool selection
             let tool_y = 190;
-            let slot_outline = &ctx.textures.ui.inventory_outline;
 
             let mut draw_tool_slot =
                 |col: usize, tool_texture: Option<&Texture2D>, tool_type: Option<ToolType>| {
