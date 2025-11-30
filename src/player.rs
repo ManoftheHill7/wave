@@ -130,6 +130,10 @@ pub struct Player {
 
     pub is_gliding: bool,
 
+    /// Nearby pickup block position and name (for UI prompt)
+    #[serde(skip)]
+    pub nearby_pickup: Option<(i32, i32, &'static str)>,
+
     // Sound timing (not saved)
     #[serde(skip)]
     pub last_pickaxe_sound: f32,
@@ -227,6 +231,8 @@ impl Player {
             tool_tideclock: None,
 
             is_gliding: false,
+
+            nearby_pickup: None,
 
             last_pickaxe_sound: 0.0,
             last_footstep_sound: 0.0,
@@ -780,7 +786,64 @@ impl Player {
         }
         self.last_velocity = self.velocity;
 
+        // Check for nearby pickup blocks and handle pickup
+        self.check_nearby_pickups(terrain, controller);
+
         self.calculated_selected_blocks(terrain, controller);
+    }
+
+    /// Check for pickup blocks near the player and handle the 'E' key to pick them up
+    fn check_nearby_pickups(&mut self, terrain: &mut Terrain, controller: &Controller) {
+        use crate::terrain::Block;
+
+        // Reset nearby pickup
+        self.nearby_pickup = None;
+
+        // Check blocks in a small radius around the player
+        let player_x = self.position.x + self.width / 2.0;
+        let player_y = self.position.y + self.height / 2.0;
+        let check_radius = 2.0; // 2 tile radius
+
+        let min_x = (player_x - check_radius).floor() as i32;
+        let max_x = (player_x + check_radius).ceil() as i32;
+        let min_y = (player_y - check_radius).floor() as i32;
+        let max_y = (player_y + check_radius).ceil() as i32;
+
+        let mut closest_pickup: Option<(i32, i32, f32, &'static str)> = None;
+
+        for x in min_x..=max_x {
+            for y in min_y..=max_y {
+                let block = terrain.at(x, y);
+                if block.is_pickup() {
+                    // Calculate distance to this block
+                    let block_center_x = x as f32 + 0.5;
+                    let block_center_y = y as f32 + 0.5;
+                    let dx = block_center_x - player_x;
+                    let dy = block_center_y - player_y;
+                    let dist = (dx * dx + dy * dy).sqrt();
+
+                    if dist <= check_radius {
+                        if closest_pickup.is_none() || dist < closest_pickup.as_ref().unwrap().2 {
+                            closest_pickup = Some((x, y, dist, block.name()));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Store the closest pickup for UI display
+        if let Some((x, y, _, name)) = closest_pickup {
+            self.nearby_pickup = Some((x, y, name));
+
+            // Handle pickup if E is pressed
+            if controller.interact_pressed {
+                let block = terrain.at(x, y);
+                if let Some((item_type, amount)) = block.get_drops() {
+                    self.inventory.add(item_type, amount);
+                    terrain.set(x, y, Block::Air);
+                }
+            }
+        }
     }
 
     fn raycast(&self, start: Vector2, end: Vector2, terrain: &Terrain) -> RaycastResult {

@@ -210,6 +210,7 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
     let mut is_liquid_match_arms = Vec::new();
     let mut is_spike_match_arms = Vec::new();
     let mut is_ladder_match_arms = Vec::new();
+    let mut is_pickup_match_arms = Vec::new();
     let mut all_blocks = Vec::new();
     let mut texture_match_arms = Vec::new();
     let mut ore_spawn_match_arms = Vec::new();
@@ -280,30 +281,42 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_pickup_match_arms.push(format!("            Block::{} => false,", variant_name));
             }
             "liquid" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => true,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_pickup_match_arms.push(format!("            Block::{} => false,", variant_name));
             }
             "spike" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => true,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_pickup_match_arms.push(format!("            Block::{} => false,", variant_name));
             }
             "ladder" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => true,", variant_name));
+                is_pickup_match_arms.push(format!("            Block::{} => false,", variant_name));
             }
             "air" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_pickup_match_arms.push(format!("            Block::{} => false,", variant_name));
+            }
+            "pickup" => {
+                is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_pickup_match_arms.push(format!("            Block::{} => true,", variant_name));
             }
             _ => panic!("Unknown block type '{}' for block '{}'", block_type, key),
         }
@@ -467,6 +480,12 @@ impl Block {{
         }}
     }}
 
+    pub fn is_pickup(self) -> bool {{
+        match self {{
+{}
+        }}
+    }}
+
     pub fn all() -> &'static [Block] {{
         &[
 {}
@@ -522,6 +541,7 @@ impl Block {{
         is_liquid_match_arms.join("\n"),
         is_spike_match_arms.join("\n"),
         is_ladder_match_arms.join("\n"),
+        is_pickup_match_arms.join("\n"),
         all_blocks.join("\n"),
         texture_match_arms.join("\n"),
         ore_spawn_match_arms.join("\n"),
@@ -791,23 +811,32 @@ fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
     // Read tool names from tools.toml
     let tools_toml_path = Path::new("assets/data/tools.toml");
     let tools_content = fs::read_to_string(tools_toml_path).expect("Failed to read tools.toml");
-    let tools_data: toml::Table = toml::from_str(&tools_content).expect("Failed to parse tools.toml");
-    
+    let tools_data: toml::Table =
+        toml::from_str(&tools_content).expect("Failed to parse tools.toml");
+
     let mut tool_names = Vec::new();
-    
+
     // Extract pickaxe names
     if let Some(pick_table) = tools_data.get("pick").and_then(|v| v.as_table()) {
         for (level, data) in pick_table.iter() {
-            if let Some(name) = data.as_table().and_then(|t| t.get("name")).and_then(|n| n.as_str()) {
+            if let Some(name) = data
+                .as_table()
+                .and_then(|t| t.get("name"))
+                .and_then(|n| n.as_str())
+            {
                 tool_names.push(format!("            \"{}\" => \"{}\",", level, name));
             }
         }
     }
-    
+
     // Extract dash names
     if let Some(dash_table) = tools_data.get("dash").and_then(|v| v.as_table()) {
         for (level, data) in dash_table.iter() {
-            if let Some(name) = data.as_table().and_then(|t| t.get("name")).and_then(|n| n.as_str()) {
+            if let Some(name) = data
+                .as_table()
+                .and_then(|t| t.get("name"))
+                .and_then(|n| n.as_str())
+            {
                 tool_names.push(format!("            \"{}\" => \"{}\",", level, name));
             }
         }
@@ -816,7 +845,11 @@ fn generate_recipes(out_dir: &str, game_data: &toml::Table) {
     // Extract glider names
     if let Some(glider_table) = tools_data.get("glider").and_then(|v| v.as_table()) {
         for (level, data) in glider_table.iter() {
-            if let Some(name) = data.as_table().and_then(|t| t.get("name")).and_then(|n| n.as_str()) {
+            if let Some(name) = data
+                .as_table()
+                .and_then(|t| t.get("name"))
+                .and_then(|n| n.as_str())
+            {
                 tool_names.push(format!("            \"{}\" => \"{}\",", level, name));
             }
         }

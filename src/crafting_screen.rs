@@ -89,8 +89,21 @@ impl CraftingScreen {
                                     return false;
                                 }
                             } else {
-                                // Upgrade recipe: only show if player has the required input level
-                                if !recipe.can_craft(&ctx.world_state.player) {
+                                // Upgrade recipe: only show if player has the required input tool
+                                let has_input_tool = recipe.inputs.iter().any(|input| {
+                                    if let RecipeIOType::ToolPickaxe { level: input_level } = input
+                                    {
+                                        ctx.world_state
+                                            .player
+                                            .tool_pickaxe
+                                            .as_ref()
+                                            .map(|p| p.level == *input_level)
+                                            .unwrap_or(false)
+                                    } else {
+                                        false
+                                    }
+                                });
+                                if !has_input_tool {
                                     return false;
                                 }
                             }
@@ -133,8 +146,20 @@ impl CraftingScreen {
                                     return false;
                                 }
                             } else {
-                                // Upgrade: only show if player can craft it
-                                if !recipe.can_craft(&ctx.world_state.player) {
+                                // Upgrade: only show if player has the required input tool
+                                let has_input_tool = recipe.inputs.iter().any(|input| {
+                                    if let RecipeIOType::ToolDash { level: input_level } = input {
+                                        ctx.world_state
+                                            .player
+                                            .tool_dash
+                                            .as_ref()
+                                            .map(|d| d.level == *input_level)
+                                            .unwrap_or(false)
+                                    } else {
+                                        false
+                                    }
+                                });
+                                if !has_input_tool {
                                     return false;
                                 }
                             }
@@ -177,8 +202,20 @@ impl CraftingScreen {
                                     return false;
                                 }
                             } else {
-                                // Upgrade: only show if player can craft it
-                                if !recipe.can_craft(&ctx.world_state.player) {
+                                // Upgrade: only show if player has the required input tool
+                                let has_input_tool = recipe.inputs.iter().any(|input| {
+                                    if let RecipeIOType::ToolGlider { level: input_level } = input {
+                                        ctx.world_state
+                                            .player
+                                            .tool_glider
+                                            .as_ref()
+                                            .map(|g| g.level == *input_level)
+                                            .unwrap_or(false)
+                                    } else {
+                                        false
+                                    }
+                                });
+                                if !has_input_tool {
                                     return false;
                                 }
                             }
