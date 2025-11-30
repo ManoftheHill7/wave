@@ -297,8 +297,12 @@ fn render_terrain(
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
 
-            // Render water in air, tide, ladder, and spike blocks (water shows behind ladders/spikes)
-            if block == Block::Air || block == Block::Tide || block.is_ladder() || block.is_spike()
+            // Render water in air, tide, ladder, spike, and pickup blocks (water shows behind them)
+            if block == Block::Air
+                || block == Block::Tide
+                || block.is_ladder()
+                || block.is_spike()
+                || block.is_pickup()
             {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
