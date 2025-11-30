@@ -72,13 +72,6 @@ fn main() {
     // ctx.world_state.player.inventory.add(ItemType::Furnace, 1);
     // ctx.world_state.player.inventory.add(ItemType::Anvil, 1);
 
-    // Testing: Add torches
-    ctx.world_state.player.inventory.add(ItemType::Torch, 20);
-    ctx.world_state
-        .player
-        .inventory
-        .add(ItemType::Lumostorch, 20);
-
     let mut manager = ScreenManager::new(initial_screen, &mut ctx);
 
     while !rl.window_should_close() && !manager.is_empty() {

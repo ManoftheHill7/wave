@@ -1025,6 +1025,50 @@ impl Screen for GameScreen {
         let mut d = rl.begin_drawing(thread);
         d.clear_background(Color::RAYWHITE);
 
+        // Draw background based on y position
+        {
+            let mut d2 = d.begin_mode2D(self.camera);
+            let ppw = pixels_per_world_unit();
+            let px = ctx.world_state.player.position.x as i32;
+            let py = ctx.world_state.player.position.y as i32;
+            let range = RENDER_RANGE as i32;
+
+            let sky_color = Color::new(135, 206, 235, 255); // Light blue
+            let cave_color = Color::new(50, 50, 55, 255); // Dark grey
+            let sky_cutoff = 5.0;
+
+            // Draw sky (y above sky_cutoff)
+            if py - range < sky_cutoff as i32 {
+                let sky_min_y = (py - range).max(-range * 2) as f32;
+                let sky_max_y = 0.0;
+                let sky_height = sky_max_y - sky_min_y;
+                if sky_height > sky_cutoff {
+                    d2.draw_rectangle(
+                        ((px - range) as f32 * ppw) as i32,
+                        (sky_min_y * ppw) as i32,
+                        ((range * 2) as f32 * ppw) as i32,
+                        (sky_height * ppw) as i32,
+                        sky_color,
+                    );
+                }
+            }
+            // Draw cave (y below sky_cutoff)
+            if py + range > sky_cutoff as i32 {
+                let cave_min_y = 0.0f32.max((py - range) as f32);
+                let cave_max_y = (py + range) as f32;
+                let cave_height = cave_max_y - cave_min_y;
+                if cave_height > sky_cutoff {
+                    d2.draw_rectangle(
+                        ((px - range) as f32 * ppw) as i32,
+                        (cave_min_y * ppw) as i32,
+                        ((range * 2) as f32 * ppw) as i32,
+                        (cave_height * ppw) as i32,
+                        cave_color,
+                    );
+                }
+            }
+        }
+
         {
             let mut d2 = d.begin_mode2D(self.camera);
             let mut shader = ctx.render_state.player_shader.borrow_mut();
@@ -1095,18 +1139,16 @@ impl Screen for GameScreen {
             );
 
             // Draw lighting system
-            if false {
-                if let Some(ref texture) = lighting_texture {
-                    let mut lighting_shader = ctx.render_state.lighting_shader.borrow_mut();
-                    render_lighting(
-                        &mut d2,
-                        &ctx.world_state.lighting_system,
-                        texture,
-                        &mut lighting_shader,
-                        px,
-                        py,
-                    );
-                }
+            if let Some(ref texture) = lighting_texture {
+                let mut lighting_shader = ctx.render_state.lighting_shader.borrow_mut();
+                render_lighting(
+                    &mut d2,
+                    &ctx.world_state.lighting_system,
+                    texture,
+                    &mut lighting_shader,
+                    px,
+                    py,
+                );
             }
         }
         // Draw HUD
