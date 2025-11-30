@@ -133,7 +133,6 @@ amount = 30
 type = "mithril lava bucket"
 amount = 1
 
-
 # misc
 
 [recipes.lumostone]
@@ -152,3 +151,34 @@ amount = 1
 type = "sand"
 amount = 1
 
+[recipes.copper_ladder]
+type = "furnace"
+output = "copper_ladder"
+amount = 12
+[[recipes.copper_ladder.inputs]]
+type = "copper bar"
+amount = 1
+
+[recipes.steel_ladder]
+type = "furnace"
+output = "steel_ladder"
+amount = 4
+[[recipes.steel_ladder.inputs]]
+type = "steel bar"
+amount = 1
+
+[recipes.iron_shell]
+type = "furnace"
+output = "iron_shell"
+amount = 1
+[[recipes.iron_shell.inputs]]
+type = "iron bar"
+amount = 1
+
+[recipes.mithril_bucket]
+type = "furnace"
+output = "mithril_bucket"
+amount = 1
+[[recipes.mithril_bucket.inputs]]
+type = "mithril bar"
+amount = 2

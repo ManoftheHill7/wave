@@ -1400,10 +1400,10 @@ impl Screen for GameScreen {
             ""
         };
 
-        if !prompt.is_empty() {
-            let text_width = d.measure_text(prompt, 20);
-            let text_x = (self.screen_width - text_width as f32) / 2.0;
-            let text_y = self.screen_height - 60.0;
+            if !prompt.is_empty() {
+                let text_width = d.measure_text(prompt, 20);
+                let text_x = (self.screen_width - text_width as f32) / 2.0;
+                let text_y = self.screen_height - 300.0;
 
             // Draw background box
             d.draw_rectangle(

@@ -164,3 +164,8 @@ max_fall_speed = 1.6
 name = "Diamond Glider"
 durability = 550.0
 max_fall_speed = 1.3
+
+[fishing.fishing_rod]
+name = "Fishing Rod"
+durability = 20
+catch_bar_length = 10
