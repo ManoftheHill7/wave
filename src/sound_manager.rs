@@ -1,3 +1,4 @@
+use crate::config;
 use rand::Rng;
 use raylib::ffi;
 use std::collections::HashMap;
@@ -60,9 +61,12 @@ impl SoundManager {
             }
         }
 
+        // Load mute state from config (same as music)
+        let cfg = config::load_config();
+
         Ok(SoundManager {
             sounds,
-            muted: false,
+            muted: cfg.audio.muted,
             volume: 1.0,
         })
     }

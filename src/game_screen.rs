@@ -298,7 +298,8 @@ fn render_terrain(
             let block = terrain.at(x, y);
 
             // Render water in air, tide, ladder, and spike blocks (water shows behind ladders/spikes)
-            if block == Block::Air || block == Block::Tide || block.is_ladder() || block.is_spike() {
+            if block == Block::Air || block == Block::Tide || block.is_ladder() || block.is_spike()
+            {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
                         render_water(
@@ -1492,10 +1493,10 @@ impl Screen for GameScreen {
             ""
         };
 
-            if !prompt.is_empty() {
-                let text_width = d.measure_text(prompt, 20);
-                let text_x = (self.screen_width - text_width as f32) / 2.0;
-                let text_y = self.screen_height - 300.0;
+        if !prompt.is_empty() {
+            let text_width = d.measure_text(prompt, 20);
+            let text_x = (self.screen_width - text_width as f32) / 2.0;
+            let text_y = self.screen_height - 300.0;
 
             // Draw background box
             d.draw_rectangle(

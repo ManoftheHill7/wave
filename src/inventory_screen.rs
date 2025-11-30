@@ -49,6 +49,7 @@ impl InventoryScreen {
                 && mouse_y <= self.mute_button.y + self.mute_button.height
             {
                 ctx.music.toggle_mute();
+                ctx.sounds.set_muted(ctx.music.is_muted());
                 return;
             }
         }

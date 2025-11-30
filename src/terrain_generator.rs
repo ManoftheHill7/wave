@@ -665,7 +665,8 @@ impl TerrainGenerator {
             // Lerp between BEACH_HEIGHT and desired_height using fade_factor
             // At fade_factor=0.0 (wx=0): height = BEACH_HEIGHT
             // At fade_factor=1.0 (wx>=fade_distance): height = desired_height
-            let height = (BEACH_HEIGHT as f64 * (1.0 - fade_factor) + desired_height as f64 * fade_factor) as i32;
+            let height = (BEACH_HEIGHT as f64 * (1.0 - fade_factor)
+                + desired_height as f64 * fade_factor) as i32;
             for ly in 0..CHUNK_SIZE {
                 let wy = coord.y * chunk_size + ly as i32;
 

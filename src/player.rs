@@ -604,7 +604,12 @@ impl Player {
         }
 
         // Activate head slot equipment when jump pressed while in air (but not on ladder)
-        if jump_pressed && !self.on_ground && !self.is_swimming && !self.is_dashing && !self.is_on_ladder {
+        if jump_pressed
+            && !self.on_ground
+            && !self.is_swimming
+            && !self.is_dashing
+            && !self.is_on_ladder
+        {
             match self.head_slot {
                 Some(ToolType::Glider) => {
                     if let Some(glider) = &self.tool_glider {
@@ -714,8 +719,7 @@ impl Player {
             // Horizontal movement on ladder
             if input_dir.x != 0.0 {
                 self.facing_dir = input_dir.x.signum() as i32;
-                self.velocity.x =
-                    Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
+                self.velocity.x = Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
             } else {
                 self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
             }
@@ -1219,6 +1223,4 @@ impl Player {
             self.dash_dir = self.dash_dir.normalized();
         }
     }
-
-
 }

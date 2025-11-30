@@ -174,7 +174,7 @@ impl GameContext {
 
         // Save/Load with F5/F9
         if rl.is_key_pressed(KeyboardKey::KEY_F5) {
-            match save_load::save_game(&self.world_state, 0) {
+            match save_load::save_game(&mut self.world_state, 0) {
                 Ok(()) => println!("✓ Game saved successfully!"),
                 Err(e) => eprintln!("✗ Failed to save game: {}", e),
             }
@@ -183,7 +183,7 @@ impl GameContext {
             if save_load::save_exists(0) {
                 match save_load::load_game(0) {
                     Ok(save_data) => {
-                        save_load::apply_save_data(&mut self.world_state, save_data);
+                        save_load::apply_save_data(&mut self.world_state, save_data, 0);
                         println!("✓ Game loaded successfully!");
                     }
                     Err(e) => eprintln!("✗ Failed to load game: {}", e),
