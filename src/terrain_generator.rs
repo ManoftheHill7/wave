@@ -766,8 +766,8 @@ impl TerrainGenerator {
         for lx in 0..CHUNK_SIZE {
             let wx = coord.x * chunk_size + lx as i32;
 
-            // 1% chance to spawn a tree at this x coordinate
-            if tree_rng.gen_range(0..100) == 0 {
+            // 2% chance to spawn a tree at this x coordinate
+            if tree_rng.gen_range(0..100) < 2 {
                 let height_f =
                     noise_height as f64 * self.noise.get([wx as f64 * (1.0 / noise_detail as f64)]);
                 let ground_height = height_f as i32 - coord.x + BEACH_HEIGHT;
@@ -792,6 +792,24 @@ impl TerrainGenerator {
                         tree_height,
                         coord,
                     );
+                }
+            }
+        }
+
+        // Add flax flowers on grass tiles (20% chance per grass block)
+        let mut flax_rng =
+            StdRng::seed_from_u64(self.seed.wrapping_add(coord.x as u64).wrapping_add(2000));
+        for lx in 0..CHUNK_SIZE {
+            for ly in 0..CHUNK_SIZE {
+                // Check if this is a grass block
+                if chunk.get(lx, ly) == Block::Grass {
+                    // Check if the block above is air
+                    if ly > 0 && chunk.get(lx, ly - 1) == Block::Air {
+                        // 10% chance to spawn flax
+                        if flax_rng.gen_range(0..100) < 10 {
+                            chunk.set(lx, ly - 1, Block::Flax);
+                        }
+                    }
                 }
             }
         }

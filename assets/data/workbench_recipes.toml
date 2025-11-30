@@ -217,9 +217,6 @@ amount = 1
 type = "bronze bar"
 amount = 2
 [[tool_recipes.tidalcave_clock.inputs]]
-type = "conch shell"
-amount = 1
-[[tool_recipes.tidalcave_clock.inputs]]
 type = "white pearl"
 amount = 2
 [[tool_recipes.tidalcave_clock.inputs]]

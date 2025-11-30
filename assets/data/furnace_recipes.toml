@@ -87,8 +87,8 @@ amount = 60
 type = "lumosite ore"
 amount = 30
 [[recipes.ozathinum_bar.inputs]]
-type = "mithril lava bucket"
-amount = 1
+type = "coal"
+amount = 10
 
 [recipes.torzite_bar]
 type = "furnace"
@@ -104,8 +104,8 @@ amount = 30
 type = "ozathinum bar"
 amount = 4
 [[recipes.torzite_bar.inputs]]
-type = "mithril lava bucket"
-amount = 1
+type = "coal"
+amount = 10
 
 [recipes.etherealite_bar]
 type = "furnace"
@@ -130,8 +130,8 @@ amount = 20
 type = "silver bar"
 amount = 30
 [[recipes.etherealite_bar.inputs]]
-type = "mithril lava bucket"
-amount = 1
+type = "coal"
+amount = 10
 
 # misc
 

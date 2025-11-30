@@ -75,7 +75,7 @@ amount = 1
 
 [blocks.flax]
 name = "Flax"
-type = "air"
+type = "solid"
 durability = 0.25
 drops = "flax"
 amount = 1
