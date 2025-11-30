@@ -37,6 +37,12 @@ fn main() {
                 println!("Starting new game...");
             }
 
+            // Save immediately so chunks can be saved/loaded from files
+            match save_load::save_game(&mut ctx.world_state, 0) {
+                Ok(()) => println!("✓ New game saved!"),
+                Err(e) => eprintln!("✗ Failed to save new game: {}", e),
+            }
+
             Box::new(GameScreen::new(&ctx))
         } else if resume_mode {
             // Try to load save, if it fails, go to menu

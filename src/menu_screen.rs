@@ -84,6 +84,11 @@ impl Screen for MenuScreen {
         // Check button clicks
         if ctx.controller.left_hand_pressed {
             if self.hovered_button == Some(ButtonType::NewGame) {
+                // Save immediately so chunks can be saved/loaded from files
+                match save_load::save_game(&mut ctx.world_state, 0) {
+                    Ok(()) => println!("✓ New game saved!"),
+                    Err(e) => eprintln!("✗ Failed to save new game: {}", e),
+                }
                 return ScreenCommand::Push(Box::new(crate::GameScreen::new(ctx)));
             } else if self.hovered_button == Some(ButtonType::LoadGame) {
                 if save_load::save_exists(0) {
