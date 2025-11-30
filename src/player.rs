@@ -73,6 +73,7 @@ pub struct Player {
     pub is_jumping: bool,
     pub is_dashing: bool,
     pub is_climbing: bool,
+    pub is_on_ladder: bool,
     pub is_sliding: bool,
     pub is_swimming: bool,
     pub is_mining: bool,
@@ -167,6 +168,7 @@ impl Player {
             is_jumping: false,
             is_dashing: false,
             is_climbing: false,
+            is_on_ladder: false,
             is_sliding: false,
             is_swimming: false,
             is_mining: false,
@@ -482,9 +484,17 @@ impl Player {
             self.breath = MAX_BREATH_HOLD;
         }
 
+        // Check if on ladder
+        self.is_on_ladder = self.check_on_ladder(terrain);
+
         // Apply gravity
-        if !self.on_ground {
-            if self.is_swimming {
+        if !self.on_ground || self.is_on_ladder {
+            if self.is_on_ladder {
+                // No gravity when on ladder - only stop falling, not upward movement (jumping)
+                if self.velocity.y > 0.0 {
+                    self.velocity.y = 0.0;
+                }
+            } else if self.is_swimming {
                 self.velocity.y += WATER_BUOYANCY * dt;
                 self.velocity.x *= WATER_DRAG;
                 self.velocity.y *= WATER_DRAG;
@@ -492,7 +502,9 @@ impl Player {
                 self.velocity.y += GRAVITY * self.gravity_reduction * dt;
             }
 
-            self.landing_speed = self.velocity;
+            if !self.on_ground {
+                self.landing_speed = self.velocity;
+            }
         }
         self.velocity.y = self.velocity.y.clamp(-TERMINAL_VELOCITY, TERMINAL_VELOCITY);
 
@@ -529,6 +541,9 @@ impl Player {
         if jump_pressed || self.within_grace(self.try_jumped_at, JUMP_BUFFER_TIME) {
             if self.is_swimming {
                 self.jump(0.7);
+            } else if self.is_on_ladder {
+                // Jump from ladder
+                self.jump(1.0);
             } else if self.on_ground
                 || (self.within_grace(self.last_on_ground, JUMP_COYOTE_TIME)
                     && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN))
@@ -555,8 +570,8 @@ impl Player {
             }
         }
         
-        // Activate head slot equipment when jump pressed while in air
-        if jump_pressed && !self.on_ground && !self.is_swimming && !self.is_dashing {
+        // Activate head slot equipment when jump pressed while in air (but not on ladder)
+        if jump_pressed && !self.on_ground && !self.is_swimming && !self.is_dashing && !self.is_on_ladder {
             match self.head_slot {
                 Some(ToolType::Glider) => {
                     if let Some(glider) = &self.tool_glider {
@@ -599,6 +614,10 @@ impl Player {
         } else if self.is_swimming {
             self.is_jumping = false;
             self.climb_stamina = CLIMB_STAMINA;
+            self.dashes = max_dashes;
+        } else if self.is_on_ladder {
+            // Reset dashes when on ladder
+            self.is_jumping = false;
             self.dashes = max_dashes;
         }
 
@@ -651,6 +670,27 @@ impl Player {
                 self.dash_dir.x * DASH_VELOCITY,
                 self.dash_dir.y * DASH_VELOCITY,
             );
+        } else if self.is_on_ladder {
+            // Ladder climbing - free movement up and down
+            let ladder_speed = CLIMB_SPEED;
+            let speed = ACCEL * dt;
+            
+            // Horizontal movement on ladder
+            if input_dir.x != 0.0 {
+                self.facing_dir = input_dir.x.signum() as i32;
+                self.velocity.x =
+                    Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
+            } else {
+                self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
+            }
+            
+            // Vertical movement on ladder
+            if input_dir.y != 0.0 {
+                self.velocity.y = input_dir.y * ladder_speed;
+            } else if self.velocity.y > 0.0 {
+                // Only stop falling, not upward movement
+                self.velocity.y = 0.0;
+            }
         } else if self.is_swimming {
             let speed = ACCEL * dt;
             if input_dir.x != 0.0 {
@@ -741,7 +781,8 @@ impl Player {
         let mut ox = 0.0;
         let mut oy = 0.0;
         while vx * vx + vy * vy < distance2 {
-            if terrain.solid_terrain_at(map_x, map_y) {
+            // Stop raycast at solid blocks or ladders (ladders can be targeted for placement)
+            if terrain.solid_terrain_at(map_x, map_y) || terrain.at(map_x, map_y).is_ladder() {
                 return RaycastResult {
                     final_position: Vector2::new(vx + start.x, vy + start.y),
                     last_free_position: Vector2::new(ox + start.x, oy + start.y),
@@ -913,6 +954,14 @@ impl Player {
         let center_x = (self.position.x + self.width / 2.0) as i32;
         let center_y = (self.position.y + self.height / 2.0) as i32;
         terrain.liquid_terrain_at(center_x, center_y)
+    }
+
+    fn check_on_ladder(&self, terrain: &Terrain) -> bool {
+        // Check if player's center, near the bottom (but well inside the player) is on a ladder
+        // Since larger Y is down, check at about 25% down from the top (or 75% of the way through the height)
+        let center_x = (self.position.x + self.width / 2.0) as i32;
+        let check_y = (self.position.y + self.height * 0.25) as i32;
+        terrain.at(center_x, check_y).is_ladder()
     }
 
     fn exit_dash_handler(&mut self, terrain: &Terrain) {

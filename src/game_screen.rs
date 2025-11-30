@@ -291,7 +291,8 @@ fn render_terrain(
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
 
-            if block == Block::Air || block == Block::Tide {
+            // Render water in air, tide, ladder, and spike blocks (water shows behind ladders/spikes)
+            if block == Block::Air || block == Block::Tide || block.is_ladder() || block.is_spike() {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
                         render_water(
@@ -302,7 +303,9 @@ fn render_terrain(
                         );
                     }
                 }
-            } else if block.is_spike() {
+            }
+
+            if block.is_spike() {
                 let neighbors = Neighbors {
                     up: terrain.spike_at(x, y - 1),
                     up_right: terrain.spike_at(x + 1, y - 1),
@@ -331,7 +334,9 @@ fn render_terrain(
                     &textures.tiles.spikes.texture(),
                     Some(final_src_rect),
                 );
-            } else {
+            } else if block != Block::Air && block != Block::Tide {
+                // Don't render Air or Tide blocks (they're just water/empty)
+
                 // Handle multi-tile blocks - only render from anchor position
                 if block.is_multi_tile() {
                     // Only render if this is the anchor tile
@@ -1343,12 +1348,13 @@ impl Screen for GameScreen {
             );
             d.draw_text(
                 &format!(
-                    "On Ground: {}   Is Climbing {}   Is Sliding {}   Is Dashing {}   Is Swimming {}",
+                    "On Ground: {}   Is Climbing {}   Is Sliding {}   Is Dashing {}   Is Swimming {}   On Ladder {}",
                     ctx.world_state.player.on_ground,
                     ctx.world_state.player.is_climbing,
                     ctx.world_state.player.is_sliding,
                     ctx.world_state.player.is_dashing,
-                    ctx.world_state.player.is_swimming
+                    ctx.world_state.player.is_swimming,
+                    ctx.world_state.player.is_on_ladder
                 ),
                 10, 60, 20, Color::DARKGRAY
             );
