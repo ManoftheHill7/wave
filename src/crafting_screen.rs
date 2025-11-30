@@ -29,7 +29,7 @@ impl CraftingScreen {
     }
 
     fn get_filtered_recipes(&self, ctx: &GameContext) -> Vec<&'static Recipe> {
-        ALL_RECIPES
+        let mut recipes: Vec<&'static Recipe> = ALL_RECIPES
             .iter()
             .filter(|recipe| {
                 // Filter by recipe type first
@@ -201,7 +201,14 @@ impl CraftingScreen {
                     true
                 }
             })
-            .collect()
+            .collect();
+
+        // Sort anvil recipes: repairs first, then upgrades
+        if self.recipe_filter == Some(RecipeType::Anvil) {
+            recipes.sort_by_key(|recipe| !recipe.is_repair());
+        }
+
+        recipes
     }
 
     fn get_title(&self) -> String {

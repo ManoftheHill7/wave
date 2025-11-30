@@ -446,7 +446,12 @@ impl Player {
                     }
 
                     if self.inventory.count(item_type) == 0 {
-                        // TODO: remove from hand
+                        // Unequip from hand when last item is placed
+                        if left_hand {
+                            self.left_hand = None;
+                        } else {
+                            self.right_hand = None;
+                        }
                     }
                 }
             }
