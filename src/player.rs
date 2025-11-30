@@ -603,13 +603,14 @@ impl Player {
             }
         }
 
-        // Activate head slot equipment when jump pressed while in air (but not on ladder)
-        if jump_pressed
-            && !self.on_ground
-            && !self.is_swimming
-            && !self.is_dashing
-            && !self.is_on_ladder
-        {
+        // Activate head slot equipment when jump pressed while truly in air
+        // (not on ground, past coyote time, not on wall, not on ladder)
+        let truly_in_air = !self.on_ground
+            && !self.within_grace(self.last_on_ground, JUMP_COYOTE_TIME)
+            && !on_wall
+            && !self.is_on_ladder;
+
+        if jump_pressed && truly_in_air && !self.is_swimming && !self.is_dashing {
             match self.head_slot {
                 Some(ToolType::Glider) => {
                     if let Some(glider) = &self.tool_glider {
@@ -668,23 +669,20 @@ impl Player {
             self.is_mining = false;
         }
 
-        // Glider stays active while jump is held in the air with glider equipped in head slot
-        if !self.on_ground && !self.is_swimming && !self.is_dashing && jump_held {
+        // Glider stays active while jump is held, falling, in the air with glider equipped in head slot
+        if !self.on_ground
+            && !self.is_swimming
+            && !self.is_dashing
+            && jump_held
+            && self.velocity.y > 0.0
+        {
             if self.head_slot == Some(ToolType::Glider) {
                 if let Some(glider) = &self.tool_glider {
                     if glider.durability > 0.0 {
-                        // Keep gliding active
-                    } else {
-                        self.is_gliding = false;
+                        self.is_gliding = true;
                     }
-                } else {
-                    self.is_gliding = false;
                 }
-            } else {
-                self.is_gliding = false;
             }
-        } else {
-            self.is_gliding = false;
         }
 
         // Apply glider physics - clamp fall speed and consume durability
