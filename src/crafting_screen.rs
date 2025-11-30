@@ -184,6 +184,13 @@ impl CraftingScreen {
                             }
                         }
                     }
+                    RecipeIOType::ToolTideClock => {
+                        // TideClock is a unique tool - you can only have one
+                        // Don't show the recipe if player already has it
+                        if ctx.world_state.player.tool_tideclock.is_some() {
+                            return false;
+                        }
+                    }
                     _ => {} // Non-tool recipes: no special filtering
                 }
 
