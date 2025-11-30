@@ -209,6 +209,7 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
     let mut is_solid_match_arms = Vec::new();
     let mut is_liquid_match_arms = Vec::new();
     let mut is_spike_match_arms = Vec::new();
+    let mut is_ladder_match_arms = Vec::new();
     let mut all_blocks = Vec::new();
     let mut texture_match_arms = Vec::new();
     let mut ore_spawn_match_arms = Vec::new();
@@ -278,21 +279,31 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
                 is_solid_match_arms.push(format!("            Block::{} => true,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
             }
             "liquid" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => true,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
             }
             "spike" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => true,", variant_name));
+                is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
+            }
+            "ladder" => {
+                is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_ladder_match_arms.push(format!("            Block::{} => true,", variant_name));
             }
             "air" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
             }
             _ => panic!("Unknown block type '{}' for block '{}'", block_type, key),
         }
@@ -450,6 +461,12 @@ impl Block {{
         }}
     }}
 
+    pub fn is_ladder(self) -> bool {{
+        match self {{
+{}
+        }}
+    }}
+
     pub fn all() -> &'static [Block] {{
         &[
 {}
@@ -504,6 +521,7 @@ impl Block {{
         is_solid_match_arms.join("\n"),
         is_liquid_match_arms.join("\n"),
         is_spike_match_arms.join("\n"),
+        is_ladder_match_arms.join("\n"),
         all_blocks.join("\n"),
         texture_match_arms.join("\n"),
         ore_spawn_match_arms.join("\n"),

@@ -281,14 +281,14 @@ height = 5
 
 [blocks.copper_ladder]
 name = "Copper ladder"
-type = "air"
+type = "ladder"
 durability = 1.5
 drops = "copper ladder"
 amount = 1
 
 [blocks.steel_ladder]
 name = "Steel ladder"
-type = "air"
+type = "ladder"
 durability = 2.5
 drops = "steel ladder"
 amount = 1
@@ -318,7 +318,7 @@ height = 2
 
 [blocks.wooden_ladder]
 name = "Wooden ladder"
-type = "air"
+type = "ladder"
 durability = 0.5
 drops = "wooden ladder"
 amount = 1

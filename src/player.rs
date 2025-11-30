@@ -74,6 +74,7 @@ pub struct Player {
     pub is_jumping: bool,
     pub is_dashing: bool,
     pub is_climbing: bool,
+    pub is_on_ladder: bool,
     pub is_sliding: bool,
     pub is_swimming: bool,
     pub is_mining: bool,
@@ -121,6 +122,7 @@ pub struct Player {
 
     pub left_hand: Option<ToolType>,
     pub right_hand: Option<ToolType>,
+    pub head_slot: Option<ToolType>,
     pub tool_dash: Option<ToolDash>,
     pub tool_pickaxe: Option<ToolPickaxe>,
     pub tool_glider: Option<ToolGlider>,
@@ -177,6 +179,7 @@ impl Player {
             is_jumping: false,
             is_dashing: false,
             is_climbing: false,
+            is_on_ladder: false,
             is_sliding: false,
             is_swimming: false,
             is_mining: false,
@@ -216,6 +219,7 @@ impl Player {
 
             left_hand: Some(ToolType::Pickaxe),
             right_hand: None,
+            head_slot: None,
 
             tool_dash: None,
             tool_pickaxe: Some(load_pick("stone_pickaxe")),
@@ -513,9 +517,17 @@ impl Player {
             self.breath = (self.breath + 2.0 * dt).min(MAX_BREATH_HOLD);
         }
 
+        // Check if on ladder
+        self.is_on_ladder = self.check_on_ladder(terrain);
+
         // Apply gravity
-        if !self.on_ground {
-            if self.is_swimming {
+        if !self.on_ground || self.is_on_ladder {
+            if self.is_on_ladder {
+                // No gravity when on ladder - only stop falling, not upward movement (jumping)
+                if self.velocity.y > 0.0 {
+                    self.velocity.y = 0.0;
+                }
+            } else if self.is_swimming {
                 self.velocity.y += WATER_BUOYANCY * dt;
                 self.velocity.x *= WATER_DRAG;
                 self.velocity.y *= WATER_DRAG;
@@ -523,7 +535,9 @@ impl Player {
                 self.velocity.y += GRAVITY * self.gravity_reduction * dt;
             }
 
-            self.landing_speed = self.velocity;
+            if !self.on_ground {
+                self.landing_speed = self.velocity;
+            }
         }
         self.velocity.y = self.velocity.y.clamp(-TERMINAL_VELOCITY, TERMINAL_VELOCITY);
 
@@ -560,6 +574,9 @@ impl Player {
         if jump_pressed || self.within_grace(self.try_jumped_at, JUMP_BUFFER_TIME) {
             if self.is_swimming {
                 self.jump(0.7);
+            } else if self.is_on_ladder {
+                // Jump from ladder
+                self.jump(1.0);
             } else if self.on_ground
                 || (self.within_grace(self.last_on_ground, JUMP_COYOTE_TIME)
                     && !self.within_grace(self.last_action_at, DASHJUMP_COOLDOWN))
@@ -583,6 +600,24 @@ impl Player {
                 }
             } else if !self.within_grace(self.try_jumped_at, JUMP_BUFFER_TIME) {
                 self.try_jumped_at = self.time;
+            }
+        }
+
+        // Activate head slot equipment when jump pressed while in air (but not on ladder)
+        if jump_pressed && !self.on_ground && !self.is_swimming && !self.is_dashing && !self.is_on_ladder {
+            match self.head_slot {
+                Some(ToolType::Glider) => {
+                    if let Some(glider) = &self.tool_glider {
+                        if glider.durability > 0.0 {
+                            self.is_gliding = true;
+                        }
+                    }
+                }
+                Some(ToolType::Dash) => {
+                    // Dash in the direction of the raycast (mouse direction)
+                    self.manage_dash(controller.raycast_direction);
+                }
+                _ => {}
             }
         }
 
@@ -613,6 +648,10 @@ impl Player {
             self.is_jumping = false;
             self.climb_stamina = CLIMB_STAMINA;
             self.dashes = max_dashes;
+        } else if self.is_on_ladder {
+            // Reset dashes when on ladder
+            self.is_jumping = false;
+            self.dashes = max_dashes;
         }
 
         // Reset gliding state (will be set by use_tool if glider is active)
@@ -622,6 +661,25 @@ impl Player {
         used_tool = self.use_tool(terrain, chests, active_bombs, controller, false) || used_tool;
         if !used_tool {
             self.is_mining = false;
+        }
+
+        // Glider stays active while jump is held in the air with glider equipped in head slot
+        if !self.on_ground && !self.is_swimming && !self.is_dashing && jump_held {
+            if self.head_slot == Some(ToolType::Glider) {
+                if let Some(glider) = &self.tool_glider {
+                    if glider.durability > 0.0 {
+                        // Keep gliding active
+                    } else {
+                        self.is_gliding = false;
+                    }
+                } else {
+                    self.is_gliding = false;
+                }
+            } else {
+                self.is_gliding = false;
+            }
+        } else {
+            self.is_gliding = false;
         }
 
         // Apply glider physics - clamp fall speed and consume durability
@@ -648,6 +706,27 @@ impl Player {
                 self.dash_dir.x * DASH_VELOCITY,
                 self.dash_dir.y * DASH_VELOCITY,
             );
+        } else if self.is_on_ladder {
+            // Ladder climbing - free movement up and down
+            let ladder_speed = CLIMB_SPEED;
+            let speed = ACCEL * dt;
+
+            // Horizontal movement on ladder
+            if input_dir.x != 0.0 {
+                self.facing_dir = input_dir.x.signum() as i32;
+                self.velocity.x =
+                    Self::move_toward(self.velocity.x, input_dir.x * SPEED, speed);
+            } else {
+                self.velocity.x = Self::move_toward(self.velocity.x, 0.0, speed);
+            }
+
+            // Vertical movement on ladder
+            if input_dir.y != 0.0 {
+                self.velocity.y = input_dir.y * ladder_speed;
+            } else if self.velocity.y > 0.0 {
+                // Only stop falling, not upward movement
+                self.velocity.y = 0.0;
+            }
         } else if self.is_swimming {
             let speed = ACCEL * dt;
             if input_dir.x != 0.0 {
@@ -738,7 +817,8 @@ impl Player {
         let mut ox = 0.0;
         let mut oy = 0.0;
         while vx * vx + vy * vy < distance2 {
-            if terrain.solid_terrain_at(map_x, map_y) {
+            // Stop raycast at solid blocks or ladders (ladders can be targeted for placement)
+            if terrain.solid_terrain_at(map_x, map_y) || terrain.at(map_x, map_y).is_ladder() {
                 return RaycastResult {
                     final_position: Vector2::new(vx + start.x, vy + start.y),
                     last_free_position: Vector2::new(ox + start.x, oy + start.y),
@@ -912,6 +992,14 @@ impl Player {
         terrain.liquid_terrain_at(center_x, center_y)
     }
 
+    fn check_on_ladder(&self, terrain: &Terrain) -> bool {
+        // Check if player's center, near the bottom (but well inside the player) is on a ladder
+        // Since larger Y is down, check at about 25% down from the top (or 75% of the way through the height)
+        let center_x = (self.position.x + self.width / 2.0) as i32;
+        let check_y = (self.position.y + self.height * 0.25) as i32;
+        terrain.at(center_x, check_y).is_ladder()
+    }
+
     fn exit_dash_handler(&mut self, terrain: &Terrain) {
         let mut wiggle_y = 0.0;
         let mut wiggle_x = 0.0;
@@ -1008,18 +1096,18 @@ impl Player {
             )
         };
         match (hand, held, pressed) {
-            (Some(ToolType::Dash), _, true) => {
-                self.manage_dash(controller.raycast_direction);
-                true
+            (Some(ToolType::Dash), _, _) => {
+                // Dash is now activated via head slot with jump key while in air
+                false
             }
             (Some(ToolType::Pickaxe), true, _) => self.manage_pickaxe(terrain, chests, left_hand),
             (Some(ToolType::Lamp), _, _) => {
                 // Lamp is passive, no action needed
                 false
             }
-            (Some(ToolType::Glider), held, _) => {
-                self.manage_glider(held);
-                held
+            (Some(ToolType::Glider), _, _) => {
+                // Glider is now activated via head slot with jump key
+                false
             }
             (Some(ToolType::PlaceBlock(blk)), _, true) => {
                 self.try_place_block(terrain, chests, active_bombs, blk, left_hand);
@@ -1132,17 +1220,5 @@ impl Player {
         }
     }
 
-    fn manage_glider(&mut self, held: bool) {
-        // Only glide when in the air and holding the button
-        if !self.on_ground && !self.is_swimming && !self.is_dashing && held {
-            if let Some(glider) = &self.tool_glider {
-                // Only glide if glider has durability
-                if glider.durability > 0.0 {
-                    self.is_gliding = true;
-                    return;
-                }
-            }
-        }
-        self.is_gliding = false;
-    }
+
 }

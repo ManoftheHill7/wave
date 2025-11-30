@@ -108,7 +108,7 @@ impl InventoryScreen {
         let tool_y = 190.0;
         let tool_start_x = slot_padding * 2.0;
 
-        // Check dash tool slot (column 0)
+        // Check dash tool slot (column 0) - equips to head slot
         if ctx.world_state.player.tool_dash.is_some() {
             let tool_x = tool_start_x + (0.0 * (slot_size + slot_padding));
             if mouse_x >= tool_x
@@ -116,12 +116,12 @@ impl InventoryScreen {
                 && mouse_y >= tool_y
                 && mouse_y <= tool_y + slot_size
             {
-                Self::set_hand_with_swap(
-                    &mut ctx.world_state.player.left_hand,
-                    &mut ctx.world_state.player.right_hand,
-                    Some(ToolType::Dash),
-                    is_left_click,
-                );
+                // Dash (amulet) goes to head slot
+                if ctx.world_state.player.head_slot == Some(ToolType::Dash) {
+                    ctx.world_state.player.head_slot = None;
+                } else {
+                    ctx.world_state.player.head_slot = Some(ToolType::Dash);
+                }
                 return;
             }
         }
@@ -160,7 +160,7 @@ impl InventoryScreen {
             return;
         }
 
-        // Check glider tool slot (column 6)
+        // Check glider tool slot (column 6) - equips to head slot
         if ctx.world_state.player.tool_glider.is_some() {
             let tool_x = tool_start_x + (6.0 * (slot_size + slot_padding));
             if mouse_x >= tool_x
@@ -168,12 +168,12 @@ impl InventoryScreen {
                 && mouse_y >= tool_y
                 && mouse_y <= tool_y + slot_size
             {
-                Self::set_hand_with_swap(
-                    &mut ctx.world_state.player.left_hand,
-                    &mut ctx.world_state.player.right_hand,
-                    Some(ToolType::Glider),
-                    is_left_click,
-                );
+                // Glider goes to head slot
+                if ctx.world_state.player.head_slot == Some(ToolType::Glider) {
+                    ctx.world_state.player.head_slot = None;
+                } else {
+                    ctx.world_state.player.head_slot = Some(ToolType::Glider);
+                }
                 return;
             }
         }
@@ -508,6 +508,34 @@ impl Screen for InventoryScreen {
                     d.draw_texture_ex(
                         texture,
                         Vector2::new(right_hand_x, right_hand_y),
+                        0.0,
+                        1.0,
+                        Color::WHITE,
+                    );
+                }
+            }
+
+            // Draw selected tool in head slot if set
+            if let Some(tool) = ctx.world_state.player.head_slot {
+                let texture = match tool {
+                    ToolType::Dash => ctx
+                        .world_state
+                        .player
+                        .tool_dash
+                        .as_ref()
+                        .map(|d| d.get_texture(&ctx.textures)),
+                    ToolType::Glider => ctx
+                        .world_state
+                        .player
+                        .tool_glider
+                        .as_ref()
+                        .map(|g| g.get_texture(&ctx.textures)),
+                    _ => None,
+                };
+                if let Some(texture) = texture {
+                    d.draw_texture_ex(
+                        texture,
+                        Vector2::new(helm_x, helm_y),
                         0.0,
                         1.0,
                         Color::WHITE,

@@ -3,6 +3,7 @@ use crate::inventory::Inventory;
 use crate::lighting::LightingSystem;
 use crate::player::Player;
 use crate::terrain::{ChunkCoord, Terrain, CHUNK_SIZE};
+use rand::Rng;
 use std::collections::HashMap;
 
 #[cfg(debug_assertions)]
@@ -72,10 +73,14 @@ pub struct WorldState {
 
 impl WorldState {
     pub fn new() -> Self {
+        let mut rng = rand::thread_rng();
+        let seed = rng.gen::<u64>();
+        println!("World seed: {}", seed);
+
         WorldState {
             // player: Player::new(38.74, -3.99), // This spot reproduces the getting stuck bug
             player: Player::new(32.0, -3.0),
-            terrain: Terrain::new(12345),
+            terrain: Terrain::new(seed),
             lighting_system: LightingSystem::new(),
             ghost_mode: false,
             chests: HashMap::new(),

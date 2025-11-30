@@ -297,7 +297,8 @@ fn render_terrain(
         for y in (py - range)..(py + range) {
             let block = terrain.at(x, y);
 
-            if block == Block::Air || block == Block::Tide {
+            // Render water in air, tide, ladder, and spike blocks (water shows behind ladders/spikes)
+            if block == Block::Air || block == Block::Tide || block.is_ladder() || block.is_spike() {
                 for cell_y in 0..CELL_RESOLUTION {
                     for cell_x in 0..CELL_RESOLUTION {
                         render_water(
@@ -308,7 +309,9 @@ fn render_terrain(
                         );
                     }
                 }
-            } else if block.is_spike() {
+            }
+
+            if block.is_spike() {
                 let neighbors = Neighbors {
                     up: terrain.spike_at(x, y - 1),
                     up_right: terrain.spike_at(x + 1, y - 1),
@@ -337,7 +340,9 @@ fn render_terrain(
                     &textures.tiles.spikes.texture(),
                     Some(final_src_rect),
                 );
-            } else {
+            } else if block != Block::Air && block != Block::Tide {
+                // Don't render Air or Tide blocks (they're just water/empty)
+
                 // Handle multi-tile blocks - only render from anchor position
                 if block.is_multi_tile() {
                     // Only render if this is the anchor tile
@@ -453,6 +458,13 @@ fn render_player(
         animate!(&pt.dash, WALK_FRAME_LENGTH)
     } else if player.is_mining {
         animate_from!(pt.mining, MINING_FRAME_LENGTH, player.started_mining_at)
+    } else if player.is_on_ladder {
+        // Ladder climbing animation - use ladder frames when moving vertically
+        if player.velocity.y != 0.0 {
+            animate!(pt.ladder, CLIMBING_FRAME_LENGTH)
+        } else {
+            &pt.ladder[0]
+        }
     } else if player.is_climbing {
         if player.velocity.y != 0.0 {
             animate!(pt.climb, CLIMBING_FRAME_LENGTH)
@@ -1422,12 +1434,13 @@ impl Screen for GameScreen {
             );
             d.draw_text(
                 &format!(
-                    "On Ground: {}   Is Climbing {}   Is Sliding {}   Is Dashing {}   Is Swimming {}",
+                    "On Ground: {}   Is Climbing {}   Is Sliding {}   Is Dashing {}   Is Swimming {}   On Ladder {}",
                     ctx.world_state.player.on_ground,
                     ctx.world_state.player.is_climbing,
                     ctx.world_state.player.is_sliding,
                     ctx.world_state.player.is_dashing,
-                    ctx.world_state.player.is_swimming
+                    ctx.world_state.player.is_swimming,
+                    ctx.world_state.player.is_on_ladder
                 ),
                 10, 60, 20, Color::DARKGRAY
             );
@@ -1479,10 +1492,10 @@ impl Screen for GameScreen {
             ""
         };
 
-        if !prompt.is_empty() {
-            let text_width = d.measure_text(prompt, 20);
-            let text_x = (self.screen_width - text_width as f32) / 2.0;
-            let text_y = self.screen_height - 60.0;
+            if !prompt.is_empty() {
+                let text_width = d.measure_text(prompt, 20);
+                let text_x = (self.screen_width - text_width as f32) / 2.0;
+                let text_y = self.screen_height - 300.0;
 
             // Draw background box
             d.draw_rectangle(
