@@ -108,7 +108,7 @@ type = "anvil"
 output = "amethyst_amulet"
 amount = 1
 [[tool_recipes.amethyst_amulet_upgrade.inputs]]
-type = "white_pearl_amulet"
+type = "pearl_amulet"
 amount = 1
 [[tool_recipes.amethyst_amulet_upgrade.inputs]]
 type = "amethyst"
