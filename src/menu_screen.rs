@@ -190,7 +190,7 @@ impl Screen for MenuScreen {
             title_size,
             Color::new(91, 110, 225, 255),
         );
-       
+
         //Subtitle
         let subtitle = "ALPHA 1.0";
         let subtitle_size = title_size / 5;

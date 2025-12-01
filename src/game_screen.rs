@@ -1,9 +1,9 @@
 use crate::inventory_screen::InventoryScreen;
 use crate::player::{Player, SPIKE_IMMUNITY_COOLDOWN};
-use crate::tools::ToolType;
 use crate::terrain::{Block, Terrain, CELL_RESOLUTION, CHUNK_SIZE, NO_LIQUID_THRESHOLD};
+use crate::tools::ToolType;
 use crate::world::{LIGHTING_RANGE, RENDER_RANGE};
-use crate::{GameContext, Neighbors, ShaderLocs, pixels_per_world_unit, tools};
+use crate::{pixels_per_world_unit, tools, GameContext, Neighbors, ShaderLocs};
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
 
@@ -105,7 +105,7 @@ fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
         ),
         "jasper_glider" => (
             [91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Jasper primary (orange)
-            [102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0], // Jasper secondary
+            [102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0],  // Jasper secondary
         ),
         "emerald_glider" => (
             [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Emerald primary (green)
@@ -549,8 +549,8 @@ fn render_player(
                 COLOR_PALETTES[0].as_ptr() as *const std::ffi::c_void,
                 raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
             );
-        } 
-        
+        }
+
         raylib::ffi::SetShaderValue(
             shader.as_ref().clone(),
             shader_locs.exhustion,
@@ -823,6 +823,10 @@ fn render_player(
     }
 }
 
+// Auto-save interval in seconds (only used in WASM builds)
+#[cfg(target_arch = "wasm32")]
+const AUTOSAVE_INTERVAL: f32 = 5.0;
+
 pub struct GameScreen {
     camera: Camera2D,
     camera_velocity: Vector2,
@@ -830,6 +834,8 @@ pub struct GameScreen {
     screen_height: f32,
     help_button: Rectangle,
     help_hovered: bool,
+    #[cfg(target_arch = "wasm32")]
+    autosave_timer: f32,
 }
 
 impl GameScreen {
@@ -856,6 +862,8 @@ impl GameScreen {
                 button_size,
             ),
             help_hovered: false,
+            #[cfg(target_arch = "wasm32")]
+            autosave_timer: 0.0,
         }
     }
 }
@@ -876,6 +884,18 @@ impl Screen for GameScreen {
     }
 
     fn update(&mut self, dt: f32, ctx: &mut Self::Context) -> ScreenCommand<Self::Context> {
+        // Auto-save periodically in WASM builds
+        #[cfg(target_arch = "wasm32")]
+        {
+            self.autosave_timer += dt;
+            if self.autosave_timer >= AUTOSAVE_INTERVAL {
+                self.autosave_timer = 0.0;
+                if let Err(e) = crate::save_load::save_game(&mut ctx.world_state, 0) {
+                    eprintln!("Auto-save failed: {}", e);
+                }
+            }
+        }
+
         // Update music streams
         ctx.music.update_streams();
 
