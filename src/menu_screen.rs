@@ -8,6 +8,7 @@ pub struct MenuScreen {
     load_game_button: Rectangle,
     mute_button: Rectangle,
     credits_button: Rectangle,
+    help_button: Rectangle,
     hovered_button: Option<ButtonType>,
 }
 
@@ -17,6 +18,7 @@ enum ButtonType {
     LoadGame,
     Mute,
     Credits,
+    Help,
 }
 
 impl MenuScreen {
@@ -36,6 +38,10 @@ impl MenuScreen {
         let credits_width = 150.0;
         let credits_height = 40.0;
         let credits_margin = 20.0;
+
+        // Help button in bottom-right corner
+        let help_size = 40.0;
+        let help_margin = 10.0;
 
         MenuScreen {
             new_game_button: Rectangle::new(
@@ -61,6 +67,12 @@ impl MenuScreen {
                 screen_height - credits_height - credits_margin,
                 credits_width,
                 credits_height,
+            ),
+            help_button: Rectangle::new(
+                screen_width - help_size - help_margin,
+                screen_height - help_size - help_margin,
+                help_size,
+                help_size,
             ),
             hovered_button: None,
         }
@@ -94,6 +106,8 @@ impl Screen for MenuScreen {
             self.hovered_button = Some(ButtonType::Mute);
         } else if self.credits_button.check_collision_point_rec(mouse_pos) {
             self.hovered_button = Some(ButtonType::Credits);
+        } else if self.help_button.check_collision_point_rec(mouse_pos) {
+            self.hovered_button = Some(ButtonType::Help);
         }
 
         // Check button clicks
@@ -125,6 +139,8 @@ impl Screen for MenuScreen {
                 ctx.sounds.set_muted(ctx.music.is_muted());
             } else if self.hovered_button == Some(ButtonType::Credits) {
                 return ScreenCommand::Push(Box::new(crate::CreditsScreen::new()));
+            } else if self.hovered_button == Some(ButtonType::Help) {
+                return ScreenCommand::Push(Box::new(crate::help_screen::HelpScreen::new()));
             }
         }
 
@@ -290,6 +306,27 @@ impl Screen for MenuScreen {
             self.credits_button.y as i32 + 8,
             24,
             Color::BLACK,
+        );
+
+        // Help button in bottom right corner
+        let help_button_color = if self.hovered_button == Some(ButtonType::Help) {
+            Color::new(91, 110, 225, 255)
+        } else {
+            Color::new(60, 60, 80, 200)
+        };
+        d.draw_rectangle_rec(self.help_button, help_button_color);
+        d.draw_rectangle_lines_ex(self.help_button, 2.0, Color::WHITE);
+
+        // Draw "?" in the center of the button
+        let help_text = "?";
+        let help_text_size = 28;
+        let help_text_width = d.measure_text(help_text, help_text_size);
+        d.draw_text(
+            help_text,
+            self.help_button.x as i32 + (self.help_button.width as i32 - help_text_width) / 2,
+            self.help_button.y as i32 + (self.help_button.height as i32 - help_text_size) / 2,
+            help_text_size,
+            Color::WHITE,
         );
     }
 }

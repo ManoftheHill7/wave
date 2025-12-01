@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tidalcave</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #canvas {
+            border: 2px solid #4a4a6a;
+            border-radius: 4px;
+        }
+        
+        #loading {
+            color: #ffffff;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        
+        #progress {
+            width: 400px;
+            height: 20px;
+            background-color: #2a2a4e;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        #progress-bar {
+            height: 100%;
+            background-color: #5b6ee1;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="loading">Loading Tidalcave...</div>
+        <div id="progress">
+            <div id="progress-bar"></div>
+        </div>
+        <canvas id="canvas" class="hidden"></canvas>
+    </div>
+
+    <script>
+        var Module = {
+            canvas: (function() {
+                var canvas = document.getElementById('canvas');
+                return canvas;
+            })(),
+            onRuntimeInitialized: function() {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('progress').classList.add('hidden');
+                document.getElementById('canvas').classList.remove('hidden');
+            },
+            setStatus: function(text) {
+                var loading = document.getElementById('loading');
+                if (text) {
+                    loading.textContent = text;
+                }
+                
+                // Parse progress from emscripten status messages
+                var match = text.match(/([0-9.]+)\/([0-9.]+)/);
+                if (match) {
+                    var progress = (parseFloat(match[1]) / parseFloat(match[2])) * 100;
+                    document.getElementById('progress-bar').style.width = progress + '%';
+                }
+            },
+            totalDependencies: 0,
+            monitorRunDependencies: function(left) {
+                this.totalDependencies = Math.max(this.totalDependencies, left);
+                if (this.totalDependencies > 0) {
+                    var progress = ((this.totalDependencies - left) / this.totalDependencies) * 100;
+                    document.getElementById('progress-bar').style.width = progress + '%';
+                }
+            }
+        };
+    </script>
+    <script src="wave_github_gameoff2025.data.js"></script>
+    <script src="wave_github_gameoff2025.js"></script>
+</body>
+</html>

@@ -1057,9 +1057,10 @@ impl Player {
     }
 
     fn check_in_water(&self, terrain: &Terrain) -> bool {
-        let center_x = (self.position.x + self.width / 2.0) as i32;
-        let center_y = (self.position.y + self.height / 2.0) as i32;
-        terrain.liquid_terrain_at(center_x, center_y)
+        // Check at player's feet to detect when entering water
+        let center_x = (self.position.x + self.width / 2.0).floor() as i32;
+        let feet_y = (self.position.y).floor() as i32;
+        terrain.liquid_terrain_at(center_x, feet_y)
     }
 
     fn check_on_ladder(&self, terrain: &Terrain) -> bool {
@@ -1230,7 +1231,13 @@ impl Player {
                     }
                 }
 
-                if !self.within_grace(self.started_mining_at, block_durability) {
+                // Get pickaxe speed (default 1.0 if no pickaxe equipped)
+                let pickaxe_speed = self.tool_pickaxe.as_ref().map(|p| p.speed).unwrap_or(1.0);
+
+                // Mining time is block durability divided by pickaxe speed
+                let mining_time = block_durability / pickaxe_speed;
+
+                if !self.within_grace(self.started_mining_at, mining_time) {
                     if let Some(pickaxe) = self.tool_pickaxe.as_mut() {
                         pickaxe.durability -= block_durability;
                         if pickaxe.durability <= 0.0 {

@@ -7,9 +7,12 @@ pub const CELL_OFFSET: f32 = 1.0 / CELL_RESOLUTION as f32;
 pub const NO_LIQUID_THRESHOLD: f32 = 0.0001;
 
 // CELL_RESOLUTION 4 is too slow in debug mode
+// WASM also uses reduced resolution for performance
 #[cfg(debug_assertions)]
 pub const CELL_RESOLUTION: usize = 1;
-#[cfg(not(debug_assertions))]
+#[cfg(all(not(debug_assertions), target_arch = "wasm32"))]
+pub const CELL_RESOLUTION: usize = 1;
+#[cfg(all(not(debug_assertions), not(target_arch = "wasm32")))]
 pub const CELL_RESOLUTION: usize = 3;
 
 const FLOW_RATE: f32 = 1.0;
@@ -491,8 +494,6 @@ impl Terrain {
     }
 
     pub fn flow(&mut self) {
-        use rayon::prelude::*;
-
         let chunk_coords: Vec<ChunkCoord> = self.chunks.keys().copied().collect();
 
         // Partition chunks into checkerboard pattern to avoid adjacent chunk conflicts
@@ -508,56 +509,69 @@ impl Terrain {
 
         let chunks_ptr = SyncPtr(&mut self.chunks as *mut HashMap<ChunkCoord, Chunk>);
 
-        let process_phase = |phase: &[ChunkCoord]| {
-            phase.par_iter().for_each(|chunk_coord| {
-                let ptr = chunks_ptr;
-                unsafe {
-                    let neighbor_up_coord = ChunkCoord {
-                        x: chunk_coord.x,
-                        y: chunk_coord.y - 1,
-                    };
-                    let neighbor_down_coord = ChunkCoord {
-                        x: chunk_coord.x,
-                        y: chunk_coord.y + 1,
-                    };
-                    let neighbor_left_coord = ChunkCoord {
-                        x: chunk_coord.x - 1,
-                        y: chunk_coord.y,
-                    };
-                    let neighbor_right_coord = ChunkCoord {
-                        x: chunk_coord.x + 1,
-                        y: chunk_coord.y,
-                    };
+        let process_chunk = |chunk_coord: &ChunkCoord, ptr: SyncPtr| unsafe {
+            let neighbor_up_coord = ChunkCoord {
+                x: chunk_coord.x,
+                y: chunk_coord.y - 1,
+            };
+            let neighbor_down_coord = ChunkCoord {
+                x: chunk_coord.x,
+                y: chunk_coord.y + 1,
+            };
+            let neighbor_left_coord = ChunkCoord {
+                x: chunk_coord.x - 1,
+                y: chunk_coord.y,
+            };
+            let neighbor_right_coord = ChunkCoord {
+                x: chunk_coord.x + 1,
+                y: chunk_coord.y,
+            };
 
-                    let current_chunk = (*ptr.0).get_mut(chunk_coord).map(|c| c as *mut Chunk);
+            let current_chunk = (*ptr.0).get_mut(chunk_coord).map(|c| c as *mut Chunk);
 
-                    if let Some(current_ptr) = current_chunk {
-                        let neighbor_up = (*ptr.0)
-                            .get_mut(&neighbor_up_coord)
-                            .map(|c| c as *mut Chunk);
-                        let neighbor_down = (*ptr.0)
-                            .get_mut(&neighbor_down_coord)
-                            .map(|c| c as *mut Chunk);
-                        let neighbor_left = (*ptr.0)
-                            .get_mut(&neighbor_left_coord)
-                            .map(|c| c as *mut Chunk);
-                        let neighbor_right = (*ptr.0)
-                            .get_mut(&neighbor_right_coord)
-                            .map(|c| c as *mut Chunk);
+            if let Some(current_ptr) = current_chunk {
+                let neighbor_up = (*ptr.0)
+                    .get_mut(&neighbor_up_coord)
+                    .map(|c| c as *mut Chunk);
+                let neighbor_down = (*ptr.0)
+                    .get_mut(&neighbor_down_coord)
+                    .map(|c| c as *mut Chunk);
+                let neighbor_left = (*ptr.0)
+                    .get_mut(&neighbor_left_coord)
+                    .map(|c| c as *mut Chunk);
+                let neighbor_right = (*ptr.0)
+                    .get_mut(&neighbor_right_coord)
+                    .map(|c| c as *mut Chunk);
 
-                        (*current_ptr).flow(
-                            neighbor_up.map(|p| &mut *p),
-                            neighbor_down.map(|p| &mut *p),
-                            neighbor_left.map(|p| &mut *p),
-                            neighbor_right.map(|p| &mut *p),
-                        );
-                    }
-                }
-            });
+                (*current_ptr).flow(
+                    neighbor_up.map(|p| &mut *p),
+                    neighbor_down.map(|p| &mut *p),
+                    neighbor_left.map(|p| &mut *p),
+                    neighbor_right.map(|p| &mut *p),
+                );
+            }
         };
 
-        process_phase(&phase_0);
-        process_phase(&phase_1);
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            use rayon::prelude::*;
+            phase_0
+                .par_iter()
+                .for_each(|coord| process_chunk(coord, chunks_ptr));
+            phase_1
+                .par_iter()
+                .for_each(|coord| process_chunk(coord, chunks_ptr));
+        }
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            for coord in &phase_0 {
+                process_chunk(coord, chunks_ptr);
+            }
+            for coord in &phase_1 {
+                process_chunk(coord, chunks_ptr);
+            }
+        }
     }
 
     pub fn at(&self, x: i32, y: i32) -> Block {

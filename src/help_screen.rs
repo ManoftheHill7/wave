@@ -2,18 +2,18 @@ use crate::GameContext;
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
 
-pub struct CreditsScreen {
+pub struct HelpScreen {
     back_button: Rectangle,
     hovered: bool,
 }
 
-impl CreditsScreen {
+impl HelpScreen {
     pub fn new() -> Self {
         let button_width = 200.0;
         let button_height = 50.0;
         let margin = 20.0;
 
-        CreditsScreen {
+        HelpScreen {
             back_button: Rectangle::new(
                 margin,
                 900.0 - button_height - margin,
@@ -25,7 +25,7 @@ impl CreditsScreen {
     }
 }
 
-impl Screen for CreditsScreen {
+impl Screen for HelpScreen {
     type Context = GameContext;
 
     fn update(&mut self, _dt: f32, ctx: &mut Self::Context) -> ScreenCommand<Self::Context> {
@@ -39,6 +39,11 @@ impl Screen for CreditsScreen {
         self.hovered = self.back_button.check_collision_point_rec(mouse_pos);
 
         if ctx.controller.left_hand_pressed && self.hovered {
+            return ScreenCommand::Pop;
+        }
+
+        // Also allow escape/menu to close
+        if ctx.controller.menu_pressed {
             return ScreenCommand::Pop;
         }
 
@@ -71,35 +76,86 @@ impl Screen for CreditsScreen {
         }
 
         // Title
-        let title = "CREDITS";
+        let title = "CONTROLS";
         let title_size = 80;
         let title_width = d.measure_text(title, title_size);
         d.draw_text(
             title,
             (1600 - title_width) / 2,
-            100,
+            50,
             title_size,
             Color::new(91, 110, 225, 255),
         );
 
-        // Credits text
-        let credits = [
-            "Jacob Reckhard",
-            "ManoftheHill7",
-            "And music by Trollslayer",
+        // Controls text - two columns
+        let controls_left = [
+            ("Movement", ""),
+            ("Walk", "WASD  or  Arrow Keys"),
+            ("", ""),
+            ("Actions", ""),
+            ("Left Hand", "Left Click (hold)"),
+            ("Right Hand", "Right Click"),
         ];
-        let text_size = 40;
-        let line_height = 60;
-        let start_y = 300;
 
-        for (i, credit) in credits.iter().enumerate() {
-            let text_width = d.measure_text(credit, text_size);
+        let controls_right = [
+            ("Menus", ""),
+            ("Inventory", "Tab"),
+            ("Crafting", "M"),
+            ("", ""),
+            ("Special", ""),
+            ("Dash", "Space (with dash amulet)"),
+            ("Glide", "Hold Space (with glider)"),
+            ("", ""),
+            ("", ""),
+        ];
+
+        let text_size = 28;
+        let line_height = 38;
+        let start_y = 160;
+        let left_x = 150;
+        let right_x = 850;
+        let label_color = Color::new(91, 110, 225, 255);
+
+        // Draw left column
+        for (i, (label, value)) in controls_left.iter().enumerate() {
+            let y = start_y + (i as i32 * line_height);
+            if value.is_empty() && !label.is_empty() {
+                // Section header
+                d.draw_text(label, left_x, y, text_size + 4, label_color);
+            } else if !label.is_empty() {
+                // Key-value pair
+                d.draw_text(label, left_x, y, text_size, Color::WHITE);
+                d.draw_text(value, left_x + 200, y, text_size, Color::LIGHTGRAY);
+            }
+        }
+
+        // Draw right column
+        for (i, (label, value)) in controls_right.iter().enumerate() {
+            let y = start_y + (i as i32 * line_height);
+            if value.is_empty() && !label.is_empty() {
+                // Section header
+                d.draw_text(label, right_x, y, text_size + 4, label_color);
+            } else if !label.is_empty() {
+                // Key-value pair
+                d.draw_text(label, right_x, y, text_size, Color::WHITE);
+                d.draw_text(value, right_x + 200, y, text_size, Color::LIGHTGRAY);
+            }
+        }
+
+        // Tips section at bottom
+        let tips = [
+            "Tip: Mine ores and craft better pickaxes to dig deeper!",
+            "Tip: Watch your breath meter when underwater.",
+        ];
+        let tip_y = 680;
+        for (i, tip) in tips.iter().enumerate() {
+            let tip_width = d.measure_text(tip, 24);
             d.draw_text(
-                credit,
-                (1600 - text_width) / 2,
-                start_y + (i as i32 * line_height),
-                text_size,
-                Color::WHITE,
+                tip,
+                (1600 - tip_width) / 2,
+                tip_y + (i as i32 * 30),
+                24,
+                Color::YELLOW,
             );
         }
 

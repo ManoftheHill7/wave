@@ -22,6 +22,7 @@ pub mod crafting_screen;
 pub mod credits_screen;
 pub mod death_screen;
 pub mod game_screen;
+pub mod help_screen;
 pub mod inventory;
 pub mod inventory_screen;
 pub mod lighting;
@@ -40,6 +41,7 @@ pub mod world;
 pub use controller::Controller;
 pub use credits_screen::CreditsScreen;
 pub use game_screen::GameScreen;
+pub use help_screen::HelpScreen;
 pub use menu_screen::MenuScreen;
 pub use world::WorldState;
 
@@ -155,6 +157,9 @@ impl GameContext {
             },
             controller: Controller::new(),
             world_state,
+            #[cfg(target_arch = "wasm32")]
+            debug_enabled: false,
+            #[cfg(not(target_arch = "wasm32"))]
             debug_enabled: true,
             updating: true,
             music,
@@ -164,16 +169,15 @@ impl GameContext {
     }
 
     pub fn handle_debug_input(&mut self, rl: &RaylibHandle) {
-        if rl.is_key_pressed(KeyboardKey::KEY_SLASH) {
-            self.debug_enabled = !self.debug_enabled;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if rl.is_key_pressed(KeyboardKey::KEY_SLASH) {
+                self.debug_enabled = !self.debug_enabled;
+            }
+            if rl.is_key_pressed(KeyboardKey::KEY_APOSTROPHE) {
+                self.world_state.ghost_mode = !self.world_state.ghost_mode;
+            }
         }
-        if rl.is_key_pressed(KeyboardKey::KEY_APOSTROPHE) {
-            self.world_state.ghost_mode = !self.world_state.ghost_mode;
-        }
-        if rl.is_key_pressed(KeyboardKey::KEY_ENTER) {
-            self.updating = !self.updating;
-        }
-
         // Save/Load with F5/F9
         if rl.is_key_pressed(KeyboardKey::KEY_F5) {
             match save_load::save_game(&mut self.world_state, 0) {
