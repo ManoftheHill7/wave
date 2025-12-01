@@ -1057,9 +1057,10 @@ impl Player {
     }
 
     fn check_in_water(&self, terrain: &Terrain) -> bool {
-        let center_x = (self.position.x + self.width / 2.0) as i32;
-        let center_y = (self.position.y + self.height / 2.0) as i32;
-        terrain.liquid_terrain_at(center_x, center_y)
+        // Check at player's feet to detect when entering water
+        let center_x = (self.position.x + self.width / 2.0).floor() as i32;
+        let feet_y = (self.position.y).floor() as i32;
+        terrain.liquid_terrain_at(center_x, feet_y)
     }
 
     fn check_on_ladder(&self, terrain: &Terrain) -> bool {
