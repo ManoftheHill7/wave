@@ -40,11 +40,11 @@ pub const WATER_DRAG: f32 = 0.9;
 pub const SWIM_SPEED: f32 = 8.0;
 pub const SWIM_EXIT_TIME: f32 = 0.10;
 
-pub const MAX_RAYCAST_PICKAXE: f32 = 3.0;
+pub const MAX_RAYCAST_PICKAXE: f32 = 4.0;
 pub const MAX_RAYCAST_HOOK: f32 = 10.0;
 pub const MAX_RAYCAST_SPEAR: f32 = 3.0;
 pub const MAX_RAYCAST_DASH: f32 = 1.0;
-pub const MAX_RAYCAST_PLACE_BLOCK: f32 = 3.5;
+pub const MAX_RAYCAST_PLACE_BLOCK: f32 = 4.0;
 
 pub const INVENTORY_STARTING_WEIGHT: f32 = 100.0;
 pub const STARTING_HEALTH: i32 = 32; // 4 frames of heart * 8 hearts
@@ -225,9 +225,9 @@ impl Player {
             right_hand: None,
             head_slot: None,
 
-            tool_dash: None,
+            tool_dash: Some(load_dash("diamond_amulet")),
             tool_pickaxe: Some(load_pick("stone_pickaxe")),
-            tool_glider: None,
+            tool_glider: Some(load_glider("linen_glider")),
             tool_tideclock: None,
 
             is_gliding: false,

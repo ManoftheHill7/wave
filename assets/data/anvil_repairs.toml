@@ -148,6 +148,17 @@ amount = 1
 type = "linen"
 amount = 1
 
+[tool_recipes.jasper_glider]
+type = "anvil"
+output = "jasper_glider"
+amount = 1
+[[tool_recipes.jasper_glider.inputs]]
+type = "jasper_glider"
+amount = 1
+[[tool_recipes.jasper_glider.inputs]]
+type = "linen"
+amount = 1
+
 [tool_recipes.emerald_glider]
 type = "anvil"
 output = "emerald_glider"

@@ -1109,13 +1109,13 @@ impl TerrainGenerator {
             for ly in 0..(CHUNK_SIZE - 1) {
                 let wy = coord.y * chunk_size + ly as i32;
                 // Only spawn below sea level (wy > SEA_LEVEL means underwater)
-                if wy <= SEA_LEVEL {
+                if wy <= -3 { // changed from SEA_LEVEL as the clams were de-spawning
                     continue;
                 }
                 // Check if current tile is air and tile below is sand
                 if chunk.get(lx, ly) == Block::Air && chunk.get(lx, ly + 1) == Block::Sand {
-                    // 25% chance to spawn a clam
-                    if rng.gen_bool(0.25) {
+                    // 75% chance to spawn a clam
+                    if rng.gen_bool(0.75) {
                         chunk.set(lx, ly, Block::Clam);
                     }
                 }
