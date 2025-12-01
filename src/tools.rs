@@ -19,10 +19,10 @@ pub enum ToolType {
 impl ToolType {
     pub fn get_texture<'a>(&self, textures: &'a TextureManager) -> Option<&'a Texture2D> {
         match self {
-            ToolType::Dash => Some(&textures.tools.white_pearl_amulet),
+            ToolType::Dash => Some(&textures.tools.pearl_amulet),
             ToolType::Pickaxe => Some(&textures.tools.stone_pickaxe),
             ToolType::Lamp => Some(&textures.tools.lamp_coal1),
-            ToolType::Glider => Some(&textures.tools.glider),
+            ToolType::Glider => Some(&textures.tools.linen_glider),
             ToolType::TideClock => Some(&textures.items.tidalcave_clock),
             ToolType::PlaceBlock(blk) => blk.to_item_type().map(|item| item.get_texture(textures)),
         }
@@ -43,15 +43,15 @@ pub struct ToolDash {
 impl ToolDash {
     pub fn texture_for_level<'a>(level: &str, textures: &'a TextureManager) -> &'a Texture2D {
         match level {
-            "white_pearl_amulet" => &textures.tools.white_pearl_amulet,
+            "pearl_amulet" => &textures.tools.pearl_amulet,
             "amethyst_amulet" => &textures.tools.amethyst_amulet,
             "jasper_amulet" => &textures.tools.jasper_amulet,
             "emerald_amulet" => &textures.tools.emerald_amulet,
-            "black_pearl_amulet" => &textures.tools.black_pearl_amulet,
+            //"black_pearl_amulet" => &textures.tools.black_pearl_amulet,
             "topaz_amulet" => &textures.tools.topaz_amulet,
             "ruby_amulet" => &textures.tools.ruby_amulet,
             "diamond_amulet" => &textures.tools.diamond_amulet,
-            _ => &textures.tools.white_pearl_amulet,
+            _ => &textures.tools.pearl_amulet,
         }
     }
 
@@ -141,10 +141,15 @@ impl ToolGlider {
     pub fn texture_for_level<'a>(level: &str, textures: &'a TextureManager) -> &'a Texture2D {
         match level {
             "broken" => &textures.tools.broken_glider,
-            // All glider tiers use the same texture for now until new art is added
-            "linen_glider" | "pearl_glider" | "amethyst_glider" | "emerald_glider"
-            | "topaz_glider" | "ruby_glider" | "diamond_glider" => &textures.tools.glider,
-            _ => &textures.tools.glider,
+            "linen_glider" => &textures.tools.linen_glider,
+            "pearl_glider" => &textures.tools.pearl_glider,
+            "amethyst_glider" => &textures.tools.amethyst_glider,
+            "jasper_glider" => &textures.tools.jasper_glider,
+            "emerald_glider" => &textures.tools.emerald_glider,
+            "topaz_glider" => &textures.tools.topaz_glider,
+            "ruby_glider" => &textures.tools.ruby_glider,
+            "diamond_glider" => &textures.tools.diamond_glider,
+            _ => &textures.tools.linen_glider,
         }
     }
 

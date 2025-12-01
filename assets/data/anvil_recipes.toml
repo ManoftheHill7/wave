@@ -225,12 +225,23 @@ amount = 1
 type = "amethyst"
 amount = 1
 
+[tool_recipes.jasper_glider_upgrade]
+type = "anvil"
+output = "jasper_glider"
+amount = 1
+[[tool_recipes.jasper_glider_upgrade.inputs]]
+type = "amethyst_glider"
+amount = 1
+[[tool_recipes.jasper_glider_upgrade.inputs]]
+type = "jasper"
+amount = 1
+
 [tool_recipes.emerald_glider_upgrade]
 type = "anvil"
 output = "emerald_glider"
 amount = 1
 [[tool_recipes.emerald_glider_upgrade.inputs]]
-type = "amethyst_glider"
+type = "jasper_glider"
 amount = 1
 [[tool_recipes.emerald_glider_upgrade.inputs]]
 type = "emerald"

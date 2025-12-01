@@ -190,6 +190,25 @@ impl Screen for MenuScreen {
             title_size,
             Color::new(91, 110, 225, 255),
         );
+       
+        //Subtitle
+        let subtitle = "ALPHA 1.0";
+        let subtitle_size = title_size / 5;
+        let subtitle_width = d.measure_text(subtitle, subtitle_size);
+        d.draw_text(
+            subtitle,
+            (1600 - subtitle_width + 8) / 2,
+            346,
+            subtitle_size,
+            Color::new(0, 0, 0, 127),
+        );
+          d.draw_text(
+            subtitle,
+            (1600 - subtitle_width) / 2,
+            350,
+            subtitle_size,
+            Color::new(91, 110, 225, 255),
+        );
 
         // New Game button
         let new_game_color = if self.hovered_button == Some(ButtonType::NewGame) {

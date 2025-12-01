@@ -109,27 +109,9 @@ impl InventoryScreen {
         let tool_y = 190.0;
         let tool_start_x = slot_padding * 2.0;
 
-        // Check dash tool slot (column 0) - equips to head slot
-        if ctx.world_state.player.tool_dash.is_some() {
-            let tool_x = tool_start_x + (0.0 * (slot_size + slot_padding));
-            if mouse_x >= tool_x
-                && mouse_x <= tool_x + slot_size
-                && mouse_y >= tool_y
-                && mouse_y <= tool_y + slot_size
-            {
-                // Dash (amulet) goes to head slot
-                if ctx.world_state.player.head_slot == Some(ToolType::Dash) {
-                    ctx.world_state.player.head_slot = None;
-                } else {
-                    ctx.world_state.player.head_slot = Some(ToolType::Dash);
-                }
-                return;
-            }
-        }
-
-        // Check pickaxe tool slot (column 1)
+        // Check pickaxe tool slot (column 0)
         if ctx.world_state.player.tool_pickaxe.is_some() {
-            let tool_x = tool_start_x + (1.0 * (slot_size + slot_padding));
+            let tool_x = tool_start_x + (0.0 * (slot_size + slot_padding));
             if mouse_x >= tool_x
                 && mouse_x <= tool_x + slot_size
                 && mouse_y >= tool_y
@@ -145,8 +127,8 @@ impl InventoryScreen {
             }
         }
 
-        // Check lamp tool slot (column 4)
-        let tool_x = tool_start_x + (4.0 * (slot_size + slot_padding));
+        // Check lamp tool slot (column 1)
+        let tool_x = tool_start_x + (1.0 * (slot_size + slot_padding));
         if mouse_x >= tool_x
             && mouse_x <= tool_x + slot_size
             && mouse_y >= tool_y
@@ -161,9 +143,9 @@ impl InventoryScreen {
             return;
         }
 
-        // Check glider tool slot (column 6) - equips to head slot
+        // Check glider tool slot (column 5) - equips to head slot
         if ctx.world_state.player.tool_glider.is_some() {
-            let tool_x = tool_start_x + (6.0 * (slot_size + slot_padding));
+            let tool_x = tool_start_x + (5.0 * (slot_size + slot_padding));
             if mouse_x >= tool_x
                 && mouse_x <= tool_x + slot_size
                 && mouse_y >= tool_y
@@ -174,6 +156,24 @@ impl InventoryScreen {
                     ctx.world_state.player.head_slot = None;
                 } else {
                     ctx.world_state.player.head_slot = Some(ToolType::Glider);
+                }
+                return;
+            }
+        }
+
+        // Check dash tool slot (column 6) - equips to head slot
+        if ctx.world_state.player.tool_dash.is_some() {
+            let tool_x = tool_start_x + (6.0 * (slot_size + slot_padding));
+            if mouse_x >= tool_x
+                && mouse_x <= tool_x + slot_size
+                && mouse_y >= tool_y
+                && mouse_y <= tool_y + slot_size
+            {
+                // Dash (amulet) goes to head slot
+                if ctx.world_state.player.head_slot == Some(ToolType::Dash) {
+                    ctx.world_state.player.head_slot = None;
+                } else {
+                    ctx.world_state.player.head_slot = Some(ToolType::Dash);
                 }
                 return;
             }
@@ -286,26 +286,53 @@ impl Screen for InventoryScreen {
         let render_target = self.render_target.as_mut().unwrap();
 
         {
-            let mut d = rl.begin_texture_mode(thread, render_target);
-            d.clear_background(Color::RAYWHITE);
+        let mut d = rl.begin_texture_mode(thread, render_target);
+        let stone_background = &ctx.textures.tiles.stone;
+        let stone_scale = 4.0;
+        let stone_size = stone_background.width as f32 * stone_scale;
+        let stone_grid_cols = 13;
+        let stone_grid_rows = 8;
 
+        for row in 0..stone_grid_rows {
+            for col in 0..stone_grid_cols {
+                let stone_grid_x = col as f32 * stone_size;
+                let stone_grid_y = row as f32 * stone_size;
+
+                d.draw_texture_ex(
+                    stone_background,
+                    Vector2::new(stone_grid_x, stone_grid_y),
+                    0.0,
+                    stone_scale,
+                    Color::GRAY,
+                );
+            }
+        }
             // Display weight information above the inventory grid
             let weight_text = format!(
                 "Weight: {:.1}/{:.1}",
-                ctx.world_state.player.inventory.current_weight(),
+                ctx.world_state.player.inventory.current_weight().abs(),
                 ctx.world_state.player.inventory.max_weight()
             );
 
             let weight_x = 8.0;
             let weight_y = 8.0;
-
-            d.draw_text(
+            if ctx.world_state.player.inventory.current_weight() >= ctx.world_state.player.inventory.max_weight() * 0.9 {
+                d.draw_text(
                 &weight_text,
                 weight_x as i32,
                 weight_y as i32,
                 10,
-                Color::BLACK,
-            );
+                Color::RED,
+                );
+            } else {
+                d.draw_text(
+                &weight_text,
+                weight_x as i32,
+                weight_y as i32,
+                10,
+                Color::DARKGRAY,
+                );
+            }
 
             // Display scroll info if there are multiple pages
             let grid_cols = 6;
@@ -400,25 +427,26 @@ impl Screen for InventoryScreen {
 
                 // Draw item count in bottom-right corner
                 let count_text = item_stack.count.to_string();
+                let count_text_size = item_stack.count.ilog10() as i32 * 3;
                 let text_size = 10;
 
                 // Position text in bottom-right corner with small padding
-                let text_x = slot_x + slot_size - 12.0; // 12px from right for padding
-                let text_y = slot_y + slot_size - 12.0; // 12px from bottom for padding
+                let text_x = slot_x + slot_size - count_text_size as f32 - 14.0; // 14px from right for padding
+                let text_y = slot_y + slot_size - 4.0; // 4px from bottom for padding
 
                 d.draw_text(
                     &count_text,
                     text_x as i32 + 1,
-                    text_y as i32 + 1,
+                    text_y as i32 - 1,
                     text_size,
-                    Color::RAYWHITE,
+                    Color::new(0, 0, 0, 127),
                 );
                 d.draw_text(
                     &count_text,
                     text_x as i32,
                     text_y as i32,
                     text_size,
-                    Color::RED,
+                    Color::new(223, 113, 38, 255),
                 );
             }
 
@@ -605,21 +633,8 @@ impl Screen for InventoryScreen {
                     }
                 };
 
-            draw_tool_slot(
+             draw_tool_slot(
                 0,
-                ctx.world_state
-                    .player
-                    .tool_dash
-                    .as_ref()
-                    .map(|d| d.get_texture(&ctx.textures)),
-                ctx.world_state
-                    .player
-                    .tool_dash
-                    .as_ref()
-                    .map(|_| ToolType::Dash),
-            );
-            draw_tool_slot(
-                1,
                 ctx.world_state
                     .player
                     .tool_pickaxe
@@ -631,16 +646,16 @@ impl Screen for InventoryScreen {
                     .as_ref()
                     .map(|_| ToolType::Pickaxe),
             );
-            draw_tool_slot(2, None, None); // Grappling hook
-            draw_tool_slot(3, None, None); // Spear
             draw_tool_slot(
-                4,
+                1,
                 Some(&ctx.textures.tools.lamp_coal1),
                 Some(ToolType::Lamp),
             ); // Lamp
-            draw_tool_slot(5, None, None); // Fishing rod
+            draw_tool_slot(2, None, None); // Spear
+            draw_tool_slot(3, None, None); // Fishing rod
+            draw_tool_slot(4, None, None); // Grappling hook
             draw_tool_slot(
-                6,
+                5,
                 ctx.world_state
                     .player
                     .tool_glider
@@ -652,6 +667,19 @@ impl Screen for InventoryScreen {
                     .as_ref()
                     .map(|_| ToolType::Glider),
             ); // Glider
+            draw_tool_slot(
+                6,
+                ctx.world_state
+                    .player
+                    .tool_dash
+                    .as_ref()
+                    .map(|d| d.get_texture(&ctx.textures)),
+                ctx.world_state
+                    .player
+                    .tool_dash
+                    .as_ref()
+                    .map(|_| ToolType::Dash),
+            );
             draw_tool_slot(
                 7,
                 ctx.world_state

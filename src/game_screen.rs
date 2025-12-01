@@ -1,8 +1,9 @@
 use crate::inventory_screen::InventoryScreen;
 use crate::player::{Player, SPIKE_IMMUNITY_COOLDOWN};
+use crate::tools::ToolType;
 use crate::terrain::{Block, Terrain, CELL_RESOLUTION, CHUNK_SIZE, NO_LIQUID_THRESHOLD};
 use crate::world::{LIGHTING_RANGE, RENDER_RANGE};
-use crate::{pixels_per_world_unit, GameContext, Neighbors, ShaderLocs};
+use crate::{GameContext, Neighbors, ShaderLocs, pixels_per_world_unit, tools};
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
 
@@ -101,6 +102,10 @@ fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
         "amethyst_glider" => (
             [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Amethyst primary (purple)
             [69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0],   // Amethyst secondary
+        ),
+        "jasper_glider" => (
+            [91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Jasper primary (orange)
+            [102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0], // Jasper secondary
         ),
         "emerald_glider" => (
             [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Emerald primary (green)
@@ -529,13 +534,23 @@ fn render_player(
             DEFAULT_SPRITE_PALLETTE.as_ptr() as *const std::ffi::c_void,
             raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
         );
-        raylib::ffi::SetShaderValue(
-            shader.as_ref().clone(),
-            shader_locs.replace_0,
-            palette.as_ptr() as *const std::ffi::c_void,
-            raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
-        );
 
+        if player.head_slot == Some(ToolType::Dash) {
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.replace_0,
+                palette.as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+        } else {
+            raylib::ffi::SetShaderValue(
+                shader.as_ref().clone(),
+                shader_locs.replace_0,
+                COLOR_PALETTES[0].as_ptr() as *const std::ffi::c_void,
+                raylib::ffi::ShaderUniformDataType::SHADER_UNIFORM_VEC4 as i32,
+            );
+        } 
+        
         raylib::ffi::SetShaderValue(
             shader.as_ref().clone(),
             shader_locs.exhustion,
@@ -1310,18 +1325,6 @@ impl Screen for GameScreen {
                         .tool_pickaxe
                         .as_ref()
                         .map(|p| p.get_texture(&ctx.textures)),
-                    crate::tools::ToolType::Dash => ctx
-                        .world_state
-                        .player
-                        .tool_dash
-                        .as_ref()
-                        .map(|d| d.get_texture(&ctx.textures)),
-                    crate::tools::ToolType::Glider => ctx
-                        .world_state
-                        .player
-                        .tool_glider
-                        .as_ref()
-                        .map(|g| g.get_texture(&ctx.textures)),
                     _ => selected_tool.get_texture(&ctx.textures),
                 };
                 if let Some(texture) = texture {

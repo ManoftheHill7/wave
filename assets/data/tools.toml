@@ -1,3 +1,5 @@
+# dash amulet
+
 [dash.broken]
 name = "Broken Amulet"
 durability = -1.0
@@ -70,6 +72,9 @@ dash_time = 0.44
 dash_extended_time = 0.54
 dash_control_modifier = 2.2
 
+
+# pickaxe
+
 [pick.broken]
 name = "Broken Pickaxe"
 durability = -1.0
@@ -125,45 +130,58 @@ name = "Etherealite Pickaxe"
 durability = 2300.0
 speed = 6.5
 
+
+# glider
+
 [glider.broken]
 name = "Broken Glider"
 durability = -1.0
 max_fall_speed = 50.0
 
+# TO-DO maxed duriability until repairing works again
+
 [glider.linen_glider]
 name = "Linen Glider"
-durability = 150.0
-max_fall_speed = 3.5
+durability = 999999.0 #150.0
+max_fall_speed = 5.0
 
 [glider.pearl_glider]
 name = "Pearl Glider"
-durability = 200.0
-max_fall_speed = 3.0
+durability = 999999.0 #200.0
+max_fall_speed = 3.5
 
 [glider.amethyst_glider]
 name = "Amethyst Glider"
-durability = 250.0
-max_fall_speed = 2.6
+durability = 999999.0 #250.0
+max_fall_speed = 3.0
+
+[glider.jasper_Glider]
+name = "Jasper Glider"
+durability = 999999.0 #250.0
+max_fall_speed = 2.5
 
 [glider.emerald_glider]
 name = "Emerald Glider"
-durability = 300.0
-max_fall_speed = 2.2
+durability = 999999.0 #300.0
+max_fall_speed = 1.9
 
 [glider.topaz_glider]
 name = "Topaz Glider"
-durability = 375.0
-max_fall_speed = 1.9
+durability = 999999.0 #375.0
+max_fall_speed = 1.4
 
 [glider.ruby_glider]
 name = "Ruby Glider"
-durability = 450.0
-max_fall_speed = 1.6
+durability = 999999.0 #450.0
+max_fall_speed = 1.0
 
 [glider.diamond_glider]
 name = "Diamond Glider"
-durability = 550.0
-max_fall_speed = 1.3
+durability = 99999.0 #550.0
+max_fall_speed = 0.6
+
+
+# fishing rod
 
 [fishing.fishing_rod]
 name = "Fishing Rod"
