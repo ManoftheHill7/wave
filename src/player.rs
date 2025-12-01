@@ -1230,7 +1230,13 @@ impl Player {
                     }
                 }
 
-                if !self.within_grace(self.started_mining_at, block_durability) {
+                // Get pickaxe speed (default 1.0 if no pickaxe equipped)
+                let pickaxe_speed = self.tool_pickaxe.as_ref().map(|p| p.speed).unwrap_or(1.0);
+
+                // Mining time is block durability divided by pickaxe speed
+                let mining_time = block_durability / pickaxe_speed;
+
+                if !self.within_grace(self.started_mining_at, mining_time) {
                     if let Some(pickaxe) = self.tool_pickaxe.as_mut() {
                         pickaxe.durability -= block_durability;
                         if pickaxe.durability <= 0.0 {

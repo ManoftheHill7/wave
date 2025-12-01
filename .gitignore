@@ -4,3 +4,8 @@ target/
 # Generated map variants
 assets/maps/gen_h_*.png
 assets/maps/gen_v_*.png
+
+# Generated WASM files
+web/*.js
+web/*.wasm
+web/*.data

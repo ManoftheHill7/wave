@@ -16,29 +16,29 @@ const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 /
 const COLOR_PALETTES: &[[f32; 4]] = &[
     [99.0 / 255.0, 155.0 / 255.0, 1.0, 1.0], // Blue scarf
     [55.0 / 255.0, 148.0 / 255.0, 110.0 / 255.0, 1.0], // Green scarf
-    [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],  // Red scarf
+    [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0], // Red scarf
     [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Purple scarf
 
-                                                       //[1.0, 1.0, 1.0, 1.0]; // Air boots primary
-                                                       //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Air boots secondary
-                                                       //[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Dash boots primary
-                                                       //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Dash boots secondary
-                                                       //[95.0 / 255.0, 205.0 / 255.0, 228.0 / 255.0, 1.0]; // Flippers primary
-                                                       //[48.0 / 255.0, 96.0 / 255.0, 130.0 / 255.0, 1.0]; // Flippers secondary
-                                                       //[215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0]; // Floatie boots primary
-                                                       //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Floatie boots secondary
-                                                       //[118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0]; // Gravity boots primary
-                                                       //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Gravity boots secondary
-                                                       //[143.0 / 255.0, 86.0 / 255.0, 59.0 / 255.0, 1.0]; // Hover boots primary
-                                                       //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Hover boots secondary
-                                                       //[223.0 / 255.0, 113.0 / 255.0, 38.0 / 255.0, 1.0]; // Rocket boots primary
-                                                       //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Rocket boots secondary
-                                                       //[251.0 / 255.0, 242.0 / 255.0, 54.0 / 255.0, 1.0]; // Rubber boots primary
-                                                       //[82.0 / 255.0, 75.0 / 255.0, 36.0 / 255.0, 1.0]; // Rubber boots secondary
-                                                       //[203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0]; // Steel boots primary
-                                                       //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Steel boots secondary
-                                                       //[75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0]; // Wall boots primary
-                                                       //[50.0 / 255.0, 60.0 / 255.0, 57.0 / 255.0, 1.0]; // Wall boots secondary
+                                             //[1.0, 1.0, 1.0, 1.0]; // Air boots primary
+                                             //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Air boots secondary
+                                             //[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Dash boots primary
+                                             //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Dash boots secondary
+                                             //[95.0 / 255.0, 205.0 / 255.0, 228.0 / 255.0, 1.0]; // Flippers primary
+                                             //[48.0 / 255.0, 96.0 / 255.0, 130.0 / 255.0, 1.0]; // Flippers secondary
+                                             //[215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0]; // Floatie boots primary
+                                             //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Floatie boots secondary
+                                             //[118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0]; // Gravity boots primary
+                                             //[69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0]; // Gravity boots secondary
+                                             //[143.0 / 255.0, 86.0 / 255.0, 59.0 / 255.0, 1.0]; // Hover boots primary
+                                             //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Hover boots secondary
+                                             //[223.0 / 255.0, 113.0 / 255.0, 38.0 / 255.0, 1.0]; // Rocket boots primary
+                                             //[102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0]; // Rocket boots secondary
+                                             //[251.0 / 255.0, 242.0 / 255.0, 54.0 / 255.0, 1.0]; // Rubber boots primary
+                                             //[82.0 / 255.0, 75.0 / 255.0, 36.0 / 255.0, 1.0]; // Rubber boots secondary
+                                             //[203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0]; // Steel boots primary
+                                             //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Steel boots secondary
+                                             //[75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0]; // Wall boots primary
+                                             //[50.0 / 255.0, 60.0 / 255.0, 57.0 / 255.0, 1.0]; // Wall boots secondary
 ];
 
 // Tool sprite original colors to swap from
@@ -96,11 +96,11 @@ fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
         ),
         "pearl_glider" => (
             [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Pearl primary (creamy white)
-            [1.0, 1.0, 1.0, 1.0], // Pearl secondary    
+            [1.0, 1.0, 1.0, 1.0],                               // Pearl secondary
         ),
         "amethyst_glider" => (
             [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Amethyst primary (purple)
-            [69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0], // Amethyst secondary
+            [69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0],   // Amethyst secondary
         ),
         "emerald_glider" => (
             [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Emerald primary (green)
@@ -108,7 +108,7 @@ fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
         ),
         "topaz_glider" => (
             [91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Topaz primary (blue)
-            [48.0 / 255.0, 96.0 / 255.0, 130.0 / 255.0, 1.0], // Topaz secondary
+            [48.0 / 255.0, 96.0 / 255.0, 130.0 / 255.0, 1.0],  // Topaz secondary
         ),
         "ruby_glider" => (
             [217.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0, 1.0], // Ruby primary (red)
@@ -116,7 +116,7 @@ fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
         ),
         "diamond_glider" => (
             [95.0 / 255.0, 205.0 / 255.0, 228.0 / 255.0, 1.0], // Diamond primary (light blue)
-            [99.0 / 255.0, 155.0 / 255.0, 225.0 / 255.0, 1.0],  // Diamond secondary
+            [99.0 / 255.0, 155.0 / 255.0, 225.0 / 255.0, 1.0], // Diamond secondary
         ),
         _ => (
             [132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Default primary
@@ -794,8 +794,11 @@ fn render_player(
             let block = terrain.at(bx as i32, by as i32);
             if block != Block::Air {
                 let durability = block.durability();
+                // Get pickaxe speed (default 1.0 if no pickaxe equipped)
+                let pickaxe_speed = player.tool_pickaxe.as_ref().map(|p| p.speed).unwrap_or(1.0);
+                let mining_time = durability / pickaxe_speed;
                 let progress =
-                    ((player.time - player.started_mining_at) / durability).clamp(0.0, 1.0);
+                    ((player.time - player.started_mining_at) / mining_time).clamp(0.0, 1.0);
                 let frame = (progress * 4.0).floor().min(3.0) as usize;
                 let break_texture = &textures.ui.block_break[frame];
 
@@ -1470,8 +1473,11 @@ impl Screen for GameScreen {
                 Color::DARKGRAY,
             );
             d.draw_text(
-                "Controls: WASD/Arrows=Move, Space=Jump, C=Climb, Shift/X=Dash, Toggle Controls=/, Toggle Ghost=', Play/Pause=Enter",
-                500, 10, 16, Color::BLACK
+                "Controls: WASD/Arrows=Move, Space=Jump, C=Climb, Shift/X=Dash, Toggle Controls=/",
+                500,
+                10,
+                16,
+                Color::BLACK,
             );
             d.draw_text(&format!("FPS: {}", d.get_fps()), 1500, 10, 20, Color::GRAY);
 

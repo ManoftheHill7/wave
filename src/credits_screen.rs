@@ -83,7 +83,11 @@ impl Screen for CreditsScreen {
         );
 
         // Credits text
-        let credits = ["Jacob Reckhard", "ManoftheHill7", "And music by Trollslayer"];
+        let credits = [
+            "Jacob Reckhard",
+            "ManoftheHill7",
+            "And music by Trollslayer",
+        ];
         let text_size = 40;
         let line_height = 60;
         let start_y = 300;

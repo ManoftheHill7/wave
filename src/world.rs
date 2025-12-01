@@ -251,7 +251,13 @@ impl WorldState {
         }
 
         // Update lighting at reduced framerate for performance
-        if self.illuminate_timer > LIGHTING_UPDATE_TIMER {
+        // On WASM, use a longer timer to reduce CPU usage
+        #[cfg(target_arch = "wasm32")]
+        let lighting_timer = LIGHTING_UPDATE_TIMER * 4.0;
+        #[cfg(not(target_arch = "wasm32"))]
+        let lighting_timer = LIGHTING_UPDATE_TIMER;
+
+        if self.illuminate_timer > lighting_timer {
             self.illuminate_timer = 0.0;
             self.update_lighting();
         }
@@ -259,8 +265,15 @@ impl WorldState {
         self.illuminate_timer += dt;
         self.tide_timer += dt;
         self.flow_timer += dt;
-        while self.flow_timer > LIQUID_UPDATE_TIMER {
-            self.flow_timer -= LIQUID_UPDATE_TIMER;
+
+        // On WASM, reduce water flow frequency for performance
+        #[cfg(target_arch = "wasm32")]
+        let flow_timer = LIQUID_UPDATE_TIMER * 3.0;
+        #[cfg(not(target_arch = "wasm32"))]
+        let flow_timer = LIQUID_UPDATE_TIMER;
+
+        while self.flow_timer > flow_timer {
+            self.flow_timer -= flow_timer;
             self.terrain.flow();
         }
 

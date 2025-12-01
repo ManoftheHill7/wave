@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
+
+#[cfg(not(target_arch = "wasm32"))]
 use std::fs;
+#[cfg(not(target_arch = "wasm32"))]
 use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Default)]
@@ -18,6 +21,7 @@ impl Default for AudioConfig {
     }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn get_config_path() -> PathBuf {
     let mut path = if let Some(data_dir) = dirs::config_dir() {
         data_dir
@@ -29,6 +33,7 @@ fn get_config_path() -> PathBuf {
     path
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn load_config() -> GameConfig {
     let config_path = get_config_path();
 
@@ -42,6 +47,13 @@ pub fn load_config() -> GameConfig {
     GameConfig::default()
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn load_config() -> GameConfig {
+    // WASM: Return default config (no filesystem access)
+    GameConfig::default()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn save_config(config: &GameConfig) -> Result<(), String> {
     let config_path = get_config_path();
 
@@ -57,5 +69,11 @@ pub fn save_config(config: &GameConfig) -> Result<(), String> {
     fs::write(&config_path, config_str)
         .map_err(|e| format!("Failed to write config file: {}", e))?;
 
+    Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn save_config(_config: &GameConfig) -> Result<(), String> {
+    // WASM: No-op (no filesystem access)
     Ok(())
 }

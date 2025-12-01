@@ -1,12 +1,16 @@
 use crate::inventory::Inventory;
 use crate::player::Player;
 use crate::terrain::{Block, Chunk, ChunkCoord, MultiTileData};
+#[cfg(not(target_arch = "wasm32"))]
 use crate::terrain_generator::Generator;
 use crate::world::WorldState;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+#[cfg(not(target_arch = "wasm32"))]
 use std::fs::{self, File};
+#[cfg(not(target_arch = "wasm32"))]
 use std::io::{Read, Write};
+#[cfg(not(target_arch = "wasm32"))]
 use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize)]
@@ -71,6 +75,8 @@ impl ChunkData {
     }
 }
 
+// Native filesystem functions
+#[cfg(not(target_arch = "wasm32"))]
 fn get_save_dir() -> PathBuf {
     let mut path = if let Some(data_dir) = dirs::data_local_dir() {
         data_dir
@@ -82,18 +88,21 @@ fn get_save_dir() -> PathBuf {
     path
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn get_save_path(slot: u32) -> PathBuf {
     let mut path = get_save_dir();
     path.push(format!("save_{}.bin", slot));
     path
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn get_chunks_dir(slot: u32) -> PathBuf {
     let mut path = get_save_dir();
     path.push(format!("save_{}_chunks", slot));
     path
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 fn get_chunk_path(slot: u32, coord: ChunkCoord) -> PathBuf {
     let mut path = get_chunks_dir(slot);
     path.push(format!("chunk_{}_{}.bin", coord.x, coord.y));
@@ -101,6 +110,7 @@ fn get_chunk_path(slot: u32, coord: ChunkCoord) -> PathBuf {
 }
 
 /// Save a single chunk to disk
+#[cfg(not(target_arch = "wasm32"))]
 pub fn save_chunk(slot: u32, chunk: &Chunk) -> Result<(), String> {
     let chunks_dir = get_chunks_dir(slot);
     fs::create_dir_all(&chunks_dir)
@@ -120,7 +130,14 @@ pub fn save_chunk(slot: u32, chunk: &Chunk) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn save_chunk(_slot: u32, _chunk: &Chunk) -> Result<(), String> {
+    // WASM: No filesystem access
+    Ok(())
+}
+
 /// Load a single chunk from disk, returns None if file doesn't exist
+#[cfg(not(target_arch = "wasm32"))]
 pub fn load_chunk(slot: u32, coord: ChunkCoord) -> Result<Option<Chunk>, String> {
     let chunk_path = get_chunk_path(slot, coord);
 
@@ -141,12 +158,26 @@ pub fn load_chunk(slot: u32, coord: ChunkCoord) -> Result<Option<Chunk>, String>
     Ok(Some(chunk_data.to_chunk()))
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn load_chunk(_slot: u32, _coord: ChunkCoord) -> Result<Option<Chunk>, String> {
+    // WASM: No filesystem access
+    Ok(None)
+}
+
 /// Check if a saved chunk exists for the given slot and coordinate
+#[cfg(not(target_arch = "wasm32"))]
 pub fn chunk_exists(slot: u32, coord: ChunkCoord) -> bool {
     get_chunk_path(slot, coord).exists()
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn chunk_exists(_slot: u32, _coord: ChunkCoord) -> bool {
+    // WASM: No filesystem access
+    false
+}
+
 /// Delete all chunk files for a save slot
+#[cfg(not(target_arch = "wasm32"))]
 pub fn delete_chunks(slot: u32) -> Result<(), String> {
     let chunks_dir = get_chunks_dir(slot);
 
@@ -160,6 +191,13 @@ pub fn delete_chunks(slot: u32) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn delete_chunks(_slot: u32) -> Result<(), String> {
+    // WASM: No filesystem access
+    Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn save_game(world_state: &mut WorldState, slot: u32) -> Result<(), String> {
     let save_dir = get_save_dir();
     fs::create_dir_all(&save_dir).map_err(|e| format!("Failed to create save directory: {}", e))?;
@@ -224,6 +262,13 @@ pub fn save_game(world_state: &mut WorldState, slot: u32) -> Result<(), String> 
     Ok(())
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn save_game(_world_state: &mut WorldState, _slot: u32) -> Result<(), String> {
+    // WASM: No filesystem access
+    Err("Saving is not supported in the web version".to_string())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn load_game(slot: u32) -> Result<SaveData, String> {
     let save_path = get_save_path(slot);
 
@@ -247,6 +292,12 @@ pub fn load_game(slot: u32) -> Result<SaveData, String> {
         encoded.len()
     );
     Ok(save_data)
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn load_game(_slot: u32) -> Result<SaveData, String> {
+    // WASM: No filesystem access
+    Err("Loading is not supported in the web version".to_string())
 }
 
 pub fn apply_save_data(world_state: &mut WorldState, save_data: SaveData, slot: u32) {
@@ -295,10 +346,18 @@ pub fn apply_save_data(world_state: &mut WorldState, save_data: SaveData, slot: 
     world_state.chests = save_data.chests;
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn save_exists(slot: u32) -> bool {
     get_save_path(slot).exists()
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn save_exists(_slot: u32) -> bool {
+    // WASM: No filesystem access
+    false
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn delete_save(slot: u32) -> Result<(), String> {
     let save_path = get_save_path(slot);
 
@@ -315,6 +374,13 @@ pub fn delete_save(slot: u32) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(target_arch = "wasm32")]
+pub fn delete_save(_slot: u32) -> Result<(), String> {
+    // WASM: No filesystem access
+    Ok(())
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub fn delete_all_saves() -> Result<(), String> {
     let save_dir = get_save_dir();
 
@@ -353,5 +419,11 @@ pub fn delete_all_saves() -> Result<(), String> {
         "Deleted {} save file(s) from: {:?}",
         deleted_count, save_dir
     );
+    Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn delete_all_saves() -> Result<(), String> {
+    // WASM: No filesystem access
     Ok(())
 }

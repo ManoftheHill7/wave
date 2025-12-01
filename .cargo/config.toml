@@ -1,0 +1,4 @@
+[target.wasm32-unknown-emscripten]
+rustflags = [
+    "-C", "link-args=-O3 -s USE_GLFW=3 -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s ASYNCIFY -s STACK_SIZE=5MB -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','HEAPF32','HEAPU8','HEAP32']"
+]
