@@ -225,9 +225,9 @@ impl Player {
             right_hand: None,
             head_slot: None,
 
-            tool_dash: Some(load_dash("diamond_amulet")),
+            tool_dash: None,
             tool_pickaxe: Some(load_pick("stone_pickaxe")),
-            tool_glider: Some(load_glider("linen_glider")),
+            tool_glider: None,
             tool_tideclock: None,
 
             is_gliding: false,

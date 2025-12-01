@@ -82,7 +82,6 @@ name = "Clam"
 type = "pickup"
 drops = "white_pearl"
 amount = 1
-image = "items.clam"
 
 [blocks.water]
 name = "Water"
