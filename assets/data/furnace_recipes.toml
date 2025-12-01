@@ -47,7 +47,7 @@ output = "silver_bar"
 amount = 1
 [[recipes.silver_bar.inputs]]
 type = "silver ore"
-amount = 20
+amount = 10
 
 [recipes.gold_bar]
 type = "furnace"
@@ -55,7 +55,7 @@ output = "gold_bar"
 amount = 1
 [[recipes.gold_bar.inputs]]
 type = "gold ore"
-amount = 30
+amount = 15
 
 [recipes.platinum_bar]
 type = "furnace"
@@ -63,7 +63,7 @@ output = "platinum_bar"
 amount = 1
 [[recipes.platinum_bar.inputs]]
 type = "platinum ore"
-amount = 50
+amount = 20
 
 [recipes.mithril_bar]
 type = "furnace"
@@ -71,7 +71,7 @@ output = "mithril_bar"
 amount = 1
 [[recipes.mithril_bar.inputs]]
 type = "mithril ore"
-amount = 60
+amount = 30
 [[recipes.mithril_bar.inputs]]
 type = "coal"
 amount = 20
@@ -82,13 +82,16 @@ output = "ozathinum_bar"
 amount = 1
 [[recipes.ozathinum_bar.inputs]]
 type = "ozathinum ore"
-amount = 60
+amount = 40
 [[recipes.ozathinum_bar.inputs]]
 type = "lumosite ore"
-amount = 30
-[[recipes.ozathinum_bar.inputs]]
-type = "coal"
 amount = 10
+[[recipes.etherealite_bar.inputs]]
+type = "silver bar"
+amount = 5
+[[recipes.ozathinum_bar.inputs]]
+type = "mithril bar"
+amount = 1
 
 [recipes.torzite_bar]
 type = "furnace"
@@ -96,16 +99,16 @@ output = "torzite_bar"
 amount = 1
 [[recipes.torzite_bar.inputs]]
 type = "torzite ore"
-amount = 60
+amount = 40
 [[recipes.torzite_bar.inputs]]
 type = "lumosite ore"
-amount = 30
+amount = 20
+[[recipes.etherealite_bar.inputs]]
+type = "gold bar"
+amount = 5
 [[recipes.torzite_bar.inputs]]
 type = "ozathinum bar"
-amount = 4
-[[recipes.torzite_bar.inputs]]
-type = "coal"
-amount = 10
+amount = 2
 
 [recipes.etherealite_bar]
 type = "furnace"
@@ -113,25 +116,17 @@ output = "etherealite_bar"
 amount = 1
 [[recipes.etherealite_bar.inputs]]
 type = "etherealite ore"
-amount = 100
-[[recipes.etherealite_bar.inputs]]
-type = "lumosite ore"
 amount = 50
 [[recipes.etherealite_bar.inputs]]
-type = "torzite bar"
-amount = 6
-[[recipes.etherealite_bar.inputs]]
-type = "platinum bar"
-amount = 10
-[[recipes.etherealite_bar.inputs]]
-type = "gold bar"
-amount = 20
-[[recipes.etherealite_bar.inputs]]
-type = "silver bar"
+type = "lumosite ore"
 amount = 30
 [[recipes.etherealite_bar.inputs]]
-type = "coal"
-amount = 10
+type = "platinum bar"
+amount = 5
+[[recipes.etherealite_bar.inputs]]
+type = "torzite bar"
+amount = 3
+
 
 # misc
 

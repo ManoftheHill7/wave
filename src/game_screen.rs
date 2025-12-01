@@ -14,10 +14,10 @@ const FOOTSTEP_MIN_SPEED: f32 = 0.5;
 // Maps to uniforms (original_0, replace_0)
 const DEFAULT_SPRITE_PALLETTE: &[f32; 4] = &[172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0]; // Red scarf
 const COLOR_PALETTES: &[[f32; 4]] = &[
-    [91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Blue scarf
+    [99.0 / 255.0, 155.0 / 255.0, 1.0, 1.0], // Blue scarf
+    [55.0 / 255.0, 148.0 / 255.0, 110.0 / 255.0, 1.0], // Green scarf
     [172.0 / 255.0, 50.0 / 255.0, 50.0 / 255.0, 1.0],  // Red scarf
-    [215.0 / 255.0, 123.0 / 255.0, 186.0 / 255.0, 1.0], // Pink scarf
-    [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Green scarf
+    [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Purple scarf
 
                                                        //[1.0, 1.0, 1.0, 1.0]; // Air boots primary
                                                        //[105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0]; // Air boots secondary
@@ -91,32 +91,32 @@ fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
         ),
         // Gliders (gem-based)
         "linen_glider" => (
-            [132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Linen primary (natural/default)
-            [105.0 / 255.0, 106.0 / 255.0, 106.0 / 255.0, 1.0], // Linen secondary
+            [155.0 / 255.0, 173.0 / 255.0, 183.0 / 255.0, 1.0], // Linen primary (natural/default)
+            [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Linen secondary
         ),
         "pearl_glider" => (
-            [255.0 / 255.0, 241.0 / 255.0, 232.0 / 255.0, 1.0], // Pearl primary (creamy white)
-            [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Pearl secondary
+            [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Pearl primary (creamy white)
+            [1.0, 1.0, 1.0, 1.0], // Pearl secondary    
         ),
         "amethyst_glider" => (
-            [155.0 / 255.0, 89.0 / 255.0, 182.0 / 255.0, 1.0], // Amethyst primary (purple)
-            [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Amethyst secondary
+            [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Amethyst primary (purple)
+            [69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0], // Amethyst secondary
         ),
         "emerald_glider" => (
-            [46.0 / 255.0, 204.0 / 255.0, 113.0 / 255.0, 1.0], // Emerald primary (green)
-            [39.0 / 255.0, 174.0 / 255.0, 96.0 / 255.0, 1.0],  // Emerald secondary
+            [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Emerald primary (green)
+            [75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0],  // Emerald secondary
         ),
         "topaz_glider" => (
-            [241.0 / 255.0, 196.0 / 255.0, 15.0 / 255.0, 1.0], // Topaz primary (golden yellow)
-            [243.0 / 255.0, 156.0 / 255.0, 18.0 / 255.0, 1.0], // Topaz secondary
+            [91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Topaz primary (blue)
+            [48.0 / 255.0, 96.0 / 255.0, 130.0 / 255.0, 1.0], // Topaz secondary
         ),
         "ruby_glider" => (
-            [231.0 / 255.0, 76.0 / 255.0, 60.0 / 255.0, 1.0], // Ruby primary (red)
-            [192.0 / 255.0, 57.0 / 255.0, 43.0 / 255.0, 1.0], // Ruby secondary
+            [217.0 / 255.0, 87.0 / 255.0, 99.0 / 255.0, 1.0], // Ruby primary (red)
+            [172.0 / 255.0, 55.0 / 255.0, 50.0 / 255.0, 1.0], // Ruby secondary
         ),
         "diamond_glider" => (
-            [133.0 / 255.0, 193.0 / 255.0, 233.0 / 255.0, 1.0], // Diamond primary (light blue)
-            [93.0 / 255.0, 173.0 / 255.0, 226.0 / 255.0, 1.0],  // Diamond secondary
+            [95.0 / 255.0, 205.0 / 255.0, 228.0 / 255.0, 1.0], // Diamond primary (light blue)
+            [99.0 / 255.0, 155.0 / 255.0, 225.0 / 255.0, 1.0],  // Diamond secondary
         ),
         _ => (
             [132.0 / 255.0, 126.0 / 255.0, 135.0 / 255.0, 1.0], // Default primary
@@ -1159,7 +1159,7 @@ impl Screen for GameScreen {
         let heart_texture = &ctx.textures.ui.hearts[4];
         let heart_size = heart_texture.width as f32 / 2.5;
         let heart_spacing = 10.0;
-        let max_health = 12;
+        let max_health = 32;
         let health_frames = 4;
         let hearts_x = (self.screen_width
             - (heart_size * heart_spacing) * max_health as f32 / health_frames as f32)
@@ -1402,9 +1402,9 @@ impl Screen for GameScreen {
                 crate::tools::ToolTideClock::get_frame_texture(tide_percent, &ctx.textures);
 
             // Draw tideclock in top left corner
-            let clock_scale = 4.0;
-            let clock_x = 10.0;
-            let clock_y = 10.0;
+            let clock_scale = 8.0;
+            let clock_x = 16.0;
+            let clock_y = 16.0;
 
             d.draw_texture_ex(
                 tideclock_texture,
