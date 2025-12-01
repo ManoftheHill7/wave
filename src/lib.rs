@@ -22,6 +22,7 @@ pub mod crafting_screen;
 pub mod credits_screen;
 pub mod death_screen;
 pub mod game_screen;
+pub mod help_screen;
 pub mod inventory;
 pub mod inventory_screen;
 pub mod lighting;
@@ -40,6 +41,7 @@ pub mod world;
 pub use controller::Controller;
 pub use credits_screen::CreditsScreen;
 pub use game_screen::GameScreen;
+pub use help_screen::HelpScreen;
 pub use menu_screen::MenuScreen;
 pub use world::WorldState;
 

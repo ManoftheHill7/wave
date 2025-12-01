@@ -813,10 +813,14 @@ pub struct GameScreen {
     camera_velocity: Vector2,
     screen_width: f32,
     screen_height: f32,
+    help_button: Rectangle,
+    help_hovered: bool,
 }
 
 impl GameScreen {
     pub fn new(ctx: &GameContext) -> Self {
+        let button_size = 40.0;
+        let margin = 10.0;
         GameScreen {
             camera: Camera2D {
                 target: Vector2::new(
@@ -830,6 +834,13 @@ impl GameScreen {
             camera_velocity: Vector2::zero(),
             screen_width: 1600.0,
             screen_height: 900.0,
+            help_button: Rectangle::new(
+                1600.0 - button_size - margin,
+                900.0 - button_size - margin,
+                button_size,
+                button_size,
+            ),
+            help_hovered: false,
         }
     }
 }
@@ -910,6 +921,16 @@ impl Screen for GameScreen {
         // Check if Tab is pressed to open inventory
         if ctx.controller.menu_pressed {
             return ScreenCommand::Push(Box::new(InventoryScreen::new()));
+        }
+
+        // Check for help button click
+        let mouse_pos = Vector2::new(
+            ctx.controller.mouse_position.x * self.screen_width,
+            ctx.controller.mouse_position.y * self.screen_height,
+        );
+        self.help_hovered = self.help_button.check_collision_point_rec(mouse_pos);
+        if ctx.controller.left_hand_pressed && self.help_hovered {
+            return ScreenCommand::Push(Box::new(crate::help_screen::HelpScreen::new()));
         }
 
         // Check if M is pressed to open crafting or chest
@@ -1570,5 +1591,26 @@ impl Screen for GameScreen {
             // Draw text
             d.draw_text(&prompt, text_x as i32, text_y as i32, 20, Color::WHITE);
         }
+
+        // Draw help button in bottom right corner
+        let help_button_color = if self.help_hovered {
+            Color::new(91, 110, 225, 255)
+        } else {
+            Color::new(60, 60, 80, 200)
+        };
+        d.draw_rectangle_rec(self.help_button, help_button_color);
+        d.draw_rectangle_lines_ex(self.help_button, 2.0, Color::WHITE);
+
+        // Draw "?" in the center of the button
+        let help_text = "?";
+        let help_text_size = 28;
+        let help_text_width = d.measure_text(help_text, help_text_size);
+        d.draw_text(
+            help_text,
+            self.help_button.x as i32 + (self.help_button.width as i32 - help_text_width) / 2,
+            self.help_button.y as i32 + (self.help_button.height as i32 - help_text_size) / 2,
+            help_text_size,
+            Color::WHITE,
+        );
     }
 }

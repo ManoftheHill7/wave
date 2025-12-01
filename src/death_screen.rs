@@ -56,8 +56,8 @@ impl DeathScreen {
         ctx.world_state.player.breath = 100.0;
 
         // Reset position to starting location
-        ctx.world_state.player.position.x = 32.0;
-        ctx.world_state.player.position.y = -3.0;
+        ctx.world_state.player.position.x = 46.0;
+        ctx.world_state.player.position.y = -6.0;
 
         // Reset velocity
         ctx.world_state.player.velocity.x = 0.0;

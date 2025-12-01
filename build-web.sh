@@ -19,8 +19,11 @@ EMSCRIPTEN_DIR=$(dirname $(which emcc))
 
 echo "Building for WebAssembly..."
 
+# Get absolute path to storage library
+STORAGE_LIB="$(cd "$(dirname "$0")" && pwd)/web/storage_library.js"
+
 # Set EMCC_CFLAGS for raylib-sys compilation
-export EMCC_CFLAGS="-O3 -sUSE_GLFW=3 -sASSERTIONS=1 -sWASM=1 -sASYNCIFY -sGL_ENABLE_GET_PROC_ADDRESS=1"
+export EMCC_CFLAGS="-O3 -sUSE_GLFW=3 -sASSERTIONS=1 -sWASM=1 -sASYNCIFY -sGL_ENABLE_GET_PROC_ADDRESS=1 --js-library=$STORAGE_LIB"
 
 # Build for WASM with cargo
 cargo build --target wasm32-unknown-emscripten --release

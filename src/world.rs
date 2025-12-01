@@ -78,8 +78,7 @@ impl WorldState {
         println!("World seed: {}", seed);
 
         WorldState {
-            // player: Player::new(38.74, -3.99), // This spot reproduces the getting stuck bug
-            player: Player::new(32.0, -3.0),
+            player: Player::new(46.0, -6.0),
             terrain: Terrain::new(seed),
             lighting_system: LightingSystem::new(),
             ghost_mode: false,
