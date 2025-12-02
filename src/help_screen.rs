@@ -91,10 +91,12 @@ impl Screen for HelpScreen {
         let controls_left = [
             ("Movement", ""),
             ("Walk", "WASD  or  Arrow Keys"),
+            ("Climb", "Hold shift"),
+            ("Jump", "Space"),
             ("", ""),
             ("Actions", ""),
             ("Left Hand", "Left Click (hold)"),
-            ("Right Hand", "Right Click"),
+            ("Right Hand", "Right Click  (hold)"),
         ];
 
         let controls_right = [
