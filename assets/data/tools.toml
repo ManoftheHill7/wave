@@ -8,8 +8,8 @@ dash_time = 0.0
 dash_extended_time = 0.0
 dash_control_modifier = 0.0
 
-[dash.white_pearl_amulet]
-name = "White Pearl Amulet"
+[dash.pearl_amulet]
+name = "Pearl Amulet"
 durability = 50.0
 max_dashes = 1
 dash_time = 0.30
