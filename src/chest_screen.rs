@@ -244,20 +244,20 @@ impl Screen for ChestScreen {
             let stone_grid_cols = 13;
             let stone_grid_rows = 8;
 
-        for row in 0..stone_grid_rows {
-            for col in 0..stone_grid_cols {
-                let stone_grid_x = col as f32 * stone_size;
-                let stone_grid_y = row as f32 * stone_size;
+            for row in 0..stone_grid_rows {
+                for col in 0..stone_grid_cols {
+                    let stone_grid_x = col as f32 * stone_size;
+                    let stone_grid_y = row as f32 * stone_size;
 
-                d.draw_texture_ex(
-                    stone_background,
-                    Vector2::new(stone_grid_x, stone_grid_y),
-                    0.0,
-                    stone_scale,
-                    Color::GRAY,
-                );
+                    d.draw_texture_ex(
+                        stone_background,
+                        Vector2::new(stone_grid_x, stone_grid_y),
+                        0.0,
+                        stone_scale,
+                        Color::GRAY,
+                    );
+                }
             }
-        }
 
             let slot_texture = &ctx.textures.ui.inventory_slot;
             let slot_size = slot_texture.width as f32;
@@ -283,24 +283,14 @@ impl Screen for ChestScreen {
                 ctx.world_state.player.inventory.current_weight().abs(),
                 ctx.world_state.player.inventory.max_weight()
             );
-            if ctx.world_state.player.inventory.current_weight() >= ctx.world_state.player.inventory.max_weight() * 0.9 {
-                d.draw_text(
-                &player_weight_text,
-                8,
-                22,
-                10,
-                Color::RED,
-                );
+            if ctx.world_state.player.inventory.current_weight()
+                >= ctx.world_state.player.inventory.max_weight() * 0.9
+            {
+                d.draw_text(&player_weight_text, 8, 22, 10, Color::RED);
             } else {
-                d.draw_text(
-                &player_weight_text,
-                8,
-                22,
-                10,
-                Color::DARKGRAY,
-                );
+                d.draw_text(&player_weight_text, 8, 22, 10, Color::DARKGRAY);
             }
-            
+
             if let Some(chest_inv) = ctx.world_state.chests.get(&self.chest_position) {
                 let chest_weight_text = format!(
                     "Weight: {:.1}/{:.1}",
@@ -308,22 +298,10 @@ impl Screen for ChestScreen {
                     chest_inv.max_weight()
                 );
                 if chest_inv.current_weight() >= chest_inv.max_weight() * 0.9 {
-                d.draw_text(
-                &chest_weight_text,
-                210,
-                22,
-                10,
-                Color::RED,
-                );
-            } else {
-                d.draw_text(
-                &chest_weight_text,
-                210,
-                22,
-                10,
-                Color::DARKGRAY,
-                );
-            }
+                    d.draw_text(&chest_weight_text, 210, 22, 10, Color::RED);
+                } else {
+                    d.draw_text(&chest_weight_text, 210, 22, 10, Color::DARKGRAY);
+                }
             }
 
             // Draw player inventory slots
@@ -421,28 +399,28 @@ impl Screen for ChestScreen {
                     );
 
                     // Draw item count in bottom-right corner
-                let count_text = item_stack.count.to_string();
-                let count_text_size = item_stack.count.ilog10() as i32 * 3;
-                let text_size = 10;
+                    let count_text = item_stack.count.to_string();
+                    let count_text_size = item_stack.count.ilog10() as i32 * 3;
+                    let text_size = 10;
 
-                // Position text in bottom-right corner with small padding
-                let text_x = slot_x + slot_size - count_text_size as f32 - 14.0; // 14px from right for padding
-                let text_y = slot_y + slot_size - 4.0; // 4px from bottom for padding
+                    // Position text in bottom-right corner with small padding
+                    let text_x = slot_x + slot_size - count_text_size as f32 - 14.0; // 14px from right for padding
+                    let text_y = slot_y + slot_size - 4.0; // 4px from bottom for padding
 
-                d.draw_text(
-                    &count_text,
-                    text_x as i32 + 1,
-                    text_y as i32 - 1,
-                    text_size,
-                    Color::new(0, 0, 0, 127),
-                );
-                d.draw_text(
-                    &count_text,
-                    text_x as i32,
-                    text_y as i32,
-                    text_size,
-                    Color::LIGHTSEAGREEN,
-                );
+                    d.draw_text(
+                        &count_text,
+                        text_x as i32 + 1,
+                        text_y as i32 - 1,
+                        text_size,
+                        Color::new(0, 0, 0, 127),
+                    );
+                    d.draw_text(
+                        &count_text,
+                        text_x as i32,
+                        text_y as i32,
+                        text_size,
+                        Color::LIGHTSEAGREEN,
+                    );
                 }
             }
 
