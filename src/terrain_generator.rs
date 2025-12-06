@@ -1109,7 +1109,8 @@ impl TerrainGenerator {
             for ly in 0..(CHUNK_SIZE - 1) {
                 let wy = coord.y * chunk_size + ly as i32;
                 // Only spawn below sea level (wy > SEA_LEVEL means underwater)
-                if wy <= -3 { // changed from SEA_LEVEL as the clams were de-spawning
+                if wy <= -3 {
+                    // changed from SEA_LEVEL as the clams were de-spawning
                     continue;
                 }
                 // Check if current tile is air and tile below is sand

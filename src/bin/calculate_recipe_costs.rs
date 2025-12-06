@@ -94,9 +94,7 @@ fn main() {
     // Print other tools
     println!("\nOTHER TOOLS:");
     println!("============\n");
-    let other_tools = vec![
-        ("tidalcave_clock", "Tidalcave Clock"),
-    ];
+    let other_tools = vec![("tidalcave_clock", "Tidalcave Clock")];
     for (tool_id, tool_name) in other_tools {
         println!("{}:", tool_name);
         let costs = calculate_total_cost(tool_id, &all_recipes, &mut HashMap::new());
@@ -105,14 +103,14 @@ fn main() {
     }
 
     println!("\n=== ESTIMATED CHUNKS TO EXPLORE ===\n");
-    
+
     for (tool_id, tool_name) in &[
         ("etherealite_pickaxe", "Etherealite Pickaxe"),
         ("diamond_amulet", "Diamond Amulet"),
     ] {
         println!("{}:", tool_name);
         println!("{}", "=".repeat(tool_name.len() + 1));
-        
+
         let costs = calculate_total_cost(tool_id, &all_recipes, &mut HashMap::new());
         estimate_chunks_needed(&costs, &ore_gen);
         println!();
@@ -142,7 +140,7 @@ fn calculate_total_cost(
 
             // Recursively expand this input (whether it has a recipe or not)
             let sub_costs = calculate_total_cost(&input.item_type, recipes, memo);
-            
+
             if sub_costs.is_empty() {
                 // This is a base resource (no recipe and no sub-costs)
                 *total_costs.entry(input.item_type.clone()).or_insert(0) += input.amount;
@@ -228,12 +226,30 @@ fn load_ore_generation(path: &str) -> HashMap<String, OreGeneration> {
         for (key, value) in ore_table {
             if let Some(table) = value.as_table() {
                 let gen = OreGeneration {
-                    spawns_from: table.get("spawns_from").and_then(|v| v.as_integer()).unwrap_or(0) as i32,
-                    spawns_peak: table.get("spawns_peak").and_then(|v| v.as_integer()).unwrap_or(0) as i32,
-                    spawns_to: table.get("spawns_to").and_then(|v| v.as_integer()).unwrap_or(0) as i32,
-                    spawns_pap: table.get("spawns_pap").and_then(|v| v.as_float()).unwrap_or(0.0) as f32,
-                    min_vein_size: table.get("min_vein_size").and_then(|v| v.as_integer()).unwrap_or(1) as u32,
-                    max_vein_size: table.get("max_vein_size").and_then(|v| v.as_integer()).unwrap_or(1) as u32,
+                    spawns_from: table
+                        .get("spawns_from")
+                        .and_then(|v| v.as_integer())
+                        .unwrap_or(0) as i32,
+                    spawns_peak: table
+                        .get("spawns_peak")
+                        .and_then(|v| v.as_integer())
+                        .unwrap_or(0) as i32,
+                    spawns_to: table
+                        .get("spawns_to")
+                        .and_then(|v| v.as_integer())
+                        .unwrap_or(0) as i32,
+                    spawns_pap: table
+                        .get("spawns_pap")
+                        .and_then(|v| v.as_float())
+                        .unwrap_or(0.0) as f32,
+                    min_vein_size: table
+                        .get("min_vein_size")
+                        .and_then(|v| v.as_integer())
+                        .unwrap_or(1) as u32,
+                    max_vein_size: table
+                        .get("max_vein_size")
+                        .and_then(|v| v.as_integer())
+                        .unwrap_or(1) as u32,
                 };
                 ore_gen.insert(key.clone(), gen);
             }
@@ -246,13 +262,15 @@ fn load_ore_generation(path: &str) -> HashMap<String, OreGeneration> {
 fn estimate_chunks_needed(costs: &HashMap<String, u32>, ore_gen: &HashMap<String, OreGeneration>) {
     // The ore generation probability is per chunk
     let blocks_per_chunk = (CHUNK_SIZE * CHUNK_SIZE) as f32;
-    
-    println!("  Ore generation probability is per chunk ({}x{} blocks = {} blocks):\n", 
-             CHUNK_SIZE, CHUNK_SIZE, blocks_per_chunk);
+
+    println!(
+        "  Ore generation probability is per chunk ({}x{} blocks = {} blocks):\n",
+        CHUNK_SIZE, CHUNK_SIZE, blocks_per_chunk
+    );
 
     // Group ores by depth range
     let mut depth_ranges: HashMap<&str, Vec<(&str, u32, &OreGeneration)>> = HashMap::new();
-    
+
     for (item_name, &amount) in costs {
         if let Some(gen) = ore_gen.get(item_name) {
             let depth_label = match gen.spawns_peak {
@@ -263,8 +281,9 @@ fn estimate_chunks_needed(costs: &HashMap<String, u32>, ore_gen: &HashMap<String
                 701..=850 => "Very Deep (700-850)",
                 _ => "Extreme (850+)",
             };
-            
-            depth_ranges.entry(depth_label)
+
+            depth_ranges
+                .entry(depth_label)
                 .or_insert_with(Vec::new)
                 .push((item_name.as_str(), amount, gen));
         }
@@ -283,40 +302,42 @@ fn estimate_chunks_needed(costs: &HashMap<String, u32>, ore_gen: &HashMap<String
     });
 
     let mut total_chunks_by_depth: Vec<(&str, f32)> = Vec::new();
-    
+
     for (depth_label, ores) in sorted_ranges {
         println!("  {} depth:", depth_label);
-        
+
         let mut max_chunks_this_depth = 0.0_f32;
-        
+
         for (ore_name, amount, gen) in ores {
             // Calculate average vein size
             let avg_vein_size = (gen.min_vein_size + gen.max_vein_size) as f32 / 2.0;
-            
+
             // Probability per chunk at peak depth (as decimal)
             let prob_per_chunk = gen.spawns_pap / 100.0;
-            
+
             // Expected ore per chunk at peak depth
             // Each chunk has 'prob_per_chunk' chance to spawn a vein of 'avg_vein_size'
             let expected_ore_per_chunk = prob_per_chunk * avg_vein_size;
-            
+
             // Chunks needed (at peak depth)
             let chunks_needed = if expected_ore_per_chunk > 0.0 {
                 (amount as f32 / expected_ore_per_chunk).ceil()
             } else {
                 f32::INFINITY
             };
-            
+
             max_chunks_this_depth = max_chunks_this_depth.max(chunks_needed);
-            
-            println!("    {} x {} - ~{:.0} chunks (depth {}-{})",
-                amount, ore_name, chunks_needed, gen.spawns_from, gen.spawns_to);
+
+            println!(
+                "    {} x {} - ~{:.0} chunks (depth {}-{})",
+                amount, ore_name, chunks_needed, gen.spawns_from, gen.spawns_to
+            );
         }
-        
+
         total_chunks_by_depth.push((depth_label, max_chunks_this_depth));
         println!();
     }
-    
+
     println!("  Summary:");
     for (depth_label, max_chunks) in total_chunks_by_depth {
         if max_chunks.is_finite() && max_chunks > 0.0 {
@@ -327,11 +348,8 @@ fn estimate_chunks_needed(costs: &HashMap<String, u32>, ore_gen: &HashMap<String
 
 fn parse_recipe(key: &str, value: &toml::Value) -> Option<Recipe> {
     let table = value.as_table()?;
-    
-    let output = table
-        .get("output")
-        .and_then(|v| v.as_str())
-        .unwrap_or(key);
+
+    let output = table.get("output").and_then(|v| v.as_str()).unwrap_or(key);
     let output = normalize_name(output);
 
     let inputs_array = table.get("inputs").and_then(|v| v.as_array())?;
@@ -342,7 +360,7 @@ fn parse_recipe(key: &str, value: &toml::Value) -> Option<Recipe> {
         let item_type = input_table.get("type").and_then(|v| v.as_str())?;
         let item_type = normalize_name(item_type);
         let amount = input_table.get("amount").and_then(|v| v.as_integer())? as u32;
-        
+
         inputs.push(RecipeInput { item_type, amount });
     }
 
@@ -367,7 +385,7 @@ fn print_costs(costs: &HashMap<String, u32>) {
     // Sort by amount (descending) for better readability
     let mut sorted_costs: Vec<_> = costs.iter().collect();
     sorted_costs.sort_by(|a, b| b.1.cmp(a.1));
-    
+
     for (item, amount) in sorted_costs {
         println!("  {} x {}", amount, item);
     }

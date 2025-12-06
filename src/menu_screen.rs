@@ -202,7 +202,7 @@ impl Screen for MenuScreen {
             subtitle_size,
             Color::new(0, 0, 0, 127),
         );
-          d.draw_text(
+        d.draw_text(
             subtitle,
             (1600 - subtitle_width) / 2,
             350,
