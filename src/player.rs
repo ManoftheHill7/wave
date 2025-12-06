@@ -89,6 +89,7 @@ pub struct Player {
     pub started_mining_at: f32,
     pub dashed_at: f32,
     pub last_action_at: f32,
+    pub pickup_item_at: f32,
     pub time: f32,
 
     pub dashes: i32,
@@ -133,6 +134,10 @@ pub struct Player {
     /// Nearby pickup block position and name (for UI prompt)
     #[serde(skip)]
     pub nearby_pickup: Option<(i32, i32, &'static str)>,
+    
+    // Item pickup block name
+    #[serde(skip)]
+    pub item_pickup: Option<(u32, &'static str)>,
 
     // Sound timing (not saved)
     #[serde(skip)]
@@ -198,6 +203,7 @@ impl Player {
             started_mining_at: -999.0,
             dashed_at: -999.0,
             last_action_at: -999.0,
+            pickup_item_at: -999.0,
             time: 0.0,
 
             dashes: 0,
@@ -233,6 +239,7 @@ impl Player {
             is_gliding: false,
 
             nearby_pickup: None,
+            item_pickup: None,
 
             last_pickaxe_sound: 0.0,
             last_footstep_sound: 0.0,
@@ -841,6 +848,8 @@ impl Player {
                 if let Some((item_type, amount)) = block.get_drops() {
                     self.inventory.add(item_type, amount);
                     terrain.set(x, y, Block::Air);
+                    self.item_pickup = Some((amount, block.name()));
+                    self.pickup_item_at = self.time;
                 }
             }
         }
@@ -887,8 +896,8 @@ impl Player {
         let mut ox = 0.0;
         let mut oy = 0.0;
         while vx * vx + vy * vy < distance2 {
-            // Stop raycast at solid blocks or ladders (ladders can be targeted for placement)
-            if terrain.solid_terrain_at(map_x, map_y) || terrain.at(map_x, map_y).is_ladder() {
+            // Stop raycast at solid blocks, spikes, or ladders (ladders can be targeted for placement)
+            if terrain.solid_terrain_at(map_x, map_y) || terrain.at(map_x, map_y).is_spike() || terrain.at(map_x, map_y).is_ladder() {
                 return RaycastResult {
                     final_position: Vector2::new(vx + start.x, vy + start.y),
                     last_free_position: Vector2::new(ox + start.x, oy + start.y),
@@ -933,8 +942,8 @@ impl Player {
         if let Some(spike_type) = terrain.collides_with_spike_terrain(
             self.position.x,
             self.position.y,
-            self.width,
-            self.height,
+            self.width - 0.25,
+            self.height - 0.25,
         ) {
             if !self.within_grace(self.spike_touched_at, SPIKE_IMMUNITY_COOLDOWN) {
                 self.health -= 1;
@@ -1254,10 +1263,13 @@ impl Player {
                         if matches!(broken_block, Block::WoodenChest) {
                             chests.remove(&(block_x, block_y));
                         }
+                        
 
                         // Add drops to inventory
                         if let Some((item_type, amount)) = broken_block.get_drops() {
                             self.inventory.add(item_type, amount);
+                            self.item_pickup = Some((amount, broken_block.name()));
+                            self.pickup_item_at = self.time;
                         }
                     }
                 }

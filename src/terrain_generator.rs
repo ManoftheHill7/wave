@@ -1114,8 +1114,8 @@ impl TerrainGenerator {
                 }
                 // Check if current tile is air and tile below is sand
                 if chunk.get(lx, ly) == Block::Air && chunk.get(lx, ly + 1) == Block::Sand {
-                    // 75% chance to spawn a clam
-                    if rng.gen_bool(0.75) {
+                    // 15% chance to spawn a clam
+                    if rng.gen_bool(0.15) {
                         chunk.set(lx, ly, Block::Clam);
                     }
                 }

@@ -227,13 +227,34 @@ impl WorldState {
             }
         }
 
+        // Add lights from lumosite ore in the world
+        // Use LIGHTING_RANGE to ensure all found lumosite ore get lighting calculated
+        for dx in -LIGHTING_RANGE..=LIGHTING_RANGE {
+            for dy in -LIGHTING_RANGE..=LIGHTING_RANGE {
+                let tx = px + dx;
+                let ty = py + dy;
+                let block = self.terrain.at(tx, ty);
+
+                let light_type = match block {
+                    Block::LumositeOre => Some(LightType::LumositeOre),
+                    _ => None,
+                };
+
+                if let Some(lt) = light_type {
+                    let ore_pos = Vector2::new(tx as f32 + 0.5, ty as f32 + 0.5);
+                    let ore_light = Light::new(ore_pos, lt);
+                    self.lighting_system.add_light(ore_light);
+                }
+            }
+        }
+
         // Calculate shadows for all lights
         self.lighting_system
             .calculate_shadows(&self.terrain, px, py, RENDER_RANGE);
 
-        // Calculate solid block lighting
+        // Calculate opaque block lighting
         self.lighting_system
-            .calculate_solid_lighting(&self.terrain, px, py, LIGHTING_RANGE);
+            .calculate_opaque_lighting(&self.terrain, px, py, LIGHTING_RANGE);
     }
 
     pub fn update(&mut self, dt: f32, controller: &Controller) {

@@ -602,6 +602,10 @@ impl Terrain {
     }
 
     pub fn solid_terrain_at(&self, x: i32, y: i32) -> bool {
+        self.at(x, y).is_solid() || self.at(x, y).is_transparent()
+    }
+
+    pub fn opaque_terrain_at(&self, x: i32, y: i32) -> bool {
         self.at(x, y).is_solid()
     }
 

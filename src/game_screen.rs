@@ -1,11 +1,12 @@
 use crate::inventory_screen::InventoryScreen;
-use crate::player::{Player, SPIKE_IMMUNITY_COOLDOWN};
+use crate::player::{self, Player, SPIKE_IMMUNITY_COOLDOWN};
 use crate::terrain::{Block, Terrain, CELL_RESOLUTION, CHUNK_SIZE, NO_LIQUID_THRESHOLD};
 use crate::tools::ToolType;
 use crate::world::{LIGHTING_RANGE, RENDER_RANGE};
 use crate::{pixels_per_world_unit, tools, GameContext, Neighbors, ShaderLocs};
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
+use toml::to_string;
 
 // Sound effect intervals (in seconds)
 const PICKAXE_SOUND_INTERVAL: f32 = 1.0;
@@ -1434,6 +1435,35 @@ impl Screen for GameScreen {
         // Draw right hand slot (right click tool)
         draw_hand_slot(ctx.world_state.player.right_hand, hud_x + right_offset, "R");
 
+        // Draw block tile gained notification
+        if ctx.world_state.player.within_grace(ctx.world_state.player.pickup_item_at, 0.75) {
+            let popup: String = if let Some((item_amount, item_name)) = ctx.world_state.player.item_pickup {
+                format!("+{} {}", item_amount, item_name)
+            } else {
+                String::new()
+            };          
+            let text_width = d.measure_text(&popup, 20);
+            let text_x = (self.screen_width - text_width as f32) / 2.0;
+            let text_y = self.screen_height / 2.0 - 50.0;
+
+            // Draw background box
+            d.draw_rectangle(
+            text_x as i32 - 10,
+            text_y as i32 - 5,
+            text_width + 20,
+            30,
+            Color::new(0, 0, 0, 180)
+            );
+            // Draw text
+            d.draw_text(
+            &popup, 
+            text_x as i32, 
+            text_y as i32, 
+            20, 
+            Color::YELLOW
+            );   
+        }
+                
         // Draw tideclock HUD if player has tideclock equipped in either hand
         let has_tideclock_equipped = matches!(
             ctx.world_state.player.left_hand,
