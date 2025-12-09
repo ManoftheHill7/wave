@@ -286,27 +286,27 @@ impl Screen for InventoryScreen {
         let render_target = self.render_target.as_mut().unwrap();
 
         {
-        let mut d = rl.begin_texture_mode(thread, render_target);
-        let stone_background = &ctx.textures.tiles.stone;
-        let stone_scale = 4.0;
-        let stone_size = stone_background.width as f32 * stone_scale;
-        let stone_grid_cols = 13;
-        let stone_grid_rows = 8;
+            let mut d = rl.begin_texture_mode(thread, render_target);
+            let stone_background = &ctx.textures.tiles.stone;
+            let stone_scale = 4.0;
+            let stone_size = stone_background.width as f32 * stone_scale;
+            let stone_grid_cols = 13;
+            let stone_grid_rows = 8;
 
-        for row in 0..stone_grid_rows {
-            for col in 0..stone_grid_cols {
-                let stone_grid_x = col as f32 * stone_size;
-                let stone_grid_y = row as f32 * stone_size;
+            for row in 0..stone_grid_rows {
+                for col in 0..stone_grid_cols {
+                    let stone_grid_x = col as f32 * stone_size;
+                    let stone_grid_y = row as f32 * stone_size;
 
-                d.draw_texture_ex(
-                    stone_background,
-                    Vector2::new(stone_grid_x, stone_grid_y),
-                    0.0,
-                    stone_scale,
-                    Color::GRAY,
-                );
+                    d.draw_texture_ex(
+                        stone_background,
+                        Vector2::new(stone_grid_x, stone_grid_y),
+                        0.0,
+                        stone_scale,
+                        Color::GRAY,
+                    );
+                }
             }
-        }
             // Display weight information above the inventory grid
             let weight_text = format!(
                 "Weight: {:.1}/{:.1}",
@@ -316,21 +316,23 @@ impl Screen for InventoryScreen {
 
             let weight_x = 8.0;
             let weight_y = 8.0;
-            if ctx.world_state.player.inventory.current_weight() >= ctx.world_state.player.inventory.max_weight() * 0.9 {
+            if ctx.world_state.player.inventory.current_weight()
+                >= ctx.world_state.player.inventory.max_weight() * 0.9
+            {
                 d.draw_text(
-                &weight_text,
-                weight_x as i32,
-                weight_y as i32,
-                10,
-                Color::RED,
+                    &weight_text,
+                    weight_x as i32,
+                    weight_y as i32,
+                    10,
+                    Color::RED,
                 );
             } else {
                 d.draw_text(
-                &weight_text,
-                weight_x as i32,
-                weight_y as i32,
-                10,
-                Color::DARKGRAY,
+                    &weight_text,
+                    weight_x as i32,
+                    weight_y as i32,
+                    10,
+                    Color::DARKGRAY,
                 );
             }
 
@@ -633,7 +635,7 @@ impl Screen for InventoryScreen {
                     }
                 };
 
-             draw_tool_slot(
+            draw_tool_slot(
                 0,
                 ctx.world_state
                     .player

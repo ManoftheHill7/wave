@@ -158,10 +158,10 @@ impl GameContext {
             },
             controller: Controller::new(),
             world_state,
-            #[cfg(target_arch = "wasm32")]
-            debug_enabled: false,
-            #[cfg(not(target_arch = "wasm32"))]
+            #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
             debug_enabled: true,
+            #[cfg(not(all(debug_assertions, not(target_arch = "wasm32"))))]
+            debug_enabled: false,
             updating: true,
             music,
             sounds,
@@ -170,7 +170,8 @@ impl GameContext {
     }
 
     pub fn handle_debug_input(&mut self, rl: &RaylibHandle) {
-        #[cfg(not(target_arch = "wasm32"))]
+        // Debug toggles only available in debug builds (not release, not WASM)
+        #[cfg(all(debug_assertions, not(target_arch = "wasm32")))]
         {
             if rl.is_key_pressed(KeyboardKey::KEY_SLASH) {
                 self.debug_enabled = !self.debug_enabled;

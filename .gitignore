@@ -9,3 +9,9 @@ assets/maps/gen_v_*.png
 web/*.js
 web/*.wasm
 web/*.data
+
+# Release build artifacts
+release-build/
+tidalcave-linux.tar.gz
+tidalcave-windows.zip
+waves-web.tar.gz

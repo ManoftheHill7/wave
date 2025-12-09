@@ -73,6 +73,12 @@
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('progress').classList.add('hidden');
                 document.getElementById('canvas').classList.remove('hidden');
+                
+                // Prevent right-click context menu on the canvas
+                document.getElementById('canvas').addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    return false;
+                });
             },
             setStatus: function(text) {
                 var loading = document.getElementById('loading');
