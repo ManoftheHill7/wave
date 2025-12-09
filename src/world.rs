@@ -66,6 +66,7 @@ pub struct WorldState {
     pub ghost_mode: bool,
     pub chests: HashMap<(i32, i32), Inventory>,
     pub active_bombs: Vec<ActiveBomb>,
+    tick_timer: f32,
     flow_timer: f32,
     tide_timer: f32,
     illuminate_timer: f32,
@@ -84,10 +85,15 @@ impl WorldState {
             ghost_mode: false,
             chests: HashMap::new(),
             active_bombs: Vec::new(),
+            tick_timer: 0.0,
             flow_timer: 0.0,
             illuminate_timer: 0.0,
             tide_timer: 0.0,
         }
+    }
+
+    pub fn tick(&mut self) {
+        self.terrain.tick();
     }
 
     pub fn get_flow_timer(&self) -> f32 {
@@ -320,12 +326,17 @@ impl WorldState {
         self.terrain
             .unload_distant_chunks(px, py, unload_chunk_radius);
 
+        // Update tick every 10 sec
+        self.tick_timer += dt;
+        if self. tick_timer > 10.0 {
+            self.tick_timer = 0.0;
+            self.tick();
+        }
         self.update_tides();
         self.update_bombs(dt);
     }
 
     fn update_bombs(&mut self, dt: f32) {
-        use crate::terrain::Block;
 
         // Update all bomb timers
         for bomb in &mut self.active_bombs {

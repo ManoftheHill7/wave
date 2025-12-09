@@ -1,5 +1,7 @@
 use crate::{inventory::ItemType, terrain_generator::Generator};
 use std::collections::HashMap;
+use rand::{Rng, SeedableRng};
+use rand::rngs::StdRng;
 
 pub const CHUNK_SIZE: usize = 64;
 pub const CELLS_PER_TILE: usize = CELL_RESOLUTION * CELL_RESOLUTION;
@@ -115,6 +117,26 @@ impl Chunk {
             dirty: false,
         }
     }
+
+    pub fn tick(&mut self) {
+        for i in 0..self.blocks.len() {
+            let b = self.blocks[i];
+            // Randomly places a clam w/ black or white pearl
+            if b == Block::Clam {
+                let mut rng = rand::thread_rng();
+                let seed= rng.gen();
+                let mut prng = rand::rngs::StdRng::seed_from_u64(seed);
+                if prng.gen_bool(0.99) {
+                } else {
+                    if prng.gen_bool(0.95) {
+                        self.blocks[i] = Block::ClamWhitePearl;
+                    } else {
+                        self.blocks[i] = Block::ClamBlackPearl;
+                    }
+                }
+            }
+        }
+    } 
 
     pub fn get(&self, local_x: usize, local_y: usize) -> Block {
         // Check if this tile is part of a multi-tile block
@@ -490,6 +512,12 @@ impl Terrain {
             chunk_size: CHUNK_SIZE as i32,
             generator: Generator::Procedural(crate::terrain_generator::TerrainGenerator::new(seed)),
             save_slot: None,
+        }
+    }
+
+    pub fn tick(&mut self) {
+        for mut c in self.chunks.values_mut() {
+            c.tick();
         }
     }
 

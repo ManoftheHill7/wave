@@ -79,19 +79,16 @@ amount = 2
 
 [blocks.clam]
 name = "Clam"
-type = "pickup"
-drops = "white_pearl"
-amount = 1
-image = "tiles.clam_white_pearl"
+type = "air"
 
 [blocks.clam_white_pearl]
-name = "Clam White Pearl"
+name = "White Pearl"
 type = "pickup"
 drops = "white_pearl"
 amount = 1
 
 [blocks.clam_black_pearl]
-name = "Clam Black Pearl"
+name = "Black Pearl"
 type = "pickup"
 drops = "black_pearl"
 amount = 1

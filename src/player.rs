@@ -847,7 +847,11 @@ impl Player {
                 let block = terrain.at(x, y);
                 if let Some((item_type, amount)) = block.get_drops() {
                     self.inventory.add(item_type, amount);
-                    terrain.set(x, y, Block::Air);
+                    if block == Block::ClamWhitePearl || block == Block::ClamBlackPearl {
+                        terrain.set(x, y, Block::Clam);
+                    } else {
+                        terrain.set(x, y, Block::Air);
+                    }
                     self.item_pickup = Some((amount, block.name()));
                     self.pickup_item_at = self.time;
                 }
@@ -940,10 +944,10 @@ impl Player {
 
     fn spike_check(&mut self, terrain: &Terrain) -> bool {
         if let Some(spike_type) = terrain.collides_with_spike_terrain(
-            self.position.x,
-            self.position.y,
-            self.width - 0.25,
-            self.height - 0.25,
+            self.position.x + 0.25,
+            self.position.y + 0.25,
+            self.width - 0.5,
+            self.height - 0.5,
         ) {
             if !self.within_grace(self.spike_touched_at, SPIKE_IMMUNITY_COOLDOWN) {
                 self.health -= 1;
