@@ -887,7 +887,7 @@ impl TerrainGenerator {
             }
         }
 
-        // Add flax flowers on grass tiles (20% chance per grass block)
+        // Add flax flowers and canola on grass tiles (20% chance per grass block)
         let mut flax_rng =
             StdRng::seed_from_u64(self.seed.wrapping_add(coord.x as u64).wrapping_add(2000));
         for lx in 0..CHUNK_SIZE {
@@ -899,6 +899,9 @@ impl TerrainGenerator {
                         // 10% chance to spawn flax
                         if flax_rng.gen_range(0..100) < 10 {
                             chunk.set(lx, ly - 1, Block::Flax);
+                        }
+                        if flax_rng.gen_range(10..110) < 20 {
+                            chunk.set(lx, ly - 1, Block::Canola);
                         }
                     }
                 }
@@ -1109,7 +1112,7 @@ impl TerrainGenerator {
             for ly in 0..(CHUNK_SIZE - 1) {
                 let wy = coord.y * chunk_size + ly as i32;
                 // Only spawn below sea level (wy > SEA_LEVEL means underwater)
-                if wy <= SEA_LEVEL {
+                if wy <= SEA_LEVEL + 3 {
                     continue;
                 }
                 // Check if current tile is air and tile below is sand
@@ -1143,7 +1146,7 @@ impl TerrainGenerator {
 
         // Trunk
         for i in 0..trunk_height {
-            let trunk_y = y - i;
+            let trunk_y = y - 1 - i;
 
             if self.is_in_chunk(x, trunk_y, chunk_coord) {
                 let (lx, ly) = self.world_to_local(x, trunk_y, chunk_coord);

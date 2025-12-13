@@ -205,14 +205,14 @@ amount = 1
 
 # amulet repairs
 
-[tool_recipes.pearl_amulet]
+[tool_recipes.white_pearl_amulet]
 type = "anvil"
-output = "pearl_amulet"
+output = "white_pearl_amulet"
 amount = 1
-[[tool_recipes.pearl_amulet.inputs]]
-type = "pearl_amulet"
+[[tool_recipes.white_pearl_amulet.inputs]]
+type = "white_pearl_amulet"
 amount = 1
-[[tool_recipes.pearl_amulet.inputs]]
+[[tool_recipes.white_pearl_amulet.inputs]]
 type = "white pearl"
 amount = 1
 

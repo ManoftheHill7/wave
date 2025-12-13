@@ -1445,7 +1445,7 @@ impl Screen for GameScreen {
             };          
             let text_width = d.measure_text(&popup, 20);
             let text_x = (self.screen_width - text_width as f32) / 2.0;
-            let text_y = self.screen_height / 2.0 - 50.0;
+            let text_y = self.screen_height / 1.25;
 
             // Draw background box
             d.draw_rectangle(

@@ -170,17 +170,17 @@ amount = 5
 type = "stick"
 amount = 3
 
-[tool_recipes.pearl_amulet]
+[tool_recipes.white_pearl_amulet]
 type = "workbench"
-output = "pearl_amulet"
+output = "white_pearl_amulet"
 amount = 1
-[[tool_recipes.pearl_amulet.inputs]]
+[[tool_recipes.white_pearl_amulet.inputs]]
 type = "rope"
 amount = 1
-[[tool_recipes.pearl_amulet.inputs]]
+[[tool_recipes.white_pearl_amulet.inputs]]
 type = "white pearl"
 amount = 2
-[[tool_recipes.pearl_amulet.inputs]]
+[[tool_recipes.white_pearl_amulet.inputs]]
 type = "bronze bar"
 amount = 2
 

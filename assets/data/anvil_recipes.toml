@@ -108,7 +108,7 @@ type = "anvil"
 output = "amethyst_amulet"
 amount = 1
 [[tool_recipes.amethyst_amulet_upgrade.inputs]]
-type = "pearl_amulet"
+type = "white_pearl_amulet"
 amount = 1
 [[tool_recipes.amethyst_amulet_upgrade.inputs]]
 type = "amethyst"
@@ -145,26 +145,26 @@ amount = 2
 type = "gold bar"
 amount = 2
 
-#[tool_recipes.black_pearl_amulet_upgrade]
-#type = "anvil"
-#output = "black_pearl_amulet"
-#amount = 1
-#[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
-#type = "emerald_amulet"
-#amount = 1
-#[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
-#type = "black pearl"
-#amount = 2
-#[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
-#type = "gold bar"
-#amount = 2
+[tool_recipes.black_pearl_amulet_upgrade]
+type = "anvil"
+output = "black_pearl_amulet"
+amount = 1
+[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
+type = "emerald_amulet"
+amount = 1
+[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
+type = "black pearl"
+amount = 2
+[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
+type = "gold bar"
+amount = 2
 
 [tool_recipes.topaz_amulet_upgrade]
 type = "anvil"
 output = "topaz_amulet"
 amount = 1
 [[tool_recipes.topaz_amulet_upgrade.inputs]]
-type = "emerald_amulet" #"black_pearl_amulet"
+type = "black_pearl_amulet"
 amount = 1
 [[tool_recipes.topaz_amulet_upgrade.inputs]]
 type = "topaz"
