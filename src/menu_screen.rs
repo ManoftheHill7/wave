@@ -113,6 +113,11 @@ impl Screen for MenuScreen {
         // Check button clicks
         if ctx.controller.left_hand_pressed {
             if self.hovered_button == Some(ButtonType::NewGame) {
+                // Delete immediately so old chunks are not loaded
+                match save_load::delete_save(0) {
+                    Ok(()) => println!("✓ Old game deleted!"),
+                    Err(e) => eprintln!("✗ Failed to delete old game: {}", e),
+                }
                 // Save immediately so chunks can be saved/loaded from files
                 match save_load::save_game(&mut ctx.world_state, 0) {
                     Ok(()) => println!("✓ New game saved!"),

@@ -117,20 +117,18 @@ impl Chunk {
         }
     }
 
-    pub fn tick(&mut self) {
+    pub fn tick(&mut self, tree_locs: &mut Vec<(i32, i32)>) {
+        let mut tick_rng = rand::thread_rng();
+        let tick_seed= tick_rng.gen();
+        let mut tick_prng = rand::rngs::StdRng::seed_from_u64(tick_seed);
 
         // Randomly replaces a clam w/ black or white pearl
         if self.coord.x == 0 && self.coord.y == 0 {
             for i in 0..self.blocks.len() {
                 let b = self.blocks[i];
-   
                 if b == Block::Clam {
-                    let mut rng = rand::thread_rng();
-                    let seed= rng.gen();
-                    let mut prng = rand::rngs::StdRng::seed_from_u64(seed);
-                    if prng.gen_bool(0.99) {
-                    } else {
-                        if prng.gen_bool(0.95) {
+                    if !tick_prng.gen_bool(0.99) {
+                        if tick_prng.gen_bool(0.95) {
                             self.blocks[i] = Block::ClamWhitePearl;
                         } else {
                             self.blocks[i] = Block::ClamBlackPearl;
@@ -139,7 +137,7 @@ impl Chunk {
                 }
             }
         }
-    
+
         // Grows a tree when a leaves, log, and dirt block are positioned on top of each other
         if self.coord.y < 0 && self.coord.y > -3 {
             for local_x in 0..CHUNK_SIZE {
@@ -147,42 +145,8 @@ impl Chunk {
                     if Chunk::get(self, local_x, local_y) == Block::Log 
                     && Chunk::get(self, local_x, local_y + 1) == Block::Dirt
                     && Chunk::get(self, local_x, local_y - 1) == Block::Leaves {
-                        let mut rng = rand::thread_rng();
-                        let seed= rng.gen();
-                        let mut prng = rand::rngs::StdRng::seed_from_u64(seed);
-                        if prng.gen_bool(0.99) {
-                        } else {
-                            let tree_height = prng.gen_range(8..15);
-                            let tree_width = prng.gen_range(3..6);
-                                    
-                            // Trunk
-                            let trunk_height = (tree_height as f32 * 0.6).ceil() as i32;
-                            for i in 0..trunk_height {
-                                let trunk_y = local_y as i32 - 1 - i;
-                                Chunk::set(self, local_x, trunk_y as usize, Block::Log); 
-                            }
-
-                            // Leaves
-                            let canopy_height = tree_height - trunk_height;
-                            let canopy_base_y = local_y as i32 - trunk_height;
-                            for layer in 0..canopy_height {
-                                let canopy_y = canopy_base_y - layer;
-
-                                let layer_ratio = 1.0 - (layer as f32 / canopy_height as f32) * 0.5;
-                                let layer_width = ((tree_width as f32 * layer_ratio).ceil() as i32).max(1);
-
-                                let layer_width = if layer_width % 2 == 0 {
-                                    layer_width + 1
-                                } else {
-                                    layer_width
-                                };
-                                let half_width = layer_width / 2;
-
-                                for dx in -half_width..=half_width {
-                                    let leaves_x = local_x as i32 + dx;
-                                    Chunk::set(self, leaves_x as usize, canopy_y as usize, Block::Leaves);
-                                }
-                            }
+                        if !tick_prng.gen_bool(0.95) {
+                            tree_locs.push((local_x as i32 + CHUNK_SIZE as i32 * self.coord.x, local_y as i32 + CHUNK_SIZE as i32 * self.coord.y));
                         }
                     }
                 }
@@ -568,9 +532,48 @@ impl Terrain {
     }
 
     pub fn tick(&mut self) {
-        for mut c in self.chunks.values_mut() {
-            c.tick();
+        let mut tree_locs = Vec::new();
+        for c in self.chunks.values_mut() {
+            c.tick(&mut tree_locs);
         }
+        let mut tick_rng = rand::thread_rng();
+        let tick_seed= tick_rng.gen();
+        let mut tick_prng = rand::rngs::StdRng::seed_from_u64(tick_seed);
+
+        for tree in tree_locs {
+                let (x, y) = tree;
+                let tree_height = tick_prng.gen_range(8..15);
+                let tree_width = tick_prng.gen_range(3..6);
+                        
+                // Trunk
+                let trunk_height = (tree_height as f32 * 0.6).ceil() as i32;
+                for i in 0..trunk_height {
+                    let trunk_y = y - 1 - i;
+                    self.set(x, trunk_y, Block::Log);
+                }
+
+                // Leaves
+                let canopy_height = tree_height - trunk_height;
+                let canopy_base_y = y - trunk_height;
+                for layer in 0..canopy_height {
+                    let canopy_y = canopy_base_y - layer;
+
+                    let layer_ratio = 1.0 - (layer as f32 / canopy_height as f32) * 0.5;
+                    let layer_width = ((tree_width as f32 * layer_ratio).ceil() as i32).max(1);
+
+                    let layer_width = if layer_width % 2 == 0 {
+                        layer_width + 1
+                    } else {
+                        layer_width
+                    };
+                    let half_width = layer_width / 2;
+
+                    for dx in -half_width..=half_width {
+                        let leaves_x = x + dx;
+                        self.set(leaves_x, canopy_y, Block::Leaves);
+                    }
+                }
+            }
     }
 
     pub fn flow(&mut self) {

@@ -1,12 +1,11 @@
 use crate::inventory_screen::InventoryScreen;
-use crate::player::{self, Player, SPIKE_IMMUNITY_COOLDOWN};
+use crate::player::{Player, SPIKE_IMMUNITY_COOLDOWN};
 use crate::terrain::{Block, Terrain, CELL_RESOLUTION, CHUNK_SIZE, NO_LIQUID_THRESHOLD};
 use crate::tools::ToolType;
 use crate::world::{LIGHTING_RANGE, RENDER_RANGE};
-use crate::{pixels_per_world_unit, tools, GameContext, Neighbors, ShaderLocs};
+use crate::{pixels_per_world_unit, GameContext, Neighbors, ShaderLocs};
 use raylib::prelude::*;
 use screen_manager::{Screen, ScreenCommand};
-use toml::to_string;
 
 // Sound effect intervals (in seconds)
 const PICKAXE_SOUND_INTERVAL: f32 = 1.0;

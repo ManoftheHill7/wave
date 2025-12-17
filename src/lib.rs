@@ -29,7 +29,6 @@ pub mod lighting;
 pub mod maps;
 pub mod menu_screen;
 pub mod music_manager;
-//pub mod palette;
 pub mod player;
 pub mod save_load;
 pub mod sound_manager;
