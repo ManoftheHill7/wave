@@ -305,6 +305,7 @@ impl Player {
                 ToolType::Glider => 0.0,    // Glider doesn't raycast
                 ToolType::TideClock => 0.0, // TideClock doesn't raycast
                 ToolType::PlaceBlock(_) => MAX_RAYCAST_PLACE_BLOCK,
+                //ToolType::ConsumeItem(_) => 0.0,
             };
             let rayresult = self.raycast(
                 raycast_start,
@@ -1197,6 +1198,10 @@ impl Player {
                 self.try_place_block(terrain, chests, active_bombs, blk, left_hand);
                 true
             }
+            // (Some(ToolType::ConsumeItem(itm)), _, true) => {
+            //     self.consume_item(itm, left_hand);
+            //     true
+            // }
             _ => false,
         }
     }

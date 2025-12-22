@@ -19,6 +19,17 @@ amount = 1
 type = "coal"
 amount = 1
 
+[recipes.lumostorch]
+type = "always"
+output = "lumostorch"
+amount = 10
+[[recipes.lumostorch.inputs]]
+type = "stick"
+amount = 1
+[[recipes.lumostorch.inputs]]
+type = "lumostone"
+amount = 1
+
 [recipes.stick]
 type = "always"
 output = "stick"
@@ -52,17 +63,6 @@ amount = 1
 [[recipes.wooden_chest.inputs]]
 type = "log"
 amount = 2
-
-[recipes.lumostorch]
-type = "workbench"
-output = "lumostorch"
-amount = 2
-[[recipes.lumostorch.inputs]]
-type = "stick"
-amount = 1
-[[recipes.lumostorch.inputs]]
-type = "lumostone"
-amount = 1
 
 [recipes.wooden_ladder]
 type = "workbench"

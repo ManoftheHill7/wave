@@ -19,7 +19,7 @@ const LIGHTING_UPDATE_TIMER: f32 = 1.0 / 48.0;
 const MAX_TIDE_DEPTH: f32 = 1000.0;
 const TIDE_FREQUENCY: f32 = 1.0 / 120.0;
 
-pub const LIGHTING_RANGE: i32 = 40;
+pub const LIGHTING_RANGE: i32 = 55;
 pub const RENDER_RANGE: i32 = 40;
 
 pub const CHEST_WEIGHT_LIMIT: f32 = 1000.0;
@@ -248,7 +248,7 @@ impl WorldState {
 
                 if let Some(lt) = light_type {
                     let ore_pos = Vector2::new(tx as f32 + 0.5, ty as f32 + 0.5);
-                    let ore_light = Light::new(ore_pos, lt);
+                    let ore_light = Light::new(ore_pos, lt).with_flicker(self.player.time);
                     self.lighting_system.add_light(ore_light);
                 }
             }

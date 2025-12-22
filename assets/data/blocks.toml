@@ -93,6 +93,12 @@ type = "pickup"
 drops = "black_pearl"
 amount = 1
 
+# [blocks.message_bottle]
+# name = "Message in a Bottle"
+# type = "pickup"
+# drops = "message_bottle"
+# amount = 1
+
 [blocks.water]
 name = "Water"
 type = "liquid"

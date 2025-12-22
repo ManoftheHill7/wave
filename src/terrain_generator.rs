@@ -992,11 +992,19 @@ impl TerrainGenerator {
     /// Note: Gray pixels (127,127,127) return Stalagmite as a placeholder,
     /// use fix_spikes() after filling the chunk to correct stalactite/stalagmite placement
     fn color_to_block(r: u8, g: u8, b: u8) -> Block {
+        let mut spike_rng = rand::thread_rng();
+        let spike_seed= spike_rng.gen();
+        let mut spike_prng = rand::rngs::StdRng::seed_from_u64(spike_seed);
+        
         if r == 0 && g == 0 && b == 0 {
             Block::Stone
         } else if r == 127 && g == 127 && b == 127 {
             // Placeholder - will be fixed by fix_spikes()
-            Block::Stalagmite
+            if spike_prng.gen_bool(0.25) {
+                Block::Stalagmite
+            } else {
+                Block::Air
+            }
         } else if r == 255 && g == 255 && b == 255 {
             Block::Air
         } else if r == 0 && g == 149 && b == 199 {

@@ -95,9 +95,9 @@ fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
             [155.0 / 255.0, 173.0 / 255.0, 183.0 / 255.0, 1.0], // Linen primary (natural/default)
             [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Linen secondary
         ),
-        "pearl_glider" => (
-            [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // Pearl primary (creamy white)
-            [1.0, 1.0, 1.0, 1.0],                               // Pearl secondary
+        "white_pearl_glider" => (
+            [203.0 / 255.0, 219.0 / 255.0, 252.0 / 255.0, 1.0], // White Pearl primary (creamy white)
+            [1.0, 1.0, 1.0, 1.0],                               // White Pearl secondary
         ),
         "amethyst_glider" => (
             [118.0 / 255.0, 66.0 / 255.0, 138.0 / 255.0, 1.0], // Amethyst primary (purple)
@@ -108,8 +108,12 @@ fn get_tool_colors(level: &str) -> ([f32; 4], [f32; 4]) {
             [102.0 / 255.0, 57.0 / 255.0, 49.0 / 255.0, 1.0],  // Jasper secondary
         ),
         "emerald_glider" => (
-            [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Emerald primary (green)
-            [75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0],  // Emerald secondary
+            [34.0 / 255.0, 32.0 / 255.0, 52.0 / 255.0, 1.0], // Emerald primary (green)
+            [69.0 / 255.0, 40.0 / 255.0, 60.0 / 255.0, 1.0],  // Emerald secondary
+        ),
+        "black_pearl_glider" => (
+            [106.0 / 255.0, 190.0 / 255.0, 48.0 / 255.0, 1.0], // Black Pearl primary (dark blue)
+            [75.0 / 255.0, 105.0 / 255.0, 47.0 / 255.0, 1.0],  // Black Pearl secondary
         ),
         "topaz_glider" => (
             [91.0 / 255.0, 110.0 / 255.0, 225.0 / 255.0, 1.0], // Topaz primary (blue)

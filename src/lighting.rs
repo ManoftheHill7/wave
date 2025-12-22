@@ -25,9 +25,9 @@ impl Light {
     pub fn new(position: Vector2, light_type: LightType) -> Self {
         let (radius, color) = match light_type {
             LightType::Lamp => (24.0, Color::new(255, 200, 150, 255)), // Warm orange
-            LightType::CoalTorch => (16.0, Color::new(255, 200, 150, 255)), // Warm orange
-            LightType::LumostoneTorch => (16.0, Color::new(200, 220, 255, 255)), // Cool blue-white
-            LightType::LumositeOre => (12.0, Color::new(200, 220, 255, 255)), // Cool blue-white
+            LightType::CoalTorch => (12.0, Color::new(255, 200, 150, 255)), // Warm orange
+            LightType::LumostoneTorch => (20.0, Color::new(200, 220, 255, 255)), // Cool blue-white
+            LightType::LumositeOre => (6.0, Color::new(200, 220, 255, 255)), // Cool blue-white
         };
 
         Light {
@@ -44,10 +44,16 @@ impl Light {
         match self.light_type {
             LightType::CoalTorch | LightType::LumostoneTorch => {
                 // Subtle flicker for torches
-                let flicker = (time * 10.0).sin() * 0.1 + (time * 23.0).sin() * 0.05;
-                light.radius = self.radius * (1.0 + flicker * 0.1);
-                light.intensity = self.intensity * (1.0 + flicker * 0.2);
-            }
+                let flicker = (time * 5.0).sin() * 0.1 + (time * 9.0).sin() * 0.05;
+                light.radius = self.radius * (1.0 + flicker * 0.3);
+                light.intensity = self.intensity * (1.0 + flicker * 0.3);
+            },
+            LightType::LumositeOre => {
+                // Subtle flicker for ore
+                let flicker = (time * 0.9).sin() * 0.05 + (time * 1.4).sin() * 0.025;
+                light.radius = self.radius * (1.0 + flicker * 0.6);
+                light.intensity = self.intensity * (0.2 + flicker * 0.4);
+            },
             _ => {}
         }
         light

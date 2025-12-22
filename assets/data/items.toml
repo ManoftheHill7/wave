@@ -194,6 +194,11 @@ weight = 0.3
 name = "Conch Shell"
 weight = 0.3
 
+# [items.message_bottle]
+# name = "Message in a Bottle"
+# weight = 0.3
+# type = "consumeable"
+# image = "fallback"
 
 # anviled items
 

@@ -145,8 +145,8 @@ name = "Linen Glider"
 durability = 999999.0 #150.0
 max_fall_speed = 5.0
 
-[glider.pearl_glider]
-name = "Pearl Glider"
+[glider.white_pearl_glider]
+name = "White Pearl Glider"
 durability = 999999.0 #200.0
 max_fall_speed = 3.5
 
@@ -165,20 +165,25 @@ name = "Emerald Glider"
 durability = 999999.0 #300.0
 max_fall_speed = 1.9
 
-[glider.topaz_glider]
-name = "Topaz Glider"
+[glider.black_pearl_glider]
+name = "Black Pearl Glider"
 durability = 999999.0 #375.0
 max_fall_speed = 1.4
 
-[glider.ruby_glider]
-name = "Ruby Glider"
+[glider.topaz_glider]
+name = "Topaz Glider"
 durability = 999999.0 #450.0
 max_fall_speed = 1.0
 
+[glider.ruby_glider]
+name = "Ruby Glider"
+durability = 999999.0 #575.0
+max_fall_speed = 0.7
+
 [glider.diamond_glider]
 name = "Diamond Glider"
-durability = 99999.0 #550.0
-max_fall_speed = 0.6
+durability = 99999.0 #650.0
+max_fall_speed = 0.5
 
 
 # fishing rod
