@@ -207,6 +207,7 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
     let mut key_match_arms = Vec::new();
     let mut from_str_match_arms = Vec::new();
     let mut is_solid_match_arms = Vec::new();
+    let mut is_transparent_match_arms = Vec::new();
     let mut is_liquid_match_arms = Vec::new();
     let mut is_spike_match_arms = Vec::new();
     let mut is_ladder_match_arms = Vec::new();
@@ -278,6 +279,15 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
         match block_type {
             "solid" => {
                 is_solid_match_arms.push(format!("            Block::{} => true,", variant_name));
+                is_transparent_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_pickup_match_arms.push(format!("            Block::{} => false,", variant_name));
+            }
+            "transparent" => {
+                is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_transparent_match_arms.push(format!("            Block::{} => true,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
@@ -285,6 +295,7 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
             }
             "liquid" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_transparent_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => true,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
@@ -292,6 +303,7 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
             }
             "spike" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_transparent_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => true,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
@@ -299,6 +311,7 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
             }
             "ladder" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_transparent_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => true,", variant_name));
@@ -306,6 +319,7 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
             }
             "air" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_transparent_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
@@ -313,6 +327,7 @@ fn generate_blocks(out_dir: &str, game_data: &toml::Table) {
             }
             "pickup" => {
                 is_solid_match_arms.push(format!("            Block::{} => false,", variant_name));
+                is_transparent_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_liquid_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_spike_match_arms.push(format!("            Block::{} => false,", variant_name));
                 is_ladder_match_arms.push(format!("            Block::{} => false,", variant_name));
@@ -462,6 +477,12 @@ impl Block {{
         }}
     }}
 
+    pub fn is_transparent(self) -> bool {{
+        match self {{
+{}
+        }}
+    }}
+
     pub fn is_liquid(self) -> bool {{
         match self {{
 {}
@@ -538,6 +559,7 @@ impl Block {{
         from_str_match_arms.join("\n"),
         drops_match_arms.join("\n"),
         is_solid_match_arms.join("\n"),
+        is_transparent_match_arms.join("\n"),
         is_liquid_match_arms.join("\n"),
         is_spike_match_arms.join("\n"),
         is_ladder_match_arms.join("\n"),

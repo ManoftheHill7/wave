@@ -108,7 +108,7 @@ type = "anvil"
 output = "amethyst_amulet"
 amount = 1
 [[tool_recipes.amethyst_amulet_upgrade.inputs]]
-type = "pearl_amulet"
+type = "white_pearl_amulet"
 amount = 1
 [[tool_recipes.amethyst_amulet_upgrade.inputs]]
 type = "amethyst"
@@ -145,26 +145,26 @@ amount = 2
 type = "gold bar"
 amount = 2
 
-#[tool_recipes.black_pearl_amulet_upgrade]
-#type = "anvil"
-#output = "black_pearl_amulet"
-#amount = 1
-#[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
-#type = "emerald_amulet"
-#amount = 1
-#[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
-#type = "black pearl"
-#amount = 2
-#[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
-#type = "gold bar"
-#amount = 2
+[tool_recipes.black_pearl_amulet_upgrade]
+type = "anvil"
+output = "black_pearl_amulet"
+amount = 1
+[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
+type = "emerald_amulet"
+amount = 1
+[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
+type = "black pearl"
+amount = 2
+[[tool_recipes.black_pearl_amulet_upgrade.inputs]]
+type = "gold bar"
+amount = 2
 
 [tool_recipes.topaz_amulet_upgrade]
 type = "anvil"
 output = "topaz_amulet"
 amount = 1
 [[tool_recipes.topaz_amulet_upgrade.inputs]]
-type = "emerald_amulet" #"black_pearl_amulet"
+type = "black_pearl_amulet"
 amount = 1
 [[tool_recipes.topaz_amulet_upgrade.inputs]]
 type = "topaz"
@@ -203,14 +203,14 @@ amount = 2
 
 # glider upgrades
 
-[tool_recipes.pearl_glider_upgrade]
+[tool_recipes.white_pearl_glider_upgrade]
 type = "anvil"
-output = "pearl_glider"
+output = "white_pearl_glider"
 amount = 1
-[[tool_recipes.pearl_glider_upgrade.inputs]]
+[[tool_recipes.white_pearl_glider_upgrade.inputs]]
 type = "linen_glider"
 amount = 1
-[[tool_recipes.pearl_glider_upgrade.inputs]]
+[[tool_recipes.white_pearl_glider_upgrade.inputs]]
 type = "white pearl"
 amount = 1
 
@@ -219,7 +219,7 @@ type = "anvil"
 output = "amethyst_glider"
 amount = 1
 [[tool_recipes.amethyst_glider_upgrade.inputs]]
-type = "pearl_glider"
+type = "white_pearl_glider"
 amount = 1
 [[tool_recipes.amethyst_glider_upgrade.inputs]]
 type = "amethyst"
@@ -247,12 +247,23 @@ amount = 1
 type = "emerald"
 amount = 1
 
+[tool_recipes.black_pearl_glider_upgrade]
+type = "anvil"
+output = "black_pearl_glider"
+amount = 1
+[[tool_recipes.black_pearl_glider_upgrade.inputs]]
+type = "emerald_glider"
+amount = 1
+[[tool_recipes.black_pearl_glider_upgrade.inputs]]
+type = "black pearl"
+amount = 1
+
 [tool_recipes.topaz_glider_upgrade]
 type = "anvil"
 output = "topaz_glider"
 amount = 1
 [[tool_recipes.topaz_glider_upgrade.inputs]]
-type = "emerald_glider"
+type = "black_pearl_glider"
 amount = 1
 [[tool_recipes.topaz_glider_upgrade.inputs]]
 type = "topaz"

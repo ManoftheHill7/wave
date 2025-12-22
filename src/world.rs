@@ -19,7 +19,7 @@ const LIGHTING_UPDATE_TIMER: f32 = 1.0 / 48.0;
 const MAX_TIDE_DEPTH: f32 = 1000.0;
 const TIDE_FREQUENCY: f32 = 1.0 / 120.0;
 
-pub const LIGHTING_RANGE: i32 = 40;
+pub const LIGHTING_RANGE: i32 = 55;
 pub const RENDER_RANGE: i32 = 40;
 
 pub const CHEST_WEIGHT_LIMIT: f32 = 1000.0;
@@ -66,6 +66,7 @@ pub struct WorldState {
     pub ghost_mode: bool,
     pub chests: HashMap<(i32, i32), Inventory>,
     pub active_bombs: Vec<ActiveBomb>,
+    tick_timer: f32,
     flow_timer: f32,
     tide_timer: f32,
     illuminate_timer: f32,
@@ -84,10 +85,15 @@ impl WorldState {
             ghost_mode: false,
             chests: HashMap::new(),
             active_bombs: Vec::new(),
+            tick_timer: 0.0,
             flow_timer: 0.0,
             illuminate_timer: 0.0,
             tide_timer: 0.0,
         }
+    }
+
+    pub fn tick(&mut self) {
+        self.terrain.tick();
     }
 
     pub fn get_flow_timer(&self) -> f32 {
@@ -227,13 +233,34 @@ impl WorldState {
             }
         }
 
+        // Add lights from lumosite ore in the world
+        // Use LIGHTING_RANGE to ensure all found lumosite ore get lighting calculated
+        for dx in -LIGHTING_RANGE..=LIGHTING_RANGE {
+            for dy in -LIGHTING_RANGE..=LIGHTING_RANGE {
+                let tx = px + dx;
+                let ty = py + dy;
+                let block = self.terrain.at(tx, ty);
+
+                let light_type = match block {
+                    Block::LumositeOre => Some(LightType::LumositeOre),
+                    _ => None,
+                };
+
+                if let Some(lt) = light_type {
+                    let ore_pos = Vector2::new(tx as f32 + 0.5, ty as f32 + 0.5);
+                    let ore_light = Light::new(ore_pos, lt).with_flicker(self.player.time);
+                    self.lighting_system.add_light(ore_light);
+                }
+            }
+        }
+
         // Calculate shadows for all lights
         self.lighting_system
             .calculate_shadows(&self.terrain, px, py, RENDER_RANGE);
 
-        // Calculate solid block lighting
+        // Calculate opaque block lighting
         self.lighting_system
-            .calculate_solid_lighting(&self.terrain, px, py, LIGHTING_RANGE);
+            .calculate_opaque_lighting(&self.terrain, px, py, LIGHTING_RANGE);
     }
 
     pub fn update(&mut self, dt: f32, controller: &Controller) {
@@ -299,12 +326,17 @@ impl WorldState {
         self.terrain
             .unload_distant_chunks(px, py, unload_chunk_radius);
 
+        // Update tick every 10 sec
+        self.tick_timer += dt;
+        if self. tick_timer > 10.0 {
+            self.tick_timer = 0.0;
+            self.tick();
+        }
         self.update_tides();
         self.update_bombs(dt);
     }
 
     fn update_bombs(&mut self, dt: f32) {
-        use crate::terrain::Block;
 
         // Update all bomb timers
         for bomb in &mut self.active_bombs {

@@ -887,7 +887,7 @@ impl TerrainGenerator {
             }
         }
 
-        // Add flax flowers on grass tiles (20% chance per grass block)
+        // Add flax flowers and canola on grass tiles (20% chance per grass block)
         let mut flax_rng =
             StdRng::seed_from_u64(self.seed.wrapping_add(coord.x as u64).wrapping_add(2000));
         for lx in 0..CHUNK_SIZE {
@@ -899,6 +899,9 @@ impl TerrainGenerator {
                         // 10% chance to spawn flax
                         if flax_rng.gen_range(0..100) < 10 {
                             chunk.set(lx, ly - 1, Block::Flax);
+                        }
+                        if flax_rng.gen_range(10..110) < 20 {
+                            chunk.set(lx, ly - 1, Block::Canola);
                         }
                     }
                 }
@@ -989,11 +992,19 @@ impl TerrainGenerator {
     /// Note: Gray pixels (127,127,127) return Stalagmite as a placeholder,
     /// use fix_spikes() after filling the chunk to correct stalactite/stalagmite placement
     fn color_to_block(r: u8, g: u8, b: u8) -> Block {
+        let mut spike_rng = rand::thread_rng();
+        let spike_seed= spike_rng.gen();
+        let mut spike_prng = rand::rngs::StdRng::seed_from_u64(spike_seed);
+        
         if r == 0 && g == 0 && b == 0 {
             Block::Stone
         } else if r == 127 && g == 127 && b == 127 {
             // Placeholder - will be fixed by fix_spikes()
-            Block::Stalagmite
+            if spike_prng.gen_bool(0.25) {
+                Block::Stalagmite
+            } else {
+                Block::Air
+            }
         } else if r == 255 && g == 255 && b == 255 {
             Block::Air
         } else if r == 0 && g == 149 && b == 199 {
@@ -1109,14 +1120,13 @@ impl TerrainGenerator {
             for ly in 0..(CHUNK_SIZE - 1) {
                 let wy = coord.y * chunk_size + ly as i32;
                 // Only spawn below sea level (wy > SEA_LEVEL means underwater)
-                if wy <= -3 {
-                    // changed from SEA_LEVEL as the clams were de-spawning
+                if wy <= SEA_LEVEL + 3 {
                     continue;
                 }
                 // Check if current tile is air and tile below is sand
                 if chunk.get(lx, ly) == Block::Air && chunk.get(lx, ly + 1) == Block::Sand {
-                    // 75% chance to spawn a clam
-                    if rng.gen_bool(0.75) {
+                    // 20% chance to spawn a clam
+                    if rng.gen_bool(0.2) {
                         chunk.set(lx, ly, Block::Clam);
                     }
                 }
@@ -1144,7 +1154,7 @@ impl TerrainGenerator {
 
         // Trunk
         for i in 0..trunk_height {
-            let trunk_y = y - i;
+            let trunk_y = y - 1 - i;
 
             if self.is_in_chunk(x, trunk_y, chunk_coord) {
                 let (lx, ly) = self.world_to_local(x, trunk_y, chunk_coord);

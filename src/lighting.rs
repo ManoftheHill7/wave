@@ -9,6 +9,7 @@ pub enum LightType {
     Lamp,
     CoalTorch,
     LumostoneTorch,
+    LumositeOre,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -24,8 +25,9 @@ impl Light {
     pub fn new(position: Vector2, light_type: LightType) -> Self {
         let (radius, color) = match light_type {
             LightType::Lamp => (24.0, Color::new(255, 200, 150, 255)), // Warm orange
-            LightType::CoalTorch => (16.0, Color::new(255, 200, 150, 255)), // Warm orange
-            LightType::LumostoneTorch => (16.0, Color::new(200, 220, 255, 255)), // Cool blue-white
+            LightType::CoalTorch => (12.0, Color::new(255, 200, 150, 255)), // Warm orange
+            LightType::LumostoneTorch => (20.0, Color::new(200, 220, 255, 255)), // Cool blue-white
+            LightType::LumositeOre => (6.0, Color::new(200, 220, 255, 255)), // Cool blue-white
         };
 
         Light {
@@ -42,10 +44,16 @@ impl Light {
         match self.light_type {
             LightType::CoalTorch | LightType::LumostoneTorch => {
                 // Subtle flicker for torches
-                let flicker = (time * 10.0).sin() * 0.1 + (time * 23.0).sin() * 0.05;
-                light.radius = self.radius * (1.0 + flicker * 0.1);
-                light.intensity = self.intensity * (1.0 + flicker * 0.2);
-            }
+                let flicker = (time * 5.0).sin() * 0.1 + (time * 9.0).sin() * 0.05;
+                light.radius = self.radius * (1.0 + flicker * 0.3);
+                light.intensity = self.intensity * (1.0 + flicker * 0.3);
+            },
+            LightType::LumositeOre => {
+                // Subtle flicker for ore
+                let flicker = (time * 0.9).sin() * 0.05 + (time * 1.4).sin() * 0.025;
+                light.radius = self.radius * (1.0 + flicker * 0.6);
+                light.intensity = self.intensity * (0.2 + flicker * 0.4);
+            },
             _ => {}
         }
         light
@@ -81,7 +89,7 @@ impl ShadowMap {
 pub struct LightingSystem {
     lights: Vec<Light>,
     shadow_map: ShadowMap,
-    solid_light_cache: HashMap<(i32, i32), f32>,
+    opaque_light_cache: HashMap<(i32, i32), f32>,
     air_light_cache: HashMap<(i32, i32), f32>,
     pub ambient_darkness: f32,
 }
@@ -91,7 +99,7 @@ impl LightingSystem {
         LightingSystem {
             lights: Vec::new(),
             shadow_map: ShadowMap::new(),
-            solid_light_cache: HashMap::new(),
+            opaque_light_cache: HashMap::new(),
             air_light_cache: HashMap::new(),
             ambient_darkness: 0.0,
         }
@@ -165,7 +173,7 @@ impl LightingSystem {
         }
     }
 
-    /// Raycast from start to end, return true if hits solid terrain
+    /// Raycast from start to end, return true if hits opaque terrain
     fn raycast_hits_terrain(&self, start: Vector2, end: Vector2, terrain: &Terrain) -> bool {
         // DDA algorithm for grid traversal
         let dx = end.x - start.x;
@@ -184,8 +192,7 @@ impl LightingSystem {
             let t = i as f32 / steps as f32;
             let x = start.x + step_x * t * distance;
             let y = start.y + step_y * t * distance;
-
-            if terrain.solid_terrain_at(x as i32, y as i32) {
+            if terrain.opaque_terrain_at(x as i32, y as i32) {
                 return true;
             }
         }
@@ -223,9 +230,9 @@ impl LightingSystem {
         total_light.min(1.0)
     }
 
-    /// Calculate lighting for solid blocks based on nearby air tiles
+    /// Calculate lighting for opaque blocks based on nearby air tiles
     /// This should be called after calculate_shadows() during update, not render
-    pub fn calculate_solid_lighting(
+    pub fn calculate_opaque_lighting(
         &mut self,
         terrain: &Terrain,
         center_x: i32,
@@ -233,7 +240,7 @@ impl LightingSystem {
         range: i32,
     ) {
         self.air_light_cache.clear();
-        self.solid_light_cache.clear();
+        self.opaque_light_cache.clear();
 
         // First pass: Cache air tile brightness
         for ty in (center_y - range - 2)..(center_y + range + 2) {
@@ -255,7 +262,7 @@ impl LightingSystem {
                     continue;
                 }
 
-                if !terrain.solid_terrain_at(tx, ty) {
+                if !terrain.opaque_terrain_at(tx, ty) {
                     let tile_x = tx as f32 + 0.5;
                     let tile_y = ty as f32 + 0.5;
                     let light = self.get_light_at(tile_x, tile_y);
@@ -266,10 +273,10 @@ impl LightingSystem {
             }
         }
 
-        // Second pass: Calculate solid block lighting from nearby air
+        // Second pass: Calculate opaque block lighting from nearby air
         for ty in (center_y - range)..(center_y + range) {
             for tx in (center_x - range)..(center_x + range) {
-                if !terrain.solid_terrain_at(tx, ty) {
+                if !terrain.opaque_terrain_at(tx, ty) {
                     continue;
                 }
 
@@ -341,23 +348,23 @@ impl LightingSystem {
                 }
 
                 if max_nearby_light > 0.01 {
-                    self.solid_light_cache.insert((tx, ty), max_nearby_light);
+                    self.opaque_light_cache.insert((tx, ty), max_nearby_light);
                 }
             }
         }
     }
 
-    /// Get cached light value for any tile (air or solid)
-    pub fn get_cached_light(&self, x: i32, y: i32, is_solid: bool) -> f32 {
-        if is_solid {
-            self.solid_light_cache.get(&(x, y)).copied().unwrap_or(0.0)
+    /// Get cached light value for any tile (air or opaque)
+    pub fn get_cached_light(&self, x: i32, y: i32, is_opaque: bool) -> f32 {
+        if is_opaque {
+            self.opaque_light_cache.get(&(x, y)).copied().unwrap_or(0.0)
         } else {
             self.air_light_cache.get(&(x, y)).copied().unwrap_or(0.0)
         }
     }
 
     /// Create a dual-channel lighting texture for GPU rendering
-    /// Returns RG pixel data: R=brightness (0-255), G=is_solid flag (0 or 255)
+    /// Returns RG pixel data: R=brightness (0-255), G=is_opaque flag (0 or 255)
     /// Uses 1 texel per tile; shader does sub-tile interpolation
     pub fn create_lighting_texture(
         &self,
@@ -373,14 +380,14 @@ impl LightingSystem {
             for x in 0..size {
                 let wx = center_x - range + x;
                 let wy = center_y - range + y;
-                let is_solid = terrain.solid_terrain_at(wx, wy);
+                let is_opaque = terrain.opaque_terrain_at(wx, wy);
 
                 // Use cached lighting values (from CPU calculations)
-                let brightness = self.get_cached_light(wx, wy, is_solid);
+                let brightness = self.get_cached_light(wx, wy, is_opaque);
 
                 let idx = ((y * size + x) * 2) as usize;
                 pixels[idx] = (brightness * 255.0) as u8; // R channel = brightness
-                pixels[idx + 1] = if is_solid { 255 } else { 0 }; // G channel = is_solid flag
+                pixels[idx + 1] = if is_opaque { 255 } else { 0 }; // G channel = is_opaque flag
             }
         }
 

@@ -54,7 +54,7 @@ amount = 1
 
 [blocks.leaves]
 name = "Leaves"
-type = "solid"
+type = "transparent"
 durability = 0.2
 drops = "leaves"
 amount = 1
@@ -79,9 +79,25 @@ amount = 2
 
 [blocks.clam]
 name = "Clam"
+type = "air"
+
+[blocks.clam_white_pearl]
+name = "White Pearl"
 type = "pickup"
 drops = "white_pearl"
 amount = 1
+
+[blocks.clam_black_pearl]
+name = "Black Pearl"
+type = "pickup"
+drops = "black_pearl"
+amount = 1
+
+# [blocks.message_bottle]
+# name = "Message in a Bottle"
+# type = "pickup"
+# drops = "message_bottle"
+# amount = 1
 
 [blocks.water]
 name = "Water"
@@ -102,13 +118,13 @@ image = "fallback"
 [blocks.stalagmite]
 name = "Stalagmite"
 type = "spike"
-durability = 0.0
+durability = 1.0
 image = "fallback"
 
 [blocks.stalactite]
 name = "Stalactite"
 type = "spike"
-durability = 0.0
+durability = 1.0
 image = "fallback"
 
 
@@ -179,7 +195,7 @@ amount = 1
 
 [blocks.lumosite_ore]
 name = "Lumosite Ore"
-type = "solid"
+type = "transparent"
 durability = 6.5
 drops = "lumosite_ore"
 amount = 1
@@ -301,7 +317,7 @@ amount = 1
 
 [blocks.glass]
 name = "Glass"
-type = "solid"
+type = "transparent"
 durability = 0.5
 drops = "glass"
 amount = 0
